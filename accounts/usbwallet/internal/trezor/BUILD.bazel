@@ -1,9 +1,31 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 
 go_library(
     name = "go_default_library",
     srcs = ["trezor.go"],
     importpath = "github.com/ethereum/go-ethereum/accounts/usbwallet/internal/trezor",
     visibility = ["//accounts/usbwallet:__subpackages__"],
-    deps = ["//vendor/github.com/golang/protobuf/proto:go_default_library"],
+    # embed = [":go_proto"],
+    deps = [
+        ":go_proto",
+        "//vendor/github.com/golang/protobuf/proto:go_default_library",
+    ],
+)
+
+go_proto_library(
+    name = "go_proto",
+    importpath = "github.com/ethereum/go-ethereum/accounts/usbwallets/internal/trezor/proto",
+    proto = ":proto",
+)
+
+proto_library(
+    name = "proto",
+    srcs = [
+        "messages.proto",
+        "types.proto",
+    ],
+    deps = [
+        "@com_google_protobuf//:descriptor_proto",
+    ],
 )

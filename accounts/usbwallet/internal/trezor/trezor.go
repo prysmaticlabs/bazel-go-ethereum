@@ -27,18 +27,20 @@ import (
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
+
+	pb "github.com/ethereum/go-ethereum/accounts/usbwallets/internal/trezor/proto"
 )
 
 // Type returns the protocol buffer type number of a specific message. If the
 // message is nil, this method panics!
 func Type(msg proto.Message) uint16 {
-	return uint16(MessageType_value["MessageType_"+reflect.TypeOf(msg).Elem().Name()])
+	return uint16(pb.MessageType_value["MessageType_"+reflect.TypeOf(msg).Elem().Name()])
 }
 
 // Name returns the friendly message type name of a specific protocol buffer
 // type number.
 func Name(kind uint16) string {
-	name := MessageType_name[int32(kind)]
+	name := pb.MessageType_name[int32(kind)]
 	if len(name) < 12 {
 		return name
 	}

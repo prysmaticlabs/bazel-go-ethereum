@@ -12,7 +12,7 @@ syntax = "proto2";
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessage";
 
-import "types.proto";
+import "accounts/usbwallet/internal/trezor/types.proto";
 
 /**
  * Mapping between Trezor wire identifier (uint) and a protobuf message

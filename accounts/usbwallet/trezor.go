@@ -34,6 +34,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/golang/protobuf/proto"
+
+	pb "github.com/ethereum/go-ethereum/accounts/usbwallets/internal/trezor/proto"
 )
 
 // ErrTrezorPINNeeded is returned if opening the trezor requires a PIN code. In
@@ -97,8 +99,8 @@ func (w *trezorDriver) Open(device io.ReadWriter, passphrase string) error {
 			return ErrTrezorPINNeeded
 		}
 		// Initialize a connection to the device
-		features := new(trezor.Features)
-		if _, err := w.trezorExchange(&trezor.Initialize{}, features); err != nil {
+		features := new(pb.Features)
+		if _, err := w.trezorExchange(&pb.Initialize{}, features); err != nil {
 			return err
 		}
 		w.version = [3]uint32{features.GetMajorVersion(), features.GetMinorVersion(), features.GetPatchVersion()}
@@ -106,13 +108,13 @@ func (w *trezorDriver) Open(device io.ReadWriter, passphrase string) error {
 
 		// Do a manual ping, forcing the device to ask for its PIN
 		askPin := true
-		res, err := w.trezorExchange(&trezor.Ping{PinProtection: &askPin}, new(trezor.PinMatrixRequest), new(trezor.Success))
+		res, err := w.trezorExchange(&pb.Ping{PinProtection: &askPin}, new(pb.PinMatrixRequest), new(pb.Success))
 		if err != nil {
 			return err
 		}
 		// Only return the PIN request if the device wasn't unlocked until now
 		if res == 1 {
-			return nil // Device responded with trezor.Success
+			return nil // Device responded with pb.Success
 		}
 		w.pinwait = true
 		return ErrTrezorPINNeeded
@@ -120,7 +122,7 @@ func (w *trezorDriver) Open(device io.ReadWriter, passphrase string) error {
 	// Phase 2 requested with actual PIN entry
 	w.pinwait = false
 
-	if _, err := w.trezorExchange(&trezor.PinMatrixAck{Pin: &passphrase}, new(trezor.Success)); err != nil {
+	if _, err := w.trezorExchange(&pb.PinMatrixAck{Pin: &passphrase}, new(pb.Success)); err != nil {
 		w.failure = err
 		return err
 	}
@@ -137,7 +139,7 @@ func (w *trezorDriver) Close() error {
 // Heartbeat implements usbwallet.driver, performing a sanity check against the
 // Trezor to see if it's still online.
 func (w *trezorDriver) Heartbeat() error {
-	if _, err := w.trezorExchange(&trezor.Ping{}, new(trezor.Success)); err != nil {
+	if _, err := w.trezorExchange(&pb.Ping{}, new(pb.Success)); err != nil {
 		w.failure = err
 		return err
 	}
@@ -162,8 +164,8 @@ func (w *trezorDriver) SignTx(path accounts.DerivationPath, tx *types.Transactio
 // trezorDerive sends a derivation request to the Trezor device and returns the
 // Ethereum address located on that path.
 func (w *trezorDriver) trezorDerive(derivationPath []uint32) (common.Address, error) {
-	address := new(trezor.EthereumAddress)
-	if _, err := w.trezorExchange(&trezor.EthereumGetAddress{AddressN: derivationPath}, address); err != nil {
+	address := new(pb.EthereumAddress)
+	if _, err := w.trezorExchange(&pb.EthereumGetAddress{AddressN: derivationPath}, address); err != nil {
 		return common.Address{}, err
 	}
 	return common.BytesToAddress(address.GetAddress()), nil
@@ -176,7 +178,7 @@ func (w *trezorDriver) trezorSign(derivationPath []uint32, tx *types.Transaction
 	data := tx.Data()
 	length := uint32(len(data))
 
-	request := &trezor.EthereumSignTx{
+	request := &pb.EthereumSignTx{
 		AddressN:   derivationPath,
 		Nonce:      new(big.Int).SetUint64(tx.Nonce()).Bytes(),
 		GasPrice:   tx.GasPrice().Bytes(),
@@ -197,7 +199,7 @@ func (w *trezorDriver) trezorSign(derivationPath []uint32, tx *types.Transaction
 		request.ChainId = &id
 	}
 	// Send the initiation message and stream content until a signature is returned
-	response := new(trezor.EthereumTxRequest)
+	response := new(pb.EthereumTxRequest)
 	if _, err := w.trezorExchange(request, response); err != nil {
 		return common.Address{}, nil, err
 	}
@@ -205,7 +207,7 @@ func (w *trezorDriver) trezorSign(derivationPath []uint32, tx *types.Transaction
 		chunk := data[:*response.DataLength]
 		data = data[*response.DataLength:]
 
-		if _, err := w.trezorExchange(&trezor.EthereumTxAck{DataChunk: chunk}, response); err != nil {
+		if _, err := w.trezorExchange(&pb.EthereumTxAck{DataChunk: chunk}, response); err != nil {
 			return common.Address{}, nil, err
 		}
 	}
@@ -305,17 +307,17 @@ func (w *trezorDriver) trezorExchange(req proto.Message, results ...proto.Messag
 		}
 	}
 	// Try to parse the reply into the requested reply message
-	if kind == uint16(trezor.MessageType_MessageType_Failure) {
+	if kind == uint16(pb.MessageType_MessageType_Failure) {
 		// Trezor returned a failure, extract and return the message
-		failure := new(trezor.Failure)
+		failure := new(pb.Failure)
 		if err := proto.Unmarshal(reply, failure); err != nil {
 			return 0, err
 		}
 		return 0, errors.New("trezor: " + failure.GetMessage())
 	}
-	if kind == uint16(trezor.MessageType_MessageType_ButtonRequest) {
+	if kind == uint16(pb.MessageType_MessageType_ButtonRequest) {
 		// Trezor is waiting for user confirmation, ack and wait for the next message
-		return w.trezorExchange(&trezor.ButtonAck{}, results...)
+		return w.trezorExchange(&pb.ButtonAck{}, results...)
 	}
 	for i, res := range results {
 		if trezor.Type(res) == kind {

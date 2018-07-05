@@ -1,0 +1,53 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "api.go",
+        "config.go",
+        "filesystem.go",
+        "manifest.go",
+        "storage.go",
+        "testapi.go",
+        "uri.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/swarm/api",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:go_default_library",
+        "//contracts/ens:go_default_library",
+        "//core/types:go_default_library",
+        "//crypto:go_default_library",
+        "//metrics:go_default_library",
+        "//node:go_default_library",
+        "//p2p/discover:go_default_library",
+        "//swarm/log:go_default_library",
+        "//swarm/multihash:go_default_library",
+        "//swarm/network:go_default_library",
+        "//swarm/pss:go_default_library",
+        "//swarm/services/swap:go_default_library",
+        "//swarm/storage:go_default_library",
+        "//swarm/storage/mru:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "api_test.go",
+        "config_test.go",
+        "filesystem_test.go",
+        "manifest_test.go",
+        "storage_test.go",
+        "uri_test.go",
+    ],
+    data = glob(["testdata/**"]),
+    embed = [":go_default_library"],
+    deps = [
+        "//common:go_default_library",
+        "//core/types:go_default_library",
+        "//crypto:go_default_library",
+        "//swarm/log:go_default_library",
+        "//swarm/storage:go_default_library",
+    ],
+)

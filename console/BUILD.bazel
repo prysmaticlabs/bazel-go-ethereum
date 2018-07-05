@@ -1,0 +1,37 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "bridge.go",
+        "console.go",
+        "prompter.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/console",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//accounts/usbwallet:go_default_library",
+        "//internal/jsre:go_default_library",
+        "//internal/web3ext:go_default_library",
+        "//log:go_default_library",
+        "//rpc:go_default_library",
+        "//vendor/github.com/mattn/go-colorable:go_default_library",
+        "//vendor/github.com/peterh/liner:go_default_library",
+        "//vendor/github.com/robertkrimen/otto:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["console_test.go"],
+    data = glob(["testdata/**"]),
+    embed = [":go_default_library"],
+    deps = [
+        "//common:go_default_library",
+        "//consensus/ethash:go_default_library",
+        "//core:go_default_library",
+        "//eth:go_default_library",
+        "//internal/jsre:go_default_library",
+        "//node:go_default_library",
+    ],
+)

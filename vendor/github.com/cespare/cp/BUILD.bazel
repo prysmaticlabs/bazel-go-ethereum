@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["cp.go"],
+    importmap = "vendor/github.com/cespare/cp",
+    importpath = "github.com/cespare/cp",
+    visibility = ["//visibility:public"],
+)

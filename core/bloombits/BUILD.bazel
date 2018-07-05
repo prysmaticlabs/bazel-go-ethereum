@@ -1,0 +1,32 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "doc.go",
+        "generator.go",
+        "matcher.go",
+        "scheduler.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/core/bloombits",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common/bitutil:go_default_library",
+        "//core/types:go_default_library",
+        "//crypto:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "generator_test.go",
+        "matcher_test.go",
+        "scheduler_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//common:go_default_library",
+        "//core/types:go_default_library",
+    ],
+)

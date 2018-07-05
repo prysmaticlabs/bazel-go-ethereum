@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["base64_vlq.go"],
+    importmap = "vendor/gopkg.in/sourcemap.v1/base64vlq",
+    importpath = "gopkg.in/sourcemap.v1/base64vlq",
+    visibility = ["//visibility:public"],
+)

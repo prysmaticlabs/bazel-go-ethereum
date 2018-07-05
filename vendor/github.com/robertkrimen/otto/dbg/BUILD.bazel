@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["dbg.go"],
+    importmap = "vendor/github.com/robertkrimen/otto/dbg",
+    importpath = "github.com/robertkrimen/otto/dbg",
+    visibility = ["//visibility:public"],
+)

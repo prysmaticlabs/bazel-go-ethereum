@@ -1,0 +1,21 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "config.go",
+        "decode.go",
+        "encode.go",
+        "error.go",
+        "parse.go",
+        "parse.peg.go",
+        "util.go",
+    ],
+    importmap = "vendor/github.com/naoina/toml",
+    importpath = "github.com/naoina/toml",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/naoina/go-stringutil:go_default_library",
+        "//vendor/github.com/naoina/toml/ast:go_default_library",
+    ],
+)

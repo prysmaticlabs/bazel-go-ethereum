@@ -1,0 +1,119 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "account_cache.go",
+        "file_cache.go",
+        "key.go",
+        "keystore.go",
+        "keystore_passphrase.go",
+        "keystore_plain.go",
+        "keystore_wallet.go",
+        "presale.go",
+        "watch.go",
+        "watch_fallback.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/accounts/keystore",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:go_default_library",
+        "//accounts:go_default_library",
+        "//common:go_default_library",
+        "//common/math:go_default_library",
+        "//core/types:go_default_library",
+        "//crypto:go_default_library",
+        "//crypto/randentropy:go_default_library",
+        "//event:go_default_library",
+        "//log:go_default_library",
+        "//vendor/github.com/pborman/uuid:go_default_library",
+        "//vendor/golang.org/x/crypto/pbkdf2:go_default_library",
+        "//vendor/golang.org/x/crypto/scrypt:go_default_library",
+        "//vendor/gopkg.in/fatih/set.v0:go_default_library",
+    ] + select({
+        "@io_bazel_rules_go//go/platform:darwin_386": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:darwin_amd64": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:darwin_arm": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:darwin_arm64": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:freebsd_386": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:freebsd_amd64": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:freebsd_arm": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_386": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_amd64": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_arm": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_mips": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_mips64": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_mips64le": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_mipsle": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_ppc64": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_ppc64le": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux_s390x": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:netbsd_386": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:netbsd_amd64": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:netbsd_arm": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:solaris_amd64": [
+            "//vendor/github.com/rjeczalik/notify:go_default_library",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "account_cache_test.go",
+        "keystore_passphrase_test.go",
+        "keystore_plain_test.go",
+        "keystore_test.go",
+    ],
+    data = glob(["testdata/**"]),
+    embed = [":go_default_library"],
+    deps = [
+        "//accounts:go_default_library",
+        "//common:go_default_library",
+        "//crypto:go_default_library",
+        "//event:go_default_library",
+        "//vendor/github.com/cespare/cp:go_default_library",
+        "//vendor/github.com/davecgh/go-spew/spew:go_default_library",
+    ],
+)

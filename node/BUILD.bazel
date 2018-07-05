@@ -1,0 +1,51 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "api.go",
+        "config.go",
+        "defaults.go",
+        "doc.go",
+        "errors.go",
+        "node.go",
+        "service.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/node",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//accounts:go_default_library",
+        "//accounts/keystore:go_default_library",
+        "//accounts/usbwallet:go_default_library",
+        "//common:go_default_library",
+        "//common/hexutil:go_default_library",
+        "//crypto:go_default_library",
+        "//ethdb:go_default_library",
+        "//event:go_default_library",
+        "//internal/debug:go_default_library",
+        "//log:go_default_library",
+        "//metrics:go_default_library",
+        "//p2p:go_default_library",
+        "//p2p/discover:go_default_library",
+        "//p2p/nat:go_default_library",
+        "//rpc:go_default_library",
+        "//vendor/github.com/prometheus/prometheus/util/flock:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "config_test.go",
+        "node_example_test.go",
+        "node_test.go",
+        "service_test.go",
+        "utils_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//crypto:go_default_library",
+        "//p2p:go_default_library",
+        "//rpc:go_default_library",
+    ],
+)

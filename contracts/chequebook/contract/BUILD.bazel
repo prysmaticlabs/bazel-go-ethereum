@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "chequebook.go",
+        "code.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/contracts/chequebook/contract",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:go_default_library",
+        "//accounts/abi:go_default_library",
+        "//accounts/abi/bind:go_default_library",
+        "//common:go_default_library",
+        "//core/types:go_default_library",
+        "//event:go_default_library",
+    ],
+)

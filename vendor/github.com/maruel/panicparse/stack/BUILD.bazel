@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "source.go",
+        "stack.go",
+        "ui.go",
+    ],
+    importmap = "vendor/github.com/maruel/panicparse/stack",
+    importpath = "github.com/maruel/panicparse/stack",
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,36 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "docker.go",
+        "exec.go",
+        "inproc.go",
+        "types.go",
+        "ws.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/p2p/simulations/adapters",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//crypto:go_default_library",
+        "//event:go_default_library",
+        "//log:go_default_library",
+        "//node:go_default_library",
+        "//p2p:go_default_library",
+        "//p2p/discover:go_default_library",
+        "//p2p/simulations/pipes:go_default_library",
+        "//rpc:go_default_library",
+        "//vendor/github.com/docker/docker/pkg/reexec:go_default_library",
+        "//vendor/golang.org/x/net/websocket:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "inproc_test.go",
+        "ws_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = ["//p2p/simulations/pipes:go_default_library"],
+)

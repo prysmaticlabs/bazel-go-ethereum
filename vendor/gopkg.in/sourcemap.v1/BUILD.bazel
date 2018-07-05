@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "consumer.go",
+        "sourcemap.go",
+    ],
+    importmap = "vendor/gopkg.in/sourcemap.v1",
+    importpath = "gopkg.in/sourcemap.v1",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/gopkg.in/sourcemap.v1/base64vlq:go_default_library"],
+)

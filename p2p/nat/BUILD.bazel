@@ -1,0 +1,29 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "nat.go",
+        "natpmp.go",
+        "natupnp.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/p2p/nat",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//log:go_default_library",
+        "//vendor/github.com/huin/goupnp:go_default_library",
+        "//vendor/github.com/huin/goupnp/dcps/internetgateway1:go_default_library",
+        "//vendor/github.com/huin/goupnp/dcps/internetgateway2:go_default_library",
+        "//vendor/github.com/jackpal/go-nat-pmp:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "nat_test.go",
+        "natupnp_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = ["//vendor/github.com/huin/goupnp/httpu:go_default_library"],
+)

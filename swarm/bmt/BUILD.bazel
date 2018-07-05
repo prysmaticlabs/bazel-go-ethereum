@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "bmt.go",
+        "bmt_r.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/swarm/bmt",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["bmt_test.go"],
+    embed = [":go_default_library"],
+    deps = ["//crypto/sha3:go_default_library"],
+)

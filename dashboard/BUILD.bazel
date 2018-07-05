@@ -1,0 +1,24 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "assets.go",
+        "config.go",
+        "cpu.go",
+        "cpu_windows.go",
+        "dashboard.go",
+        "message.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/dashboard",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//log:go_default_library",
+        "//metrics:go_default_library",
+        "//p2p:go_default_library",
+        "//params:go_default_library",
+        "//rpc:go_default_library",
+        "//vendor/github.com/elastic/gosigar:go_default_library",
+        "//vendor/golang.org/x/net/websocket:go_default_library",
+    ],
+)

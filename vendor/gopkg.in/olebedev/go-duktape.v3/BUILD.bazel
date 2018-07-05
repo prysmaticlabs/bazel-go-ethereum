@@ -1,0 +1,94 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "api.go",
+        "conts.go",
+        "duk_alloc_pool.c",
+        "duk_alloc_pool.h",
+        "duk_config.h",
+        "duk_console.c",
+        "duk_console.h",
+        "duk_logging.c",
+        "duk_logging.h",
+        "duk_minimal_printf.c",
+        "duk_minimal_printf.h",
+        "duk_module_duktape.c",
+        "duk_module_duktape.h",
+        "duk_module_node.c",
+        "duk_module_node.h",
+        "duk_print_alert.c",
+        "duk_print_alert.h",
+        "duk_v1_compat.c",
+        "duk_v1_compat.h",
+        "duktape.c",
+        "duktape.go",
+        "duktape.h",
+        "timers.go",
+        "utils.go",
+    ],
+    cgo = True,
+    clinkopts = select({
+        "@io_bazel_rules_go//go/platform:freebsd": [
+            "-lm",
+        ],
+        "@io_bazel_rules_go//go/platform:linux": [
+            "-lm",
+        ],
+        "@io_bazel_rules_go//go/platform:openbsd": [
+            "-lm",
+        ],
+        "//conditions:default": [],
+    }),
+    copts = select({
+        "@io_bazel_rules_go//go/platform:android": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:darwin": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:dragonfly": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:freebsd": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:linux": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:nacl": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:netbsd": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:openbsd": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:plan9": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:solaris": [
+            "-std=c99 -O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-std=c99 -O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "@io_bazel_rules_go//go/platform:windows": [
+            "-O3 -Wall -Wno-unused-value -fomit-frame-pointer -fstrict-aliasing",
+            "-O3 -Wall -fomit-frame-pointer -fstrict-aliasing",
+        ],
+        "//conditions:default": [],
+    }),
+    importmap = "vendor/gopkg.in/olebedev/go-duktape.v3",
+    importpath = "gopkg.in/olebedev/go-duktape.v3",
+    visibility = ["//visibility:public"],
+)

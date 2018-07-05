@@ -1,0 +1,59 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "analysis.go",
+        "common.go",
+        "contract.go",
+        "contracts.go",
+        "doc.go",
+        "errors.go",
+        "evm.go",
+        "gas.go",
+        "gas_table.go",
+        "gen_structlog.go",
+        "instructions.go",
+        "int_pool_verifier_empty.go",
+        "interface.go",
+        "interpreter.go",
+        "intpool.go",
+        "jump_table.go",
+        "logger.go",
+        "memory.go",
+        "memory_table.go",
+        "noop.go",
+        "opcodes.go",
+        "stack.go",
+        "stack_table.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/core/vm",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:go_default_library",
+        "//common/hexutil:go_default_library",
+        "//common/math:go_default_library",
+        "//core/types:go_default_library",
+        "//crypto:go_default_library",
+        "//crypto/bn256:go_default_library",
+        "//params:go_default_library",
+        "//vendor/golang.org/x/crypto/ripemd160:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "analysis_test.go",
+        "contracts_test.go",
+        "gas_table_test.go",
+        "instructions_test.go",
+        "intpool_test.go",
+        "logger_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//common:go_default_library",
+        "//params:go_default_library",
+    ],
+)

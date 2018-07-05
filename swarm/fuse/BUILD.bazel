@@ -1,0 +1,72 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "fuse_dir.go",
+        "fuse_file.go",
+        "fuse_root.go",
+        "swarmfs.go",
+        "swarmfs_fallback.go",
+        "swarmfs_unix.go",
+        "swarmfs_util.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/swarm/fuse",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//swarm/api:go_default_library",
+    ] + select({
+        "@io_bazel_rules_go//go/platform:darwin": [
+            "//common:go_default_library",
+            "//swarm/log:go_default_library",
+            "//swarm/storage:go_default_library",
+            "//vendor/bazil.org/fuse:go_default_library",
+            "//vendor/bazil.org/fuse/fs:go_default_library",
+            "//vendor/golang.org/x/net/context:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:freebsd": [
+            "//common:go_default_library",
+            "//swarm/log:go_default_library",
+            "//swarm/storage:go_default_library",
+            "//vendor/bazil.org/fuse:go_default_library",
+            "//vendor/bazil.org/fuse/fs:go_default_library",
+            "//vendor/golang.org/x/net/context:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux": [
+            "//common:go_default_library",
+            "//swarm/log:go_default_library",
+            "//swarm/storage:go_default_library",
+            "//vendor/bazil.org/fuse:go_default_library",
+            "//vendor/bazil.org/fuse/fs:go_default_library",
+            "//vendor/golang.org/x/net/context:go_default_library",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["swarmfs_test.go"],
+    embed = [":go_default_library"],
+    deps = select({
+        "@io_bazel_rules_go//go/platform:darwin": [
+            "//log:go_default_library",
+            "//swarm/api:go_default_library",
+            "//swarm/storage:go_default_library",
+            "//vendor/github.com/mattn/go-colorable:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:freebsd": [
+            "//log:go_default_library",
+            "//swarm/api:go_default_library",
+            "//swarm/storage:go_default_library",
+            "//vendor/github.com/mattn/go-colorable:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux": [
+            "//log:go_default_library",
+            "//swarm/api:go_default_library",
+            "//swarm/storage:go_default_library",
+            "//vendor/github.com/mattn/go-colorable:go_default_library",
+        ],
+        "//conditions:default": [],
+    }),
+)

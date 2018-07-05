@@ -1,0 +1,48 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "block.go",
+        "bloom9.go",
+        "derive_sha.go",
+        "gen_header_json.go",
+        "gen_log_json.go",
+        "gen_receipt_json.go",
+        "gen_tx_json.go",
+        "log.go",
+        "receipt.go",
+        "transaction.go",
+        "transaction_signing.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/core/types",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:go_default_library",
+        "//common/hexutil:go_default_library",
+        "//crypto:go_default_library",
+        "//crypto/sha3:go_default_library",
+        "//params:go_default_library",
+        "//rlp:go_default_library",
+        "//trie:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "block_test.go",
+        "bloom9_test.go",
+        "log_test.go",
+        "transaction_signing_test.go",
+        "transaction_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//common:go_default_library",
+        "//common/hexutil:go_default_library",
+        "//crypto:go_default_library",
+        "//rlp:go_default_library",
+        "//vendor/github.com/davecgh/go-spew/spew:go_default_library",
+    ],
+)

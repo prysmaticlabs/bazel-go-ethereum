@@ -1,0 +1,23 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "main.go",
+        "upload_and_sync.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/cmd/swarm/swarm-smoke",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//log:go_default_library",
+        "//vendor/github.com/mattn/go-colorable:go_default_library",
+        "//vendor/github.com/pborman/uuid:go_default_library",
+        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "swarm-smoke",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)

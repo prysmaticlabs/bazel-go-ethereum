@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "peerpool.go",
+        "protocolsession.go",
+        "protocoltester.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/p2p/testing",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//log:go_default_library",
+        "//node:go_default_library",
+        "//p2p:go_default_library",
+        "//p2p/discover:go_default_library",
+        "//p2p/simulations:go_default_library",
+        "//p2p/simulations/adapters:go_default_library",
+        "//rlp:go_default_library",
+        "//rpc:go_default_library",
+    ],
+)

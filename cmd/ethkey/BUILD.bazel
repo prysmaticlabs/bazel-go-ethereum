@@ -1,0 +1,43 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "changepassphrase.go",
+        "generate.go",
+        "inspect.go",
+        "main.go",
+        "message.go",
+        "utils.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/cmd/ethkey",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//accounts/keystore:go_default_library",
+        "//cmd/utils:go_default_library",
+        "//common:go_default_library",
+        "//console:go_default_library",
+        "//crypto:go_default_library",
+        "//vendor/github.com/pborman/uuid:go_default_library",
+        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "ethkey",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "message_test.go",
+        "run_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//internal/cmdtest:go_default_library",
+        "//vendor/github.com/docker/docker/pkg/reexec:go_default_library",
+    ],
+)

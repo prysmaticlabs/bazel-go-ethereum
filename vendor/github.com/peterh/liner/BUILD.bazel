@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "bsdinput.go",
+        "common.go",
+        "fallbackinput.go",
+        "input.go",
+        "input_darwin.go",
+        "input_linux.go",
+        "input_windows.go",
+        "line.go",
+        "output.go",
+        "output_windows.go",
+        "unixmode.go",
+        "width.go",
+    ],
+    importmap = "vendor/github.com/peterh/liner",
+    importpath = "github.com/peterh/liner",
+    visibility = ["//visibility:public"],
+)

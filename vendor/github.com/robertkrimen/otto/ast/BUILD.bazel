@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "comments.go",
+        "node.go",
+    ],
+    importmap = "vendor/github.com/robertkrimen/otto/ast",
+    importpath = "github.com/robertkrimen/otto/ast",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/robertkrimen/otto/file:go_default_library",
+        "//vendor/github.com/robertkrimen/otto/token:go_default_library",
+    ],
+)

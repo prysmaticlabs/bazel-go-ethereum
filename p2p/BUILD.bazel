@@ -1,0 +1,57 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "dial.go",
+        "message.go",
+        "metrics.go",
+        "peer.go",
+        "peer_error.go",
+        "protocol.go",
+        "rlpx.go",
+        "server.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/p2p",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common:go_default_library",
+        "//common/mclock:go_default_library",
+        "//crypto:go_default_library",
+        "//crypto/ecies:go_default_library",
+        "//crypto/secp256k1:go_default_library",
+        "//crypto/sha3:go_default_library",
+        "//event:go_default_library",
+        "//log:go_default_library",
+        "//metrics:go_default_library",
+        "//p2p/discover:go_default_library",
+        "//p2p/discv5:go_default_library",
+        "//p2p/nat:go_default_library",
+        "//p2p/netutil:go_default_library",
+        "//rlp:go_default_library",
+        "//vendor/github.com/golang/snappy:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "dial_test.go",
+        "message_test.go",
+        "peer_test.go",
+        "rlpx_test.go",
+        "server_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//crypto:go_default_library",
+        "//crypto/ecies:go_default_library",
+        "//crypto/sha3:go_default_library",
+        "//log:go_default_library",
+        "//p2p/discover:go_default_library",
+        "//p2p/netutil:go_default_library",
+        "//p2p/simulations/pipes:go_default_library",
+        "//rlp:go_default_library",
+        "//vendor/github.com/davecgh/go-spew/spew:go_default_library",
+    ],
+)

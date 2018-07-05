@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "prque.go",
+        "sstack.go",
+    ],
+    importmap = "vendor/gopkg.in/karalabe/cookiejar.v2/collections/prque",
+    importpath = "gopkg.in/karalabe/cookiejar.v2/collections/prque",
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["simulated.go"],
+    importpath = "github.com/ethereum/go-ethereum/accounts/abi/bind/backends",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:go_default_library",
+        "//accounts/abi/bind:go_default_library",
+        "//common:go_default_library",
+        "//common/math:go_default_library",
+        "//consensus/ethash:go_default_library",
+        "//core:go_default_library",
+        "//core/bloombits:go_default_library",
+        "//core/rawdb:go_default_library",
+        "//core/state:go_default_library",
+        "//core/types:go_default_library",
+        "//core/vm:go_default_library",
+        "//eth/filters:go_default_library",
+        "//ethdb:go_default_library",
+        "//event:go_default_library",
+        "//params:go_default_library",
+        "//rpc:go_default_library",
+    ],
+)

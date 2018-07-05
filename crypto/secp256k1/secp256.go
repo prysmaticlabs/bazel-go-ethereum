@@ -26,9 +26,9 @@ package secp256k1
 #define USE_SCALAR_8X32
 #define USE_SCALAR_INV_BUILTIN
 #define NDEBUG
-#include "crypto/secp256k1/libsecp256k1/src/secp256k1.h"
-#include "crypto/secp256k1/libsecp256k1/src/modules/recovery/main_impl.h"
-#include "crypto/secp256k1/ext.h"
+#include "./libsecp256k1/src/secp256k1.h"
+#include "./libsecp256k1/src/modules/recovery/main_impl.h"
+#include "./ext.h"
 
 typedef void (*callbackFunc) (const char* msg, void* data);
 extern void secp256k1GoPanicIllegal(const char* msg, void* data);

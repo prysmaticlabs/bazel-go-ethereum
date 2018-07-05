@@ -40,7 +40,7 @@ import (
 )
 
 /*
-#include "crypto/secp256k1/libsecp256k1/include/secp256k1.h"
+#include "./libsecp256k1/include/secp256k1.h"
 extern int secp256k1_ext_scalar_mul(const secp256k1_context* ctx, const unsigned char *point, const unsigned char *scalar);
 */
 import "C"

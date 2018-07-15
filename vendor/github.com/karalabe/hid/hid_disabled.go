@@ -4,7 +4,8 @@
 // This file is released under the 3-clause BSD license. Note however that Linux
 // support depends on libusb, released under GNU LGPL 2.1 or later.
 
-// +build !darwin,!windows ios !cgo
+// TODO: This file had some build exclusions that will need to be added back after this library is fixed with cgo.
+// See: https://github.com/prysmaticlabs/bazel-go-ethereum/blob/fca5475b926bf46f93865edd725e01107d84b781/vendor/github.com/karalabe/hid/hid_disabled.go#L7
 
 package hid
 

@@ -10,7 +10,7 @@ go_library(
         "version.go",
         "zsyscall_windows.go",
     ],
-    importmap = "vendor/github.com/elastic/gosigar/sys/windows",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/elastic/gosigar/sys/windows",
     importpath = "github.com/elastic/gosigar/sys/windows",
     visibility = ["//visibility:public"],
     deps = select({

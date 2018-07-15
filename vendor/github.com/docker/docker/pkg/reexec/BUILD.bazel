@@ -9,7 +9,7 @@ go_library(
         "command_windows.go",
         "reexec.go",
     ],
-    importmap = "vendor/github.com/docker/docker/pkg/reexec",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/docker/docker/pkg/reexec",
     importpath = "github.com/docker/docker/pkg/reexec",
     visibility = ["//visibility:public"],
     deps = select({

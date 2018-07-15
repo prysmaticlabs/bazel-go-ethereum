@@ -11,7 +11,7 @@ go_library(
         "parse.peg.go",
         "util.go",
     ],
-    importmap = "vendor/github.com/naoina/toml",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/naoina/toml",
     importpath = "github.com/naoina/toml",
     visibility = ["//visibility:public"],
     deps = [

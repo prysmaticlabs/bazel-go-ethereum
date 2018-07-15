@@ -12,7 +12,7 @@ go_library(
         "scope.go",
         "statement.go",
     ],
-    importmap = "vendor/github.com/robertkrimen/otto/parser",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/robertkrimen/otto/parser",
     importpath = "github.com/robertkrimen/otto/parser",
     visibility = ["//visibility:public"],
     deps = [

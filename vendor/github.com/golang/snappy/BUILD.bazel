@@ -13,7 +13,7 @@ go_library(
         "encode_other.go",
         "snappy.go",
     ],
-    importmap = "vendor/github.com/golang/snappy",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/golang/snappy",
     importpath = "github.com/golang/snappy",
     visibility = ["//visibility:public"],
 )

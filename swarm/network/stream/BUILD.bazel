@@ -24,8 +24,10 @@ go_library(
         "//swarm/network/priorityqueue:go_default_library",
         "//swarm/network/stream/intervals:go_default_library",
         "//swarm/pot:go_default_library",
+        "//swarm/spancontext:go_default_library",
         "//swarm/state:go_default_library",
         "//swarm/storage:go_default_library",
+        "//vendor/github.com/opentracing/opentracing-go:go_default_library",
     ],
 )
 

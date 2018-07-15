@@ -6,7 +6,7 @@ go_library(
         "serve.go",
         "tree.go",
     ],
-    importmap = "vendor/bazil.org/fuse/fs",
+    importmap = "github.com/ethereum/go-ethereum/vendor/bazil.org/fuse/fs",
     importpath = "bazil.org/fuse/fs",
     visibility = ["//visibility:public"],
     deps = [

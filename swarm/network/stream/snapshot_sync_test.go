@@ -437,7 +437,7 @@ func runSyncTest(chunkCount int, nodeCount int, live bool, history bool) error {
 			} else {
 				//use the actual localstore
 				lstore := stores[id]
-				_, err = lstore.Get(chunk)
+				_, err = lstore.Get(context.TODO(), chunk)
 			}
 			if err != nil {
 				log.Warn(fmt.Sprintf("Chunk %s NOT found for id %s", chunk, id))
@@ -581,8 +581,12 @@ func uploadFileToSingleNodeStore(id discover.NodeID, chunkCount int) ([]storage.
 	fileStore := storage.NewFileStore(lstore, storage.NewFileStoreParams())
 	var rootAddrs []storage.Address
 	for i := 0; i < chunkCount; i++ {
-		rk, wait, err := fileStore.Store(io.LimitReader(crand.Reader, int64(size)), int64(size), false)
-		wait()
+		ctx := context.TODO()
+		rk, wait, err := fileStore.Store(ctx, io.LimitReader(crand.Reader, int64(size)), int64(size), false)
+		if err != nil {
+			return nil, err
+		}
+		err = wait(ctx)
 		if err != nil {
 			return nil, err
 		}

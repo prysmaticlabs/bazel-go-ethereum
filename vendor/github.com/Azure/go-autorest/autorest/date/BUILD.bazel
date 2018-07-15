@@ -8,7 +8,7 @@ go_library(
         "timerfc1123.go",
         "utility.go",
     ],
-    importmap = "vendor/github.com/Azure/go-autorest/autorest/date",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/Azure/go-autorest/autorest/date",
     importpath = "github.com/Azure/go-autorest/autorest/date",
     visibility = ["//visibility:public"],
 )

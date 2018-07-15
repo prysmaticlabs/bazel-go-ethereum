@@ -57,7 +57,7 @@ go_library(
         "value_primitive.go",
         "value_string.go",
     ],
-    importmap = "vendor/github.com/robertkrimen/otto",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/robertkrimen/otto",
     importpath = "github.com/robertkrimen/otto",
     visibility = ["//visibility:public"],
     deps = [

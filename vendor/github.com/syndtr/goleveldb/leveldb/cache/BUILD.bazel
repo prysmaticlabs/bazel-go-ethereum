@@ -6,7 +6,7 @@ go_library(
         "cache.go",
         "lru.go",
     ],
-    importmap = "vendor/github.com/syndtr/goleveldb/leveldb/cache",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/syndtr/goleveldb/leveldb/cache",
     importpath = "github.com/syndtr/goleveldb/leveldb/cache",
     visibility = ["//visibility:public"],
     deps = ["//vendor/github.com/syndtr/goleveldb/leveldb/util:go_default_library"],

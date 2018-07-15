@@ -6,7 +6,7 @@ go_library(
         "prque.go",
         "sstack.go",
     ],
-    importmap = "vendor/gopkg.in/karalabe/cookiejar.v2/collections/prque",
+    importmap = "github.com/ethereum/go-ethereum/vendor/gopkg.in/karalabe/cookiejar.v2/collections/prque",
     importpath = "gopkg.in/karalabe/cookiejar.v2/collections/prque",
     visibility = ["//visibility:public"],
 )

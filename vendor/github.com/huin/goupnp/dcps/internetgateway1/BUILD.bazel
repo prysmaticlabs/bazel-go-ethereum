@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "go_default_library",
     srcs = ["internetgateway1.go"],
-    importmap = "vendor/github.com/huin/goupnp/dcps/internetgateway1",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/huin/goupnp/dcps/internetgateway1",
     importpath = "github.com/huin/goupnp/dcps/internetgateway1",
     visibility = ["//visibility:public"],
     deps = [

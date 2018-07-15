@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["restriction_manager.go"],
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/uber/jaeger-client-go/internal/baggage",
+    importpath = "github.com/uber/jaeger-client-go/internal/baggage",
+    visibility = ["//vendor/github.com/uber/jaeger-client-go:__subpackages__"],
+)

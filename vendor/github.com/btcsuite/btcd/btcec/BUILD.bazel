@@ -13,7 +13,7 @@ go_library(
         "secp256k1.go",
         "signature.go",
     ],
-    importmap = "vendor/github.com/btcsuite/btcd/btcec",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/btcsuite/btcd/btcec",
     importpath = "github.com/btcsuite/btcd/btcec",
     visibility = ["//visibility:public"],
 )

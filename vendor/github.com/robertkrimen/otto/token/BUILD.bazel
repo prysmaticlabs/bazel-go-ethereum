@@ -6,7 +6,7 @@ go_library(
         "token.go",
         "token_const.go",
     ],
-    importmap = "vendor/github.com/robertkrimen/otto/token",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/robertkrimen/otto/token",
     importpath = "github.com/robertkrimen/otto/token",
     visibility = ["//visibility:public"],
 )

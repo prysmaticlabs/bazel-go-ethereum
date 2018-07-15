@@ -26,8 +26,10 @@ go_library(
         "//swarm/network:go_default_library",
         "//swarm/pss:go_default_library",
         "//swarm/services/swap:go_default_library",
+        "//swarm/spancontext:go_default_library",
         "//swarm/storage:go_default_library",
         "//swarm/storage/mru:go_default_library",
+        "//vendor/github.com/opentracing/opentracing-go:go_default_library",
     ],
 )
 

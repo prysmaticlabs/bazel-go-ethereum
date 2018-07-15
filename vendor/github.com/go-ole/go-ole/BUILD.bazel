@@ -51,7 +51,7 @@ go_library(
         "winrt.go",
         "winrt_doc.go",
     ],
-    importmap = "vendor/github.com/go-ole/go-ole",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/go-ole/go-ole",
     importpath = "github.com/go-ole/go-ole",
     visibility = ["//visibility:public"],
 )

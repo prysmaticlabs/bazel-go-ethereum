@@ -31,7 +31,7 @@ go_library(
         "unmount_linux.go",
         "unmount_std.go",
     ],
-    importmap = "vendor/bazil.org/fuse",
+    importmap = "github.com/ethereum/go-ethereum/vendor/bazil.org/fuse",
     importpath = "bazil.org/fuse",
     visibility = ["//visibility:public"],
 )

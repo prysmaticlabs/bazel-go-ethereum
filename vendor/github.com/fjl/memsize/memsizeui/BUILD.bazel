@@ -6,7 +6,7 @@ go_library(
         "template.go",
         "ui.go",
     ],
-    importmap = "vendor/github.com/fjl/memsize/memsizeui",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/fjl/memsize/memsizeui",
     importpath = "github.com/fjl/memsize/memsizeui",
     visibility = ["//visibility:public"],
     deps = ["//vendor/github.com/fjl/memsize:go_default_library"],

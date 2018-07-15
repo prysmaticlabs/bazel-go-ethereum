@@ -27,7 +27,7 @@ go_library(
         "util.go",
         "version.go",
     ],
-    importmap = "vendor/github.com/syndtr/goleveldb/leveldb",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/syndtr/goleveldb/leveldb",
     importpath = "github.com/syndtr/goleveldb/leveldb",
     visibility = ["//visibility:public"],
     deps = [

@@ -28,7 +28,7 @@ go_library(
         "theme.go",
         "widget.go",
     ],
-    importmap = "vendor/github.com/gizak/termui",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/gizak/termui",
     importpath = "github.com/gizak/termui",
     visibility = ["//visibility:public"],
     deps = [

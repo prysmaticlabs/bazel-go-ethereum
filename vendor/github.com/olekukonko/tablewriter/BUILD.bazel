@@ -8,7 +8,7 @@ go_library(
         "util.go",
         "wrap.go",
     ],
-    importmap = "vendor/github.com/olekukonko/tablewriter",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/olekukonko/tablewriter",
     importpath = "github.com/olekukonko/tablewriter",
     visibility = ["//visibility:public"],
     deps = ["//vendor/github.com/mattn/go-runewidth:go_default_library"],

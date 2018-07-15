@@ -22,7 +22,7 @@ go_library(
         "util.go",
         "version.go",
     ],
-    importmap = "vendor/github.com/Azure/azure-storage-go",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/Azure/azure-storage-go",
     importpath = "github.com/Azure/azure-storage-go",
     visibility = ["//visibility:public"],
     deps = ["//vendor/github.com/Azure/go-autorest/autorest/azure:go_default_library"],

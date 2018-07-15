@@ -16,7 +16,7 @@ go_library(
         "unixmode.go",
         "width.go",
     ],
-    importmap = "vendor/github.com/peterh/liner",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/peterh/liner",
     importpath = "github.com/peterh/liner",
     visibility = ["//visibility:public"],
 )

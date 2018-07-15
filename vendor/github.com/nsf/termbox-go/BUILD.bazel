@@ -21,7 +21,7 @@ go_library(
         "terminfo_builtin.go",
     ],
     cgo = True,
-    importmap = "vendor/github.com/nsf/termbox-go",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/nsf/termbox-go",
     importpath = "github.com/nsf/termbox-go",
     visibility = ["//visibility:public"],
     deps = select({

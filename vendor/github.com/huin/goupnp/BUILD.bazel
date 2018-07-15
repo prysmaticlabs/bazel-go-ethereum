@@ -7,7 +7,7 @@ go_library(
         "goupnp.go",
         "service_client.go",
     ],
-    importmap = "vendor/github.com/huin/goupnp",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/huin/goupnp",
     importpath = "github.com/huin/goupnp",
     visibility = ["//visibility:public"],
     deps = [

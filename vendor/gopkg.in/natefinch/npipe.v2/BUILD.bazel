@@ -8,7 +8,7 @@ go_library(
         "znpipe_windows_386.go",
         "znpipe_windows_amd64.go",
     ],
-    importmap = "vendor/gopkg.in/natefinch/npipe.v2",
+    importmap = "github.com/ethereum/go-ethereum/vendor/gopkg.in/natefinch/npipe.v2",
     importpath = "gopkg.in/natefinch/npipe.v2",
     visibility = ["//visibility:public"],
 )

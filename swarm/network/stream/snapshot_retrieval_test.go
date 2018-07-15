@@ -55,10 +55,10 @@ func initRetrievalTest() {
 	//deliveries for each node
 	deliveries = make(map[discover.NodeID]*Delivery)
 	//global retrieve func
-	getRetrieveFunc = func(id discover.NodeID) func(chunk *storage.Chunk) error {
-		return func(chunk *storage.Chunk) error {
+	getRetrieveFunc = func(id discover.NodeID) func(ctx context.Context, chunk *storage.Chunk) error {
+		return func(ctx context.Context, chunk *storage.Chunk) error {
 			skipCheck := true
-			return deliveries[id].RequestFromPeers(chunk.Addr[:], skipCheck)
+			return deliveries[id].RequestFromPeers(ctx, chunk.Addr[:], skipCheck)
 		}
 	}
 	//registries, map of discover.NodeID to its streamer
@@ -410,9 +410,9 @@ func runFileRetrievalTest(nodeCount int) error {
 		fileStore := registries[id].fileStore
 		//check all chunks
 		for i, hash := range conf.hashes {
-			reader, _ := fileStore.Retrieve(hash)
+			reader, _ := fileStore.Retrieve(context.TODO(), hash)
 			//check that we can read the file size and that it corresponds to the generated file size
-			if s, err := reader.Size(nil); err != nil || s != int64(len(randomFiles[i])) {
+			if s, err := reader.Size(context.TODO(), nil); err != nil || s != int64(len(randomFiles[i])) {
 				allSuccess = false
 				log.Warn("Retrieve error", "err", err, "hash", hash, "nodeId", id)
 			} else {
@@ -697,9 +697,9 @@ func runRetrievalTest(chunkCount int, nodeCount int) error {
 		fileStore := registries[id].fileStore
 		//check all chunks
 		for _, chnk := range conf.hashes {
-			reader, _ := fileStore.Retrieve(chnk)
+			reader, _ := fileStore.Retrieve(context.TODO(), chnk)
 			//assuming that reading the Size of the chunk is enough to know we found it
-			if s, err := reader.Size(nil); err != nil || s != chunkSize {
+			if s, err := reader.Size(context.TODO(), nil); err != nil || s != chunkSize {
 				allSuccess = false
 				log.Warn("Retrieve error", "err", err, "chunk", chnk, "nodeId", id)
 			} else {
@@ -765,9 +765,13 @@ func uploadFilesToNodes(nodes []*simulations.Node) ([]storage.Address, []string,
 			return nil, nil, err
 		}
 		//store it (upload it) on the FileStore
-		rk, wait, err := fileStore.Store(strings.NewReader(rfiles[i]), int64(len(rfiles[i])), false)
+		ctx := context.TODO()
+		rk, wait, err := fileStore.Store(ctx, strings.NewReader(rfiles[i]), int64(len(rfiles[i])), false)
 		log.Debug("Uploaded random string file to node")
-		wait()
+		if err != nil {
+			return nil, nil, err
+		}
+		err = wait(ctx)
 		if err != nil {
 			return nil, nil, err
 		}

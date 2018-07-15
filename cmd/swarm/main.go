@@ -43,6 +43,7 @@ import (
 	"github.com/ethereum/go-ethereum/swarm"
 	bzzapi "github.com/ethereum/go-ethereum/swarm/api"
 	swarmmetrics "github.com/ethereum/go-ethereum/swarm/metrics"
+	"github.com/ethereum/go-ethereum/swarm/tracing"
 
 	"gopkg.in/urfave/cli.v1"
 )
@@ -143,7 +144,7 @@ var (
 	}
 	SwarmWantManifestFlag = cli.BoolTFlag{
 		Name:  "manifest",
-		Usage: "Automatic manifest upload",
+		Usage: "Automatic manifest upload (default true)",
 	}
 	SwarmUploadDefaultPath = cli.StringFlag{
 		Name:  "defaultpath",
@@ -155,7 +156,7 @@ var (
 	}
 	SwarmUploadMimeType = cli.StringFlag{
 		Name:  "mime",
-		Usage: "force mime type",
+		Usage: "Manually specify MIME type",
 	}
 	SwarmEncryptedFlag = cli.BoolFlag{
 		Name:  "encrypt",
@@ -430,12 +431,14 @@ pv(1) tool to get a progress bar:
 	app.Flags = append(app.Flags, rpcFlags...)
 	app.Flags = append(app.Flags, debug.Flags...)
 	app.Flags = append(app.Flags, swarmmetrics.Flags...)
+	app.Flags = append(app.Flags, tracing.Flags...)
 	app.Before = func(ctx *cli.Context) error {
 		runtime.GOMAXPROCS(runtime.NumCPU())
-		if err := debug.Setup(ctx); err != nil {
+		if err := debug.Setup(ctx, ""); err != nil {
 			return err
 		}
 		swarmmetrics.Setup(ctx)
+		tracing.Setup(ctx)
 		return nil
 	}
 	app.After = func(ctx *cli.Context) error {

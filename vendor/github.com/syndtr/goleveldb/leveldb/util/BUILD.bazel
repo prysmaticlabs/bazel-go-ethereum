@@ -10,7 +10,7 @@ go_library(
         "range.go",
         "util.go",
     ],
-    importmap = "vendor/github.com/syndtr/goleveldb/leveldb/util",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/syndtr/goleveldb/leveldb/util",
     importpath = "github.com/syndtr/goleveldb/leveldb/util",
     visibility = ["//visibility:public"],
 )

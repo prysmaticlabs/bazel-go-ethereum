@@ -9,7 +9,7 @@ go_library(
         "msync_netbsd.go",
         "msync_unix.go",
     ],
-    importmap = "vendor/github.com/edsrzf/mmap-go",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/edsrzf/mmap-go",
     importpath = "github.com/edsrzf/mmap-go",
     visibility = ["//visibility:public"],
 )

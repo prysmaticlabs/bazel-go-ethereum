@@ -6,7 +6,7 @@ go_library(
         "color.go",
         "doc.go",
     ],
-    importmap = "vendor/github.com/fatih/color",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/fatih/color",
     importpath = "github.com/fatih/color",
     visibility = ["//visibility:public"],
     deps = [

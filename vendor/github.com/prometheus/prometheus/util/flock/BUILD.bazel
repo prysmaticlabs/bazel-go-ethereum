@@ -9,7 +9,7 @@ go_library(
         "flock_unix.go",
         "flock_windows.go",
     ],
-    importmap = "vendor/github.com/prometheus/prometheus/util/flock",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/prometheus/prometheus/util/flock",
     importpath = "github.com/prometheus/prometheus/util/flock",
     visibility = ["//visibility:public"],
 )

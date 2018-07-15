@@ -14,7 +14,7 @@ go_library(
         "funcs.go",
         "help.go",
     ],
-    importmap = "vendor/gopkg.in/urfave/cli.v1",
+    importmap = "github.com/ethereum/go-ethereum/vendor/gopkg.in/urfave/cli.v1",
     importpath = "gopkg.in/urfave/cli.v1",
     visibility = ["//visibility:public"],
 )

@@ -7,7 +7,7 @@ go_library(
         "stack.go",
         "ui.go",
     ],
-    importmap = "vendor/github.com/maruel/panicparse/stack",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/maruel/panicparse/stack",
     importpath = "github.com/maruel/panicparse/stack",
     visibility = ["//visibility:public"],
 )

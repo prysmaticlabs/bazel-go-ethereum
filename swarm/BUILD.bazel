@@ -31,6 +31,7 @@ go_library(
         "//swarm/storage:go_default_library",
         "//swarm/storage/mock:go_default_library",
         "//swarm/storage/mru:go_default_library",
+        "//swarm/tracing:go_default_library",
     ],
 )
 

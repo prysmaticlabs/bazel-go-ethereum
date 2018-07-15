@@ -7,7 +7,7 @@ go_library(
         "runewidth_posix.go",
         "runewidth_windows.go",
     ],
-    importmap = "vendor/github.com/mattn/go-runewidth",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/mattn/go-runewidth",
     importpath = "github.com/mattn/go-runewidth",
     visibility = ["//visibility:public"],
 )

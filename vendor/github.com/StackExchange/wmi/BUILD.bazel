@@ -6,7 +6,7 @@ go_library(
         "swbemservices.go",
         "wmi.go",
     ],
-    importmap = "vendor/github.com/StackExchange/wmi",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/StackExchange/wmi",
     importpath = "github.com/StackExchange/wmi",
     visibility = ["//visibility:public"],
     deps = select({

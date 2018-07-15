@@ -9,6 +9,10 @@ go_library(
         "//log:go_default_library",
         "//metrics:go_default_library",
         "//p2p:go_default_library",
+        "//rlp:go_default_library",
+        "//swarm/spancontext:go_default_library",
+        "//swarm/tracing:go_default_library",
+        "//vendor/github.com/opentracing/opentracing-go:go_default_library",
     ],
 )
 

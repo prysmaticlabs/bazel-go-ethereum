@@ -17,7 +17,7 @@ go_library(
         "sigar_windows.go",
     ],
     cgo = True,
-    importmap = "vendor/github.com/elastic/gosigar",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/elastic/gosigar",
     importpath = "github.com/elastic/gosigar",
     visibility = ["//visibility:public"],
     deps = select({

@@ -6,7 +6,7 @@ go_library(
         "da.go",
         "strings.go",
     ],
-    importmap = "vendor/github.com/naoina/go-stringutil",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/naoina/go-stringutil",
     importpath = "github.com/naoina/go-stringutil",
     visibility = ["//visibility:public"],
 )

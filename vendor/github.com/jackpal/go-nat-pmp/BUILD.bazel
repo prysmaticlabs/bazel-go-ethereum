@@ -7,7 +7,7 @@ go_library(
         "network.go",
         "recorder.go",
     ],
-    importmap = "vendor/github.com/jackpal/go-nat-pmp",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/jackpal/go-nat-pmp",
     importpath = "github.com/jackpal/go-nat-pmp",
     visibility = ["//visibility:public"],
 )

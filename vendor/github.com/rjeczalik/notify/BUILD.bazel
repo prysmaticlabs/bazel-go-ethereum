@@ -41,7 +41,7 @@ go_library(
         ],
         "//conditions:default": [],
     }),
-    importmap = "vendor/github.com/rjeczalik/notify",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/rjeczalik/notify",
     importpath = "github.com/rjeczalik/notify",
     visibility = ["//visibility:public"],
     deps = select({

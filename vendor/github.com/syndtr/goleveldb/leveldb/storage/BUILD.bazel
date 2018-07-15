@@ -12,7 +12,7 @@ go_library(
         "mem_storage.go",
         "storage.go",
     ],
-    importmap = "vendor/github.com/syndtr/goleveldb/leveldb/storage",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/syndtr/goleveldb/leveldb/storage",
     importpath = "github.com/syndtr/goleveldb/leveldb/storage",
     visibility = ["//visibility:public"],
 )

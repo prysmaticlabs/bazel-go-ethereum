@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "http_json.go",
+        "localip.go",
+        "rand.go",
+        "rate_limiter.go",
+        "udp_client.go",
+        "utils.go",
+    ],
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/uber/jaeger-client-go/utils",
+    importpath = "github.com/uber/jaeger-client-go/utils",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/uber/jaeger-client-go/thrift:go_default_library",
+        "//vendor/github.com/uber/jaeger-client-go/thrift-gen/agent:go_default_library",
+        "//vendor/github.com/uber/jaeger-client-go/thrift-gen/jaeger:go_default_library",
+        "//vendor/github.com/uber/jaeger-client-go/thrift-gen/zipkincore:go_default_library",
+    ],
+)

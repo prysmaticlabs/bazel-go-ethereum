@@ -3,7 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "go_default_library",
     srcs = ["file.go"],
-    importmap = "vendor/github.com/robertkrimen/otto/file",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/robertkrimen/otto/file",
     importpath = "github.com/robertkrimen/otto/file",
     visibility = ["//visibility:public"],
     deps = ["//vendor/gopkg.in/sourcemap.v1:go_default_library"],

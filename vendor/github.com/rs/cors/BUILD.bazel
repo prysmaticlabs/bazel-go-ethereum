@@ -6,7 +6,7 @@ go_library(
         "cors.go",
         "utils.go",
     ],
-    importmap = "vendor/github.com/rs/cors",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/rs/cors",
     importpath = "github.com/rs/cors",
     visibility = ["//visibility:public"],
     deps = [

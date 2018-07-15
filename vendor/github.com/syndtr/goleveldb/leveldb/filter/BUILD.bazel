@@ -6,7 +6,7 @@ go_library(
         "bloom.go",
         "filter.go",
     ],
-    importmap = "vendor/github.com/syndtr/goleveldb/leveldb/filter",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/syndtr/goleveldb/leveldb/filter",
     importpath = "github.com/syndtr/goleveldb/leveldb/filter",
     visibility = ["//visibility:public"],
     deps = ["//vendor/github.com/syndtr/goleveldb/leveldb/util:go_default_library"],

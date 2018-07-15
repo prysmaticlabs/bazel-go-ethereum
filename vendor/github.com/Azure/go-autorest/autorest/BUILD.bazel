@@ -12,7 +12,7 @@ go_library(
         "utility.go",
         "version.go",
     ],
-    importmap = "vendor/github.com/Azure/go-autorest/autorest",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/Azure/go-autorest/autorest",
     importpath = "github.com/Azure/go-autorest/autorest",
     visibility = ["//visibility:public"],
 )

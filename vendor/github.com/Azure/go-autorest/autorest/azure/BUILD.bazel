@@ -11,7 +11,7 @@ go_library(
         "persist.go",
         "token.go",
     ],
-    importmap = "vendor/github.com/Azure/go-autorest/autorest/azure",
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/Azure/go-autorest/autorest/azure",
     importpath = "github.com/Azure/go-autorest/autorest/azure",
     visibility = ["//visibility:public"],
     deps = [

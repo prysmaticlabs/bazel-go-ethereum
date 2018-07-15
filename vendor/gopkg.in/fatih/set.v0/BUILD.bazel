@@ -7,7 +7,7 @@ go_library(
         "set_nots.go",
         "set_ts.go",
     ],
-    importmap = "vendor/gopkg.in/fatih/set.v0",
+    importmap = "github.com/ethereum/go-ethereum/vendor/gopkg.in/fatih/set.v0",
     importpath = "gopkg.in/fatih/set.v0",
     visibility = ["//visibility:public"],
 )

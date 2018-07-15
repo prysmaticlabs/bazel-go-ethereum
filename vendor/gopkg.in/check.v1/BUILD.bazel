@@ -11,7 +11,7 @@ go_library(
         "reporter.go",
         "run.go",
     ],
-    importmap = "vendor/gopkg.in/check.v1",
+    importmap = "github.com/ethereum/go-ethereum/vendor/gopkg.in/check.v1",
     importpath = "gopkg.in/check.v1",
     visibility = ["//visibility:public"],
 )

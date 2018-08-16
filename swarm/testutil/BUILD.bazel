@@ -6,7 +6,6 @@ go_library(
     importpath = "github.com/ethereum/go-ethereum/swarm/testutil",
     visibility = ["//visibility:public"],
     deps = [
-        "//core/types:go_default_library",
         "//swarm/api:go_default_library",
         "//swarm/storage:go_default_library",
         "//swarm/storage/mru:go_default_library",

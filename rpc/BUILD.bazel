@@ -25,9 +25,9 @@ go_library(
         "//common/hexutil:go_default_library",
         "//log:go_default_library",
         "//p2p/netutil:go_default_library",
+        "//vendor/github.com/deckarep/golang-set:go_default_library",
         "//vendor/github.com/rs/cors:go_default_library",
         "//vendor/golang.org/x/net/websocket:go_default_library",
-        "//vendor/gopkg.in/fatih/set.v0:go_default_library",
     ] + select({
         "@io_bazel_rules_go//go/platform:windows": [
             "//vendor/gopkg.in/natefinch/npipe.v2:go_default_library",

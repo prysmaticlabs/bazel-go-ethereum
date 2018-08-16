@@ -52,7 +52,7 @@ go_library(
         "//rlp:go_default_library",
         "//rpc:go_default_library",
         "//trie:go_default_library",
-        "//vendor/gopkg.in/fatih/set.v0:go_default_library",
+        "//vendor/github.com/deckarep/golang-set:go_default_library",
     ],
 )
 

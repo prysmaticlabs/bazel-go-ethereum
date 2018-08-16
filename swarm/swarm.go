@@ -85,14 +85,12 @@ type Swarm struct {
 type SwarmAPI struct {
 	Api     *api.API
 	Backend chequebook.Backend
-	PrvKey  *ecdsa.PrivateKey
 }
 
 func (self *Swarm) API() *SwarmAPI {
 	return &SwarmAPI{
 		Api:     self.api,
 		Backend: self.backend,
-		PrvKey:  self.privateKey,
 	}
 }
 
@@ -143,6 +141,7 @@ func NewSwarm(config *api.Config, mockStore *mock.NodeStore) (self *Swarm, err e
 		OverlayAddr:  addr.OAddr,
 		UnderlayAddr: addr.UAddr,
 		HiveParams:   config.HiveParams,
+		LightNode:    config.LightNodeEnabled,
 	}
 
 	stateStore, err := state.NewDBStore(filepath.Join(config.Path, "state-store.db"))
@@ -192,37 +191,15 @@ func NewSwarm(config *api.Config, mockStore *mock.NodeStore) (self *Swarm, err e
 	self.fileStore = storage.NewFileStore(netStore, self.config.FileStoreParams)
 
 	var resourceHandler *mru.Handler
-	rhparams := &mru.HandlerParams{
-		// TODO: config parameter to set limits
-		QueryMaxPeriods: &mru.LookupParams{
-			Limit: false,
-		},
-		Signer: &mru.GenericSigner{
-			PrivKey: self.privateKey,
-		},
-	}
-	if resolver != nil {
-		resolver.SetNameHash(ens.EnsNode)
-		// Set HeaderGetter and OwnerValidator interfaces to resolver only if it is not nil.
-		rhparams.HeaderGetter = resolver
-		rhparams.OwnerValidator = resolver
-	} else {
-		log.Warn("No ETH API specified, resource updates will use block height approximation")
-		// TODO: blockestimator should use saved values derived from last time ethclient was connected
-		rhparams.HeaderGetter = mru.NewBlockEstimator()
-	}
-	resourceHandler, err = mru.NewHandler(rhparams)
-	if err != nil {
-		return nil, err
-	}
+	rhparams := &mru.HandlerParams{}
+
+	resourceHandler = mru.NewHandler(rhparams)
 	resourceHandler.SetStore(netStore)
 
-	var validators []storage.ChunkValidator
-	validators = append(validators, storage.NewContentAddressValidator(storage.MakeHashFunc(storage.DefaultHash)))
-	if resourceHandler != nil {
-		validators = append(validators, resourceHandler)
+	self.lstore.Validators = []storage.ChunkValidator{
+		storage.NewContentAddressValidator(storage.MakeHashFunc(storage.DefaultHash)),
+		resourceHandler,
 	}
-	self.lstore.Validators = validators
 
 	// setup local store
 	log.Debug(fmt.Sprintf("Set up local storage"))
@@ -238,7 +215,7 @@ func NewSwarm(config *api.Config, mockStore *mock.NodeStore) (self *Swarm, err e
 		pss.SetHandshakeController(self.ps, pss.NewHandshakeParams())
 	}
 
-	self.api = api.NewAPI(self.fileStore, self.dns, resourceHandler)
+	self.api = api.NewAPI(self.fileStore, self.dns, resourceHandler, self.privateKey)
 	// Manifests for Smart Hosting
 	log.Debug(fmt.Sprintf("-> Web3 virtual server API"))
 

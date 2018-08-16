@@ -12,7 +12,7 @@ go_library(
     importpath = "github.com/ethereum/go-ethereum/internal/build",
     visibility = ["//:__subpackages__"],
     deps = [
-        "//vendor/github.com/Azure/azure-storage-go:go_default_library",
+        "//vendor/github.com/Azure/azure-storage-blob-go/2018-03-28/azblob:go_default_library",
         "//vendor/golang.org/x/crypto/openpgp:go_default_library",
     ],
 )

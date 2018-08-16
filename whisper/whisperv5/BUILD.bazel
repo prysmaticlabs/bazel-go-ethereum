@@ -29,10 +29,10 @@ go_library(
         "//p2p/discover:go_default_library",
         "//rlp:go_default_library",
         "//rpc:go_default_library",
+        "//vendor/github.com/deckarep/golang-set:go_default_library",
         "//vendor/github.com/syndtr/goleveldb/leveldb/errors:go_default_library",
         "//vendor/golang.org/x/crypto/pbkdf2:go_default_library",
         "//vendor/golang.org/x/sync/syncmap:go_default_library",
-        "//vendor/gopkg.in/fatih/set.v0:go_default_library",
     ],
 )
 

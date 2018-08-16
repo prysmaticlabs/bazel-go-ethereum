@@ -21,6 +21,9 @@ go_library(
 
 go_test(
     name = "go_default_test",
-    srcs = ["hd_test.go"],
+    srcs = [
+        "hd_test.go",
+        "url_test.go",
+    ],
     embed = [":go_default_library"],
 )

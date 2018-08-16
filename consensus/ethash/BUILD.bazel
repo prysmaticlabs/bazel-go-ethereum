@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "algorithm.go",
+        "api.go",
         "consensus.go",
         "ethash.go",
         "sealer.go",
@@ -13,6 +14,7 @@ go_library(
     deps = [
         "//common:go_default_library",
         "//common/bitutil:go_default_library",
+        "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
         "//consensus:go_default_library",
         "//consensus/misc:go_default_library",
@@ -24,9 +26,9 @@ go_library(
         "//metrics:go_default_library",
         "//params:go_default_library",
         "//rpc:go_default_library",
+        "//vendor/github.com/deckarep/golang-set:go_default_library",
         "//vendor/github.com/edsrzf/mmap-go:go_default_library",
         "//vendor/github.com/hashicorp/golang-lru/simplelru:go_default_library",
-        "//vendor/gopkg.in/fatih/set.v0:go_default_library",
     ],
 )
 
@@ -36,6 +38,7 @@ go_test(
         "algorithm_test.go",
         "consensus_test.go",
         "ethash_test.go",
+        "sealer_test.go",
     ],
     embed = [":go_default_library"],
     deps = [

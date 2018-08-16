@@ -9,6 +9,7 @@ go_library(
         "distributor.go",
         "execqueue.go",
         "fetcher.go",
+        "freeclient.go",
         "handler.go",
         "metrics.go",
         "odr.go",
@@ -31,6 +32,7 @@ go_library(
         "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
         "//common/mclock:go_default_library",
+        "//common/prque:go_default_library",
         "//consensus:go_default_library",
         "//core:go_default_library",
         "//core/bloombits:go_default_library",
@@ -67,6 +69,7 @@ go_test(
     srcs = [
         "distributor_test.go",
         "execqueue_test.go",
+        "freeclient_test.go",
         "handler_test.go",
         "helper_test.go",
         "odr_test.go",
@@ -77,6 +80,7 @@ go_test(
     deps = [
         "//common:go_default_library",
         "//common/math:go_default_library",
+        "//common/mclock:go_default_library",
         "//consensus/ethash:go_default_library",
         "//core:go_default_library",
         "//core/rawdb:go_default_library",

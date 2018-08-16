@@ -54,6 +54,5 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//common/math:go_default_library",
-        "//crypto/randentropy:go_default_library",
     ],
 )

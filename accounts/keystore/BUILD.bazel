@@ -23,13 +23,12 @@ go_library(
         "//common/math:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",
-        "//crypto/randentropy:go_default_library",
         "//event:go_default_library",
         "//log:go_default_library",
+        "//vendor/github.com/deckarep/golang-set:go_default_library",
         "//vendor/github.com/pborman/uuid:go_default_library",
         "//vendor/golang.org/x/crypto/pbkdf2:go_default_library",
         "//vendor/golang.org/x/crypto/scrypt:go_default_library",
-        "//vendor/gopkg.in/fatih/set.v0:go_default_library",
     ] + select({
         "@io_bazel_rules_go//go/platform:darwin_386": [
             "//vendor/github.com/rjeczalik/notify:go_default_library",

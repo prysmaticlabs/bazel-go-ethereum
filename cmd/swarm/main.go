@@ -39,11 +39,11 @@ import (
 	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
-	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/swarm"
 	bzzapi "github.com/ethereum/go-ethereum/swarm/api"
 	swarmmetrics "github.com/ethereum/go-ethereum/swarm/metrics"
 	"github.com/ethereum/go-ethereum/swarm/tracing"
+	sv "github.com/ethereum/go-ethereum/swarm/version"
 
 	"gopkg.in/urfave/cli.v1"
 )
@@ -123,6 +123,11 @@ var (
 		Usage:  "Duration for sync subscriptions update after no new peers are added (default 15s)",
 		EnvVar: SWARM_ENV_SYNC_UPDATE_DELAY,
 	}
+	SwarmLightNodeEnabled = cli.BoolFlag{
+		Name:   "lightnode",
+		Usage:  "Enable Swarm LightNode (default false)",
+		EnvVar: SWARM_ENV_LIGHT_NODE_ENABLE,
+	}
 	SwarmDeliverySkipCheckFlag = cli.BoolFlag{
 		Name:   "delivery-skip-check",
 		Usage:  "Skip chunk delivery check (default false)",
@@ -150,6 +155,14 @@ var (
 		Name:  "defaultpath",
 		Usage: "path to file served for empty url path (none)",
 	}
+	SwarmAccessGrantKeyFlag = cli.StringFlag{
+		Name:  "grant-key",
+		Usage: "grants a given public key access to an ACT",
+	}
+	SwarmAccessGrantKeysFlag = cli.StringFlag{
+		Name:  "grant-keys",
+		Usage: "grants a given list of public keys in the following file (separated by line breaks) access to an ACT",
+	}
 	SwarmUpFromStdinFlag = cli.BoolFlag{
 		Name:  "stdin",
 		Usage: "reads data to be uploaded from stdin",
@@ -161,6 +174,15 @@ var (
 	SwarmEncryptedFlag = cli.BoolFlag{
 		Name:  "encrypt",
 		Usage: "use encrypted upload",
+	}
+	SwarmAccessPasswordFlag = cli.StringFlag{
+		Name:   "password",
+		Usage:  "Password",
+		EnvVar: SWARM_ACCESS_PASSWORD,
+	}
+	SwarmDryRunFlag = cli.BoolFlag{
+		Name:  "dry-run",
+		Usage: "dry-run",
 	}
 	CorsStringFlag = cli.StringFlag{
 		Name:   "corsdomain",
@@ -182,6 +204,18 @@ var (
 		Usage:  "Number of recent chunks cached in memory (default 5000)",
 		EnvVar: SWARM_ENV_STORE_CACHE_CAPACITY,
 	}
+	SwarmResourceMultihashFlag = cli.BoolFlag{
+		Name:  "multihash",
+		Usage: "Determines how to interpret data for a resource update. If not present, data will be interpreted as raw, literal data that will be included in the resource",
+	}
+	SwarmResourceNameFlag = cli.StringFlag{
+		Name:  "name",
+		Usage: "User-defined name for the new resource",
+	}
+	SwarmResourceDataOnCreateFlag = cli.StringFlag{
+		Name:  "data",
+		Usage: "Initializes the resource with the given hex-encoded data. Data must be prefixed by 0x",
+	}
 )
 
 //declare a few constant error messages, useful for later error check comparisons in test
@@ -190,12 +224,21 @@ var (
 	SWARM_ERR_SWAP_SET_NO_API = "SWAP is enabled but --swap-api is not set"
 )
 
+// this help command gets added to any subcommand that does not define it explicitly
+var defaultSubcommandHelp = cli.Command{
+	Action:             func(ctx *cli.Context) { cli.ShowCommandHelpAndExit(ctx, "", 1) },
+	CustomHelpTemplate: helpTemplate,
+	Name:               "help",
+	Usage:              "shows this help",
+	Hidden:             true,
+}
+
 var defaultNodeConfig = node.DefaultConfig
 
 // This init function sets defaults so cmd/swarm can run alongside geth.
 func init() {
 	defaultNodeConfig.Name = clientIdentifier
-	defaultNodeConfig.Version = params.VersionWithCommit(gitCommit)
+	defaultNodeConfig.Version = sv.VersionWithCommit(gitCommit)
 	defaultNodeConfig.P2P.ListenAddr = ":30399"
 	defaultNodeConfig.IPCPath = "bzzd.ipc"
 	// Set flag defaults for --help display.
@@ -227,6 +270,96 @@ func init() {
 			Description:        "uploads a file or directory to swarm using the HTTP API and prints the root hash",
 		},
 		{
+			CustomHelpTemplate: helpTemplate,
+			Name:               "access",
+			Usage:              "encrypts a reference and embeds it into a root manifest",
+			ArgsUsage:          "<ref>",
+			Description:        "encrypts a reference and embeds it into a root manifest",
+			Subcommands: []cli.Command{
+				{
+					CustomHelpTemplate: helpTemplate,
+					Name:               "new",
+					Usage:              "encrypts a reference and embeds it into a root manifest",
+					ArgsUsage:          "<ref>",
+					Description:        "encrypts a reference and embeds it into a root access manifest and prints the resulting manifest",
+					Subcommands: []cli.Command{
+						{
+							Action:             accessNewPass,
+							CustomHelpTemplate: helpTemplate,
+							Flags: []cli.Flag{
+								utils.PasswordFileFlag,
+								SwarmDryRunFlag,
+							},
+							Name:        "pass",
+							Usage:       "encrypts a reference with a password and embeds it into a root manifest",
+							ArgsUsage:   "<ref>",
+							Description: "encrypts a reference and embeds it into a root access manifest and prints the resulting manifest",
+						},
+						{
+							Action:             accessNewPK,
+							CustomHelpTemplate: helpTemplate,
+							Flags: []cli.Flag{
+								utils.PasswordFileFlag,
+								SwarmDryRunFlag,
+								SwarmAccessGrantKeyFlag,
+							},
+							Name:        "pk",
+							Usage:       "encrypts a reference with the node's private key and a given grantee's public key and embeds it into a root manifest",
+							ArgsUsage:   "<ref>",
+							Description: "encrypts a reference and embeds it into a root access manifest and prints the resulting manifest",
+						},
+						{
+							Action:             accessNewACT,
+							CustomHelpTemplate: helpTemplate,
+							Flags: []cli.Flag{
+								SwarmAccessGrantKeysFlag,
+								SwarmDryRunFlag,
+							},
+							Name:        "act",
+							Usage:       "encrypts a reference with the node's private key and a given grantee's public key and embeds it into a root manifest",
+							ArgsUsage:   "<ref>",
+							Description: "encrypts a reference and embeds it into a root access manifest and prints the resulting manifest",
+						},
+					},
+				},
+			},
+		},
+		{
+			CustomHelpTemplate: helpTemplate,
+			Name:               "resource",
+			Usage:              "(Advanced) Create and update Mutable Resources",
+			ArgsUsage:          "<create|update|info>",
+			Description:        "Works with Mutable Resource Updates",
+			Subcommands: []cli.Command{
+				{
+					Action:             resourceCreate,
+					CustomHelpTemplate: helpTemplate,
+					Name:               "create",
+					Usage:              "creates a new Mutable Resource",
+					ArgsUsage:          "<frequency>",
+					Description:        "creates a new Mutable Resource",
+					Flags:              []cli.Flag{SwarmResourceNameFlag, SwarmResourceDataOnCreateFlag, SwarmResourceMultihashFlag},
+				},
+				{
+					Action:             resourceUpdate,
+					CustomHelpTemplate: helpTemplate,
+					Name:               "update",
+					Usage:              "updates the content of an existing Mutable Resource",
+					ArgsUsage:          "<Manifest Address or ENS domain> <0x Hex data>",
+					Description:        "updates the content of an existing Mutable Resource",
+					Flags:              []cli.Flag{SwarmResourceMultihashFlag},
+				},
+				{
+					Action:             resourceInfo,
+					CustomHelpTemplate: helpTemplate,
+					Name:               "info",
+					Usage:              "obtains information about an existing Mutable Resource",
+					ArgsUsage:          "<Manifest Address or ENS domain>",
+					Description:        "obtains information about an existing Mutable Resource",
+				},
+			},
+		},
+		{
 			Action:             list,
 			CustomHelpTemplate: helpTemplate,
 			Name:               "ls",
@@ -243,16 +376,13 @@ func init() {
 			Description:        "Prints the swarm hash of file or directory",
 		},
 		{
-			Action:    download,
-			Name:      "down",
-			Flags:     []cli.Flag{SwarmRecursiveFlag},
-			Usage:     "downloads a swarm manifest or a file inside a manifest",
-			ArgsUsage: " <uri> [<dir>]",
-			Description: `
-Downloads a swarm bzz uri to the given dir. When no dir is provided, working directory is assumed. --recursive flag is expected when downloading a manifest with multiple entries.
-`,
+			Action:      download,
+			Name:        "down",
+			Flags:       []cli.Flag{SwarmRecursiveFlag, SwarmAccessPasswordFlag},
+			Usage:       "downloads a swarm manifest or a file inside a manifest",
+			ArgsUsage:   " <uri> [<dir>]",
+			Description: `Downloads a swarm bzz uri to the given dir. When no dir is provided, working directory is assumed. --recursive flag is expected when downloading a manifest with multiple entries.`,
 		},
-
 		{
 			Name:               "manifest",
 			CustomHelpTemplate: helpTemplate,
@@ -261,23 +391,23 @@ Downloads a swarm bzz uri to the given dir. When no dir is provided, working dir
 			Description:        "Updates a MANIFEST by adding/removing/updating the hash of a path.\nCOMMAND could be: add, update, remove",
 			Subcommands: []cli.Command{
 				{
-					Action:             add,
+					Action:             manifestAdd,
 					CustomHelpTemplate: helpTemplate,
 					Name:               "add",
 					Usage:              "add a new path to the manifest",
-					ArgsUsage:          "<MANIFEST> <path> <hash> [<content-type>]",
+					ArgsUsage:          "<MANIFEST> <path> <hash>",
 					Description:        "Adds a new path to the manifest",
 				},
 				{
-					Action:             update,
+					Action:             manifestUpdate,
 					CustomHelpTemplate: helpTemplate,
 					Name:               "update",
 					Usage:              "update the hash for an already existing path in the manifest",
-					ArgsUsage:          "<MANIFEST> <path> <newhash> [<newcontent-type>]",
+					ArgsUsage:          "<MANIFEST> <path> <newhash>",
 					Description:        "Update the hash for an already existing path in the manifest",
 				},
 				{
-					Action:             remove,
+					Action:             manifestRemove,
 					CustomHelpTemplate: helpTemplate,
 					Name:               "remove",
 					Usage:              "removes a path from the manifest",
@@ -352,16 +482,14 @@ pv(1) tool to get a progress bar:
 					Name:               "import",
 					Usage:              "import chunks from a tar archive into a local chunk database (use - to read from stdin)",
 					ArgsUsage:          "<chunkdb> <file>",
-					Description: `
-Import chunks from a tar archive into a local chunk database (use - to read from stdin).
+					Description: `Import chunks from a tar archive into a local chunk database (use - to read from stdin).
 
     swarm db import ~/.ethereum/swarm/bzz-KEY/chunks chunks.tar
 
 The import may be quite large, consider piping the input through the Unix
 pv(1) tool to get a progress bar:
 
-    pv chunks.tar | swarm db import ~/.ethereum/swarm/bzz-KEY/chunks -
-`,
+    pv chunks.tar | swarm db import ~/.ethereum/swarm/bzz-KEY/chunks -`,
 				},
 				{
 					Action:             dbClean,
@@ -377,6 +505,11 @@ pv(1) tool to get a progress bar:
 		// See config.go
 		DumpConfigCommand,
 	}
+
+	// append a hidden help subcommand to all commands that have subcommands
+	// if a help command was already defined above, that one will take precedence.
+	addDefaultHelpSubcommands(app.Commands)
+
 	sort.Sort(cli.CommandsByName(app.Commands))
 
 	app.Flags = []cli.Flag{
@@ -403,6 +536,7 @@ pv(1) tool to get a progress bar:
 		SwarmSwapAPIFlag,
 		SwarmSyncDisabledFlag,
 		SwarmSyncUpdateDelay,
+		SwarmLightNodeEnabled,
 		SwarmDeliverySkipCheckFlag,
 		SwarmListenAddrFlag,
 		SwarmPortFlag,
@@ -455,7 +589,8 @@ func main() {
 }
 
 func version(ctx *cli.Context) error {
-	fmt.Println("Version:", SWARM_VERSION)
+	fmt.Println(strings.Title(clientIdentifier))
+	fmt.Println("Version:", sv.VersionWithMeta)
 	if gitCommit != "" {
 		fmt.Println("Git Commit:", gitCommit)
 	}
@@ -467,6 +602,7 @@ func version(ctx *cli.Context) error {
 func bzzd(ctx *cli.Context) error {
 	//build a valid bzzapi.Config from all available sources:
 	//default config, file config, command line and env vars
+
 	bzzconfig, err := buildConfig(ctx)
 	if err != nil {
 		utils.Fatalf("unable to configure swarm: %v", err)
@@ -489,6 +625,7 @@ func bzzd(ctx *cli.Context) error {
 	if err != nil {
 		utils.Fatalf("can't create node: %v", err)
 	}
+
 	//a few steps need to be done after the config phase is completed,
 	//due to overriding behavior
 	initSwarmNode(bzzconfig, stack, ctx)
@@ -547,6 +684,26 @@ func getAccount(bzzaccount string, ctx *cli.Context, stack *node.Node) *ecdsa.Pr
 	ks := am.Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
 	return decryptStoreAccount(ks, bzzaccount, utils.MakePasswordList(ctx))
+}
+
+// getPrivKey returns the private key of the specified bzzaccount
+// Used only by client commands, such as `resource`
+func getPrivKey(ctx *cli.Context) *ecdsa.PrivateKey {
+	// booting up the swarm node just as we do in bzzd action
+	bzzconfig, err := buildConfig(ctx)
+	if err != nil {
+		utils.Fatalf("unable to configure swarm: %v", err)
+	}
+	cfg := defaultNodeConfig
+	if _, err := os.Stat(bzzconfig.Path); err == nil {
+		cfg.DataDir = bzzconfig.Path
+	}
+	utils.SetNodeConfig(ctx, &cfg)
+	stack, err := node.New(&cfg)
+	if err != nil {
+		utils.Fatalf("can't create node: %v", err)
+	}
+	return getAccount(bzzconfig.BzzAccount, ctx, stack)
 }
 
 func decryptStoreAccount(ks *keystore.KeyStore, account string, passwords []string) *ecdsa.PrivateKey {
@@ -611,5 +768,18 @@ func injectBootnodes(srv *p2p.Server, nodes []string) {
 			continue
 		}
 		srv.AddPeer(n)
+	}
+}
+
+// addDefaultHelpSubcommand scans through defined CLI commands and adds
+// a basic help subcommand to each
+// if a help command is already defined, it will take precedence over the default.
+func addDefaultHelpSubcommands(commands []cli.Command) {
+	for i := range commands {
+		cmd := &commands[i]
+		if cmd.Subcommands != nil {
+			cmd.Subcommands = append(cmd.Subcommands, defaultSubcommandHelp)
+			addDefaultHelpSubcommands(cmd.Subcommands)
+		}
 	}
 }

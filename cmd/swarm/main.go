@@ -18,6 +18,7 @@ package main
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -37,7 +38,6 @@ import (
 	"github.com/ethereum/go-ethereum/internal/debug"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/ethereum/go-ethereum/swarm"
 	bzzapi "github.com/ethereum/go-ethereum/swarm/api"
@@ -67,14 +67,7 @@ OPTIONS:
 `
 
 var (
-	gitCommit        string // Git SHA1 commit hash of the release (set via linker flags)
-	testbetBootNodes = []string{
-		"enode://ec8ae764f7cb0417bdfb009b9d0f18ab3818a3a4e8e7c67dd5f18971a93510a2e6f43cd0b69a27e439a9629457ea804104f37c85e41eed057d3faabbf7744cdf@13.74.157.139:30429",
-		"enode://c2e1fceb3bf3be19dff71eec6cccf19f2dbf7567ee017d130240c670be8594bc9163353ca55dd8df7a4f161dd94b36d0615c17418b5a3cdcbb4e9d99dfa4de37@13.74.157.139:30430",
-		"enode://fe29b82319b734ce1ec68b84657d57145fee237387e63273989d354486731e59f78858e452ef800a020559da22dcca759536e6aa5517c53930d29ce0b1029286@13.74.157.139:30431",
-		"enode://1d7187e7bde45cf0bee489ce9852dd6d1a0d9aa67a33a6b8e6db8a4fbc6fcfa6f0f1a5419343671521b863b187d1c73bad3603bae66421d157ffef357669ddb8@13.74.157.139:30432",
-		"enode://0e4cba800f7b1ee73673afa6a4acead4018f0149d2e3216be3f133318fd165b324cd71b81fbe1e80deac8dbf56e57a49db7be67f8b9bc81bd2b7ee496434fb5d@13.74.157.139:30433",
-	}
+	gitCommit string // Git SHA1 commit hash of the release (set via linker flags)
 )
 
 var (
@@ -216,6 +209,10 @@ var (
 		Name:  "data",
 		Usage: "Initializes the resource with the given hex-encoded data. Data must be prefixed by 0x",
 	}
+	SwarmCompressedFlag = cli.BoolFlag{
+		Name:  "compressed",
+		Usage: "Prints encryption keys in compressed form",
+	}
 )
 
 //declare a few constant error messages, useful for later error check comparisons in test
@@ -258,6 +255,14 @@ func init() {
 			CustomHelpTemplate: helpTemplate,
 			Name:               "version",
 			Usage:              "Print version numbers",
+			Description:        "The output of this command is supposed to be machine-readable",
+		},
+		{
+			Action:             keys,
+			CustomHelpTemplate: helpTemplate,
+			Name:               "print-keys",
+			Flags:              []cli.Flag{SwarmCompressedFlag},
+			Usage:              "Print public key information",
 			Description:        "The output of this command is supposed to be machine-readable",
 		},
 		{
@@ -314,6 +319,7 @@ func init() {
 							Flags: []cli.Flag{
 								SwarmAccessGrantKeysFlag,
 								SwarmDryRunFlag,
+								utils.PasswordFileFlag,
 							},
 							Name:        "act",
 							Usage:       "encrypts a reference with the node's private key and a given grantee's public key and embeds it into a root manifest",
@@ -588,6 +594,17 @@ func main() {
 	}
 }
 
+func keys(ctx *cli.Context) error {
+	privateKey := getPrivKey(ctx)
+	pub := hex.EncodeToString(crypto.FromECDSAPub(&privateKey.PublicKey))
+	pubCompressed := hex.EncodeToString(crypto.CompressPubkey(&privateKey.PublicKey))
+	if !ctx.Bool(SwarmCompressedFlag.Name) {
+		fmt.Println(fmt.Sprintf("publicKey=%s", pub))
+	}
+	fmt.Println(fmt.Sprintf("publicKeyCompressed=%s", pubCompressed))
+	return nil
+}
+
 func version(ctx *cli.Context) error {
 	fmt.Println(strings.Title(clientIdentifier))
 	fmt.Println("Version:", sv.VersionWithMeta)
@@ -619,6 +636,9 @@ func bzzd(ctx *cli.Context) error {
 	if _, err := os.Stat(bzzconfig.Path); err == nil {
 		cfg.DataDir = bzzconfig.Path
 	}
+
+	//optionally set the bootnodes before configuring the node
+	setSwarmBootstrapNodes(ctx, &cfg)
 	//setup the ethereum node
 	utils.SetNodeConfig(ctx, &cfg)
 	stack, err := node.New(&cfg)
@@ -642,16 +662,6 @@ func bzzd(ctx *cli.Context) error {
 		log.Info("Got sigterm, shutting swarm down...")
 		stack.Stop()
 	}()
-
-	// Add bootnodes as initial peers.
-	if bzzconfig.BootNodes != "" {
-		bootnodes := strings.Split(bzzconfig.BootNodes, ",")
-		injectBootnodes(stack.Server(), bootnodes)
-	} else {
-		if bzzconfig.NetworkID == 3 {
-			injectBootnodes(stack.Server(), testbetBootNodes)
-		}
-	}
 
 	stack.Wait()
 	return nil
@@ -760,17 +770,6 @@ func getPassPhrase(prompt string, i int, passwords []string) string {
 	return password
 }
 
-func injectBootnodes(srv *p2p.Server, nodes []string) {
-	for _, url := range nodes {
-		n, err := discover.ParseNode(url)
-		if err != nil {
-			log.Error("Invalid swarm bootnode", "err", err)
-			continue
-		}
-		srv.AddPeer(n)
-	}
-}
-
 // addDefaultHelpSubcommand scans through defined CLI commands and adds
 // a basic help subcommand to each
 // if a help command is already defined, it will take precedence over the default.
@@ -782,4 +781,21 @@ func addDefaultHelpSubcommands(commands []cli.Command) {
 			addDefaultHelpSubcommands(cmd.Subcommands)
 		}
 	}
+}
+
+func setSwarmBootstrapNodes(ctx *cli.Context, cfg *node.Config) {
+	if ctx.GlobalIsSet(utils.BootnodesFlag.Name) || ctx.GlobalIsSet(utils.BootnodesV4Flag.Name) {
+		return
+	}
+
+	cfg.P2P.BootstrapNodes = []*discover.Node{}
+
+	for _, url := range SwarmBootnodes {
+		node, err := discover.ParseNode(url)
+		if err != nil {
+			log.Error("Bootstrap URL invalid", "enode", url, "err", err)
+		}
+		cfg.P2P.BootstrapNodes = append(cfg.P2P.BootstrapNodes, node)
+	}
+	log.Debug("added default swarm bootnodes", "length", len(cfg.P2P.BootstrapNodes))
 }

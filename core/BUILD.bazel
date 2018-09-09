@@ -32,6 +32,7 @@ go_library(
         "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
         "//common/mclock:go_default_library",
+        "//common/prque:go_default_library",
         "//consensus:go_default_library",
         "//consensus/misc:go_default_library",
         "//core/rawdb:go_default_library",
@@ -47,7 +48,6 @@ go_library(
         "//rlp:go_default_library",
         "//trie:go_default_library",
         "//vendor/github.com/hashicorp/golang-lru:go_default_library",
-        "//vendor/gopkg.in/karalabe/cookiejar.v2/collections/prque:go_default_library",
     ],
 )
 

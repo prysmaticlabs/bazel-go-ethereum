@@ -27,6 +27,7 @@ go_library(
         "watcher_fsevents_cgo.go",
         "watcher_inotify.go",
         "watcher_kqueue.go",
+        "watcher_notimplemented.go",
         "watcher_readdcw.go",
         "watcher_stub.go",
         "watcher_trigger.go",

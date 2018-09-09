@@ -21,6 +21,7 @@ go_library(
         "p2p.go",
         "params.go",
         "primitives.go",
+        "shhclient.go",
         "types.go",
         "vm.go",
     ],
@@ -49,6 +50,7 @@ go_library(
         "//p2p/nat:go_default_library",
         "//params:go_default_library",
         "//rlp:go_default_library",
+        "//whisper/shhclient:go_default_library",
         "//whisper/whisperv6:go_default_library",
     ],
 )

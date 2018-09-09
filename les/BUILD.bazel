@@ -6,6 +6,7 @@ go_library(
         "api_backend.go",
         "backend.go",
         "bloombits.go",
+        "commons.go",
         "distributor.go",
         "execqueue.go",
         "fetcher.go",

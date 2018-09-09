@@ -10,11 +10,11 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//common:go_default_library",
+        "//common/prque:go_default_library",
         "//consensus:go_default_library",
         "//core/types:go_default_library",
         "//log:go_default_library",
         "//metrics:go_default_library",
-        "//vendor/gopkg.in/karalabe/cookiejar.v2/collections/prque:go_default_library",
     ],
 )
 

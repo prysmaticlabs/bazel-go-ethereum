@@ -19,6 +19,7 @@ go_library(
     deps = [
         "//:go_default_library",
         "//common:go_default_library",
+        "//common/prque:go_default_library",
         "//core:go_default_library",
         "//core/rawdb:go_default_library",
         "//core/state:go_default_library",
@@ -31,7 +32,6 @@ go_library(
         "//params:go_default_library",
         "//rpc:go_default_library",
         "//trie:go_default_library",
-        "//vendor/gopkg.in/karalabe/cookiejar.v2/collections/prque:go_default_library",
     ],
 )
 

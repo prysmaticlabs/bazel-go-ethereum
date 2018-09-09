@@ -25,6 +25,7 @@ go_library(
         "//log:go_default_library",
         "//metrics:go_default_library",
         "//params:go_default_library",
+        "//rlp:go_default_library",
         "//rpc:go_default_library",
         "//vendor/github.com/deckarep/golang-set:go_default_library",
         "//vendor/github.com/edsrzf/mmap-go:go_default_library",

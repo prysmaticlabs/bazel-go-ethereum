@@ -23,6 +23,15 @@ go_library(
     ],
     importpath = "github.com/ethereum/go-ethereum/crypto/bn256/cloudflare",
     visibility = ["//visibility:public"],
+    deps = select({
+        "@io_bazel_rules_go//go/platform:amd64": [
+            "//vendor/golang.org/x/sys/cpu:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:arm64": [
+            "//vendor/golang.org/x/sys/cpu:go_default_library",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 go_test(

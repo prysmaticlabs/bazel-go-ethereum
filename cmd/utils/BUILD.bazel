@@ -43,8 +43,8 @@ go_library(
         "//p2p/netutil:go_default_library",
         "//params:go_default_library",
         "//rlp:go_default_library",
-        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
         "//whisper/whisperv6:go_default_library",
+        "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )
 

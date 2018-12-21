@@ -12,7 +12,7 @@ go_library(
         "//p2p/simulations:go_default_library",
         "//p2p/simulations/adapters:go_default_library",
         "//rpc:go_default_library",
-        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
+        "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )
 

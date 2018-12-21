@@ -31,7 +31,7 @@ go_library(
             "//crypto/secp256k1:go_default_library",
         ],
         "@io_bazel_rules_go//go/platform:nacl": [
-            "//vendor/github.com/btcsuite/btcd/btcec:go_default_library",
+            "@com_github_btcsuite_btcd//btcec:go_default_library",
         ],
         "@io_bazel_rules_go//go/platform:netbsd": [
             "//crypto/secp256k1:go_default_library",

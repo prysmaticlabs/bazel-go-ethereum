@@ -35,9 +35,9 @@ go_library(
         "//swarm/storage:go_default_library",
         "//swarm/storage/encryption:go_default_library",
         "//swarm/storage/mru:go_default_library",
-        "//vendor/github.com/opentracing/opentracing-go:go_default_library",
-        "//vendor/golang.org/x/crypto/scrypt:go_default_library",
-        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
+        "@com_github_opentracing_opentracing_go//:go_default_library",
+        "@in_gopkg_urfave_cli_v1//:go_default_library",
+        "@org_golang_x_crypto//scrypt:go_default_library",
     ],
 )
 

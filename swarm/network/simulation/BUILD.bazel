@@ -48,6 +48,6 @@ go_test(
         "//p2p/simulations/adapters:go_default_library",
         "//rpc:go_default_library",
         "//swarm/network:go_default_library",
-        "//vendor/github.com/mattn/go-colorable:go_default_library",
+        "@com_github_mattn_go_colorable//:go_default_library",
     ],
 )

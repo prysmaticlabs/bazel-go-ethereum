@@ -14,9 +14,9 @@ go_library(
         "//p2p:go_default_library",
         "//p2p/discover:go_default_library",
         "//p2p/nat:go_default_library",
-        "//vendor/golang.org/x/crypto/pbkdf2:go_default_library",
         "//whisper/mailserver:go_default_library",
         "//whisper/whisperv6:go_default_library",
+        "@org_golang_x_crypto//pbkdf2:go_default_library",
     ],
 )
 

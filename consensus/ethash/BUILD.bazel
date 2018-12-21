@@ -27,9 +27,9 @@ go_library(
         "//params:go_default_library",
         "//rlp:go_default_library",
         "//rpc:go_default_library",
-        "//vendor/github.com/deckarep/golang-set:go_default_library",
-        "//vendor/github.com/edsrzf/mmap-go:go_default_library",
-        "//vendor/github.com/hashicorp/golang-lru/simplelru:go_default_library",
+        "@com_github_deckarep_golang_set//:go_default_library",
+        "@com_github_edsrzf_mmap_go//:go_default_library",
+        "@com_github_hashicorp_golang_lru//simplelru:go_default_library",
     ],
 )
 

@@ -28,7 +28,7 @@ go_library(
         "//swarm/spancontext:go_default_library",
         "//swarm/state:go_default_library",
         "//swarm/storage:go_default_library",
-        "//vendor/github.com/opentracing/opentracing-go:go_default_library",
+        "@com_github_opentracing_opentracing_go//:go_default_library",
     ],
 )
 
@@ -60,6 +60,6 @@ go_test(
         "//swarm/state:go_default_library",
         "//swarm/storage:go_default_library",
         "//swarm/storage/mock/db:go_default_library",
-        "//vendor/github.com/mattn/go-colorable:go_default_library",
+        "@com_github_mattn_go_colorable//:go_default_library",
     ],
 )

@@ -18,8 +18,8 @@ go_library(
         "//common:go_default_library",
         "//console:go_default_library",
         "//crypto:go_default_library",
-        "//vendor/github.com/pborman/uuid:go_default_library",
-        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
+        "@com_github_pborman_uuid//:go_default_library",
+        "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )
 
@@ -38,6 +38,6 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//internal/cmdtest:go_default_library",
-        "//vendor/github.com/docker/docker/pkg/reexec:go_default_library",
+        "@com_github_docker_docker//pkg/reexec:go_default_library",
     ],
 )

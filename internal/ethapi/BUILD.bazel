@@ -30,8 +30,8 @@ go_library(
         "//params:go_default_library",
         "//rlp:go_default_library",
         "//rpc:go_default_library",
-        "//vendor/github.com/davecgh/go-spew/spew:go_default_library",
-        "//vendor/github.com/syndtr/goleveldb/leveldb:go_default_library",
-        "//vendor/github.com/syndtr/goleveldb/leveldb/util:go_default_library",
+        "@com_github_davecgh_go_spew//spew:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/util:go_default_library",
     ],
 )

@@ -8,6 +8,6 @@ go_library(
     deps = [
         "//log:go_default_library",
         "//metrics:go_default_library",
-        "//vendor/github.com/influxdata/influxdb/client:go_default_library",
+        "@com_github_influxdata_influxdb//client:go_default_library",
     ],
 )

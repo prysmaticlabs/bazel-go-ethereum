@@ -10,6 +10,6 @@ go_library(
         "//metrics:go_default_library",
         "//metrics/influxdb:go_default_library",
         "//swarm/log:go_default_library",
-        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
+        "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )

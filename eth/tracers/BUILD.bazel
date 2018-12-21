@@ -15,7 +15,7 @@ go_library(
         "//crypto:go_default_library",
         "//eth/tracers/internal/tracers:go_default_library",
         "//log:go_default_library",
-        "//vendor/gopkg.in/olebedev/go-duktape.v3:go_default_library",
+        "@in_gopkg_olebedev_go_duktape_v3//:go_default_library",
     ],
 )
 

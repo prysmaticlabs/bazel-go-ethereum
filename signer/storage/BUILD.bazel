@@ -18,6 +18,6 @@ go_test(
     deps = [
         "//common:go_default_library",
         "//log:go_default_library",
-        "//vendor/github.com/mattn/go-colorable:go_default_library",
+        "@com_github_mattn_go_colorable//:go_default_library",
     ],
 )

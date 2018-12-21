@@ -40,12 +40,12 @@ go_library(
         "//params:go_default_library",
         "//rpc:go_default_library",
         "//trie:go_default_library",
-        "//vendor/github.com/elastic/gosigar:go_default_library",
-        "//vendor/github.com/gizak/termui:go_default_library",
-        "//vendor/github.com/naoina/toml:go_default_library",
-        "//vendor/github.com/syndtr/goleveldb/leveldb/util:go_default_library",
-        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
         "//whisper/whisperv6:go_default_library",
+        "@com_github_elastic_gosigar//:go_default_library",
+        "@com_github_gizak_termui//:go_default_library",
+        "@com_github_naoina_toml//:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/util:go_default_library",
+        "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )
 
@@ -72,7 +72,7 @@ go_test(
         "//ethdb:go_default_library",
         "//internal/cmdtest:go_default_library",
         "//params:go_default_library",
-        "//vendor/github.com/cespare/cp:go_default_library",
-        "//vendor/github.com/docker/docker/pkg/reexec:go_default_library",
+        "@com_github_cespare_cp//:go_default_library",
+        "@com_github_docker_docker//pkg/reexec:go_default_library",
     ],
 )

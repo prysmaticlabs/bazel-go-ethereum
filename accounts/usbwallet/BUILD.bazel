@@ -13,15 +13,15 @@ go_library(
     deps = [
         "//:go_default_library",
         "//accounts:go_default_library",
-        "//accounts/usbwallet/internal/trezor:go_default_library",
         "//accounts/usbwallet/internal/trezor:ethereum_go_proto",
+        "//accounts/usbwallet/internal/trezor:go_default_library",
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
         "//core/types:go_default_library",
         "//event:go_default_library",
         "//log:go_default_library",
         "//rlp:go_default_library",
-        "//vendor/github.com/golang/protobuf/proto:go_default_library",
-        "//vendor/github.com/karalabe/hid:go_default_library",
+        "@com_github_golang_protobuf//proto:go_default_library",
+        "@com_github_karalabe_hid//:go_default_library",
     ],
 )

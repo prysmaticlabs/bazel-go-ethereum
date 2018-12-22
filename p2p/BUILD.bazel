@@ -29,7 +29,7 @@ go_library(
         "//p2p/nat:go_default_library",
         "//p2p/netutil:go_default_library",
         "//rlp:go_default_library",
-        "//vendor/github.com/golang/snappy:go_default_library",
+        "@com_github_golang_snappy//:go_default_library",
     ],
 )
 
@@ -52,6 +52,6 @@ go_test(
         "//p2p/netutil:go_default_library",
         "//p2p/simulations/pipes:go_default_library",
         "//rlp:go_default_library",
-        "//vendor/github.com/davecgh/go-spew/spew:go_default_library",
+        "@com_github_davecgh_go_spew//spew:go_default_library",
     ],
 )

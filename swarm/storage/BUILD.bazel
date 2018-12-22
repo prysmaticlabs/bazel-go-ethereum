@@ -32,12 +32,12 @@ go_library(
         "//swarm/spancontext:go_default_library",
         "//swarm/storage/encryption:go_default_library",
         "//swarm/storage/mock:go_default_library",
-        "//vendor/github.com/hashicorp/golang-lru:go_default_library",
-        "//vendor/github.com/opentracing/opentracing-go:go_default_library",
-        "//vendor/github.com/opentracing/opentracing-go/log:go_default_library",
-        "//vendor/github.com/syndtr/goleveldb/leveldb:go_default_library",
-        "//vendor/github.com/syndtr/goleveldb/leveldb/iterator:go_default_library",
-        "//vendor/github.com/syndtr/goleveldb/leveldb/opt:go_default_library",
+        "@com_github_hashicorp_golang_lru//:go_default_library",
+        "@com_github_opentracing_opentracing_go//:go_default_library",
+        "@com_github_opentracing_opentracing_go//log:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/iterator:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/opt:go_default_library",
     ],
 )
 
@@ -63,7 +63,7 @@ go_test(
         "//swarm/network:go_default_library",
         "//swarm/storage/encryption:go_default_library",
         "//swarm/storage/mock/mem:go_default_library",
-        "//vendor/github.com/mattn/go-colorable:go_default_library",
-        "//vendor/github.com/syndtr/goleveldb/leveldb/errors:go_default_library",
+        "@com_github_mattn_go_colorable//:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/errors:go_default_library",
     ],
 )

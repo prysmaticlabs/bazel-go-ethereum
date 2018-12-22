@@ -33,8 +33,8 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//vendor/github.com/maruel/panicparse/stack:go_default_library",
-        "//vendor/github.com/mattn/go-runewidth:go_default_library",
-        "//vendor/github.com/mitchellh/go-wordwrap:go_default_library",
-        "//vendor/github.com/nsf/termbox-go:go_default_library",
+        "@com_github_mattn_go_runewidth//:go_default_library",
+        "@com_github_mitchellh_go_wordwrap//:go_default_library",
+        "@com_github_nsf_termbox_go//:go_default_library",
     ],
 )

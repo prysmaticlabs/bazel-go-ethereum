@@ -12,8 +12,8 @@ go_library(
     deps = [
         "//common:go_default_library",
         "//internal/jsre/deps:go_default_library",
-        "//vendor/github.com/fatih/color:go_default_library",
-        "//vendor/github.com/robertkrimen/otto:go_default_library",
+        "@com_github_fatih_color//:go_default_library",
+        "@com_github_robertkrimen_otto//:go_default_library",
     ],
 )
 
@@ -24,5 +24,5 @@ go_test(
         "jsre_test.go",
     ],
     embed = [":go_default_library"],
-    deps = ["//vendor/github.com/robertkrimen/otto:go_default_library"],
+    deps = ["@com_github_robertkrimen_otto//:go_default_library"],
 )

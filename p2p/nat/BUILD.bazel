@@ -11,10 +11,10 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//log:go_default_library",
-        "//vendor/github.com/huin/goupnp:go_default_library",
-        "//vendor/github.com/huin/goupnp/dcps/internetgateway1:go_default_library",
-        "//vendor/github.com/huin/goupnp/dcps/internetgateway2:go_default_library",
-        "//vendor/github.com/jackpal/go-nat-pmp:go_default_library",
+        "@com_github_huin_goupnp//:go_default_library",
+        "@com_github_huin_goupnp//dcps/internetgateway1:go_default_library",
+        "@com_github_huin_goupnp//dcps/internetgateway2:go_default_library",
+        "@com_github_jackpal_go_nat_pmp//:go_default_library",
     ],
 )
 
@@ -25,5 +25,5 @@ go_test(
         "natupnp_test.go",
     ],
     embed = [":go_default_library"],
-    deps = ["//vendor/github.com/huin/goupnp/httpu:go_default_library"],
+    deps = ["@com_github_huin_goupnp//httpu:go_default_library"],
 )

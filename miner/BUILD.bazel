@@ -21,7 +21,7 @@ go_library(
         "//event:go_default_library",
         "//log:go_default_library",
         "//params:go_default_library",
-        "//vendor/github.com/deckarep/golang-set:go_default_library",
+        "@com_github_deckarep_golang_set//:go_default_library",
     ],
 )
 

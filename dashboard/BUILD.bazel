@@ -19,9 +19,9 @@ go_library(
         "//p2p:go_default_library",
         "//params:go_default_library",
         "//rpc:go_default_library",
-        "//vendor/github.com/elastic/gosigar:go_default_library",
-        "//vendor/github.com/mohae/deepcopy:go_default_library",
-        "//vendor/github.com/rjeczalik/notify:go_default_library",
-        "//vendor/golang.org/x/net/websocket:go_default_library",
+        "@com_github_elastic_gosigar//:go_default_library",
+        "@com_github_mohae_deepcopy//:go_default_library",
+        "@com_github_rjeczalik_notify//:go_default_library",
+        "@org_golang_x_net//websocket:go_default_library",
     ],
 )

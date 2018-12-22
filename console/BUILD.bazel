@@ -15,9 +15,9 @@ go_library(
         "//internal/web3ext:go_default_library",
         "//log:go_default_library",
         "//rpc:go_default_library",
-        "//vendor/github.com/mattn/go-colorable:go_default_library",
-        "//vendor/github.com/peterh/liner:go_default_library",
-        "//vendor/github.com/robertkrimen/otto:go_default_library",
+        "@com_github_mattn_go_colorable//:go_default_library",
+        "@com_github_peterh_liner//:go_default_library",
+        "@com_github_robertkrimen_otto//:go_default_library",
     ],
 )
 

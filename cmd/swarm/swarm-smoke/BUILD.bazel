@@ -10,9 +10,9 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//log:go_default_library",
-        "//vendor/github.com/mattn/go-colorable:go_default_library",
-        "//vendor/github.com/pborman/uuid:go_default_library",
-        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
+        "@com_github_mattn_go_colorable//:go_default_library",
+        "@com_github_pborman_uuid//:go_default_library",
+        "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )
 

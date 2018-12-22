@@ -7,9 +7,9 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//log:go_default_library",
-        "//vendor/github.com/uber/jaeger-client-go:go_default_library",
-        "//vendor/github.com/uber/jaeger-client-go/config:go_default_library",
-        "//vendor/github.com/uber/jaeger-client-go/log:go_default_library",
-        "//vendor/gopkg.in/urfave/cli.v1:go_default_library",
+        "@com_github_uber_jaeger_client_go//:go_default_library",
+        "@com_github_uber_jaeger_client_go//config:go_default_library",
+        "@com_github_uber_jaeger_client_go//log:go_default_library",
+        "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )

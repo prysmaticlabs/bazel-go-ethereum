@@ -37,7 +37,7 @@ go_library(
         "//crypto:go_default_library",
         "//crypto/bn256:go_default_library",
         "//params:go_default_library",
-        "//vendor/golang.org/x/crypto/ripemd160:go_default_library",
+        "@org_golang_x_crypto//ripemd160:go_default_library",
     ],
 )
 

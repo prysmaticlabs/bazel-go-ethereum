@@ -9,7 +9,7 @@ go_library(
     ],
     importpath = "github.com/ethereum/go-ethereum/swarm/state",
     visibility = ["//visibility:public"],
-    deps = ["//vendor/github.com/syndtr/goleveldb/leveldb:go_default_library"],
+    deps = ["@com_github_syndtr_goleveldb//leveldb:go_default_library"],
 )
 
 go_test(

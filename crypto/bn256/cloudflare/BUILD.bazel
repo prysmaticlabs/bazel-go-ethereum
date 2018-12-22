@@ -25,10 +25,10 @@ go_library(
     visibility = ["//visibility:public"],
     deps = select({
         "@io_bazel_rules_go//go/platform:amd64": [
-            "//vendor/golang.org/x/sys/cpu:go_default_library",
+            "@org_golang_x_sys//cpu:go_default_library",
         ],
         "@io_bazel_rules_go//go/platform:arm64": [
-            "//vendor/golang.org/x/sys/cpu:go_default_library",
+            "@org_golang_x_sys//cpu:go_default_library",
         ],
         "//conditions:default": [],
     }),
@@ -44,5 +44,5 @@ go_test(
         "main_test.go",
     ],
     embed = [":go_default_library"],
-    deps = ["//vendor/github.com/stretchr/testify/require:go_default_library"],
+    deps = ["@com_github_stretchr_testify//require:go_default_library"],
 )

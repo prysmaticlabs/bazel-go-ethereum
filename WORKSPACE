@@ -65,12 +65,6 @@ go_repository(
 )
 
 go_repository(
-    name = "com_github_karalabe_hid",
-    commit = "d815e0c1a2e2082a287a2806bc90bc8fc7b276a9",
-    importpath = "github.com/karalabe/hid",
-)
-
-go_repository(
     name = "in_gopkg_urfave_cli_v1",
     commit = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1",
     importpath = "gopkg.in/urfave/cli.v1",
@@ -86,12 +80,6 @@ go_repository(
     name = "com_github_elastic_gosigar",
     commit = "f498c67133bcded80f5966ee63acfe68cff4e6bf",
     importpath = "github.com/elastic/gosigar",
-)
-
-go_repository(
-    name = "com_github_gizak_termui",
-    commit = "3461d4a2e81a4c0ffc508d1268b5f1b46768b09c",
-    importpath = "github.com/gizak/termui",
 )
 
 go_repository(
@@ -179,12 +167,6 @@ go_repository(
 )
 
 go_repository(
-    name = "com_github_azure_azure_storage_blob_go",
-    commit = "cf01652132ccc92af2b9da9d2de542b5b7eafc1d",
-    importpath = "github.com/Azure/azure-storage-blob-go",
-)
-
-go_repository(
     name = "com_github_docker_docker",
     commit = "ab318fa6ca3ccc00284b08a6c196f307c508719d",
     importpath = "github.com/docker/docker",
@@ -218,12 +200,6 @@ go_repository(
     name = "com_github_influxdata_influxdb",
     commit = "7db3db278bfafee3f10767b9322720035688f18b",
     importpath = "github.com/influxdata/influxdb",
-)
-
-go_repository(
-    name = "com_github_prometheus_prometheus",
-    commit = "646adff2ac79efd246e5404db839c30afbb064d9",
-    importpath = "github.com/prometheus/prometheus",
 )
 
 go_repository(
@@ -363,3 +339,4 @@ go_repository(
     commit = "e66db43f958eebf221239eb919def7803644115d",
     importpath = "github.com/influxdata/platform",
 )
+

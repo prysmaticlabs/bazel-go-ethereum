@@ -29,7 +29,7 @@ go_library(
         "//p2p/discover:go_default_library",
         "//p2p/nat:go_default_library",
         "//rpc:go_default_library",
-        "@com_github_prometheus_prometheus//util/flock:go_default_library",
+        "//vendor/github.com/prometheus/prometheus/util/flock:go_default_library",
     ],
 )
 

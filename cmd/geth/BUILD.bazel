@@ -33,6 +33,7 @@ go_library(
         "//ethclient:go_default_library",
         "//ethdb:go_default_library",
         "//event:go_default_library",
+        "//graphql:go_default_library",
         "//internal/debug:go_default_library",
         "//log:go_default_library",
         "//metrics:go_default_library",

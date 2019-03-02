@@ -2,6 +2,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 load("@bazel_gazelle//:def.bzl", "gazelle")
 
 # gazelle:prefix github.com/ethereum/go-ethereum
+# gazelle:proto disable_global
 gazelle(
     name = "gazelle",
     prefix = "github.com/ethereum/go-ethereum",

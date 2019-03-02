@@ -12,6 +12,7 @@ go_library(
         "//rlp:go_default_library",
         "//whisper/whisperv6:go_default_library",
         "@com_github_syndtr_goleveldb//leveldb:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/opt:go_default_library",
         "@com_github_syndtr_goleveldb//leveldb/util:go_default_library",
     ],
 )

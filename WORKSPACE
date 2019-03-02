@@ -1,15 +1,16 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
     name = "io_bazel_rules_go",
-    url = "https://github.com/bazelbuild/rules_go/releases/download/0.17.0/rules_go-0.17.0.tar.gz",
-    sha256 = "492c3ac68ed9dcf527a07e6a1b2dcbf199c6bf8b35517951467ac32e421c06c1",
+    urls = ["https://github.com/bazelbuild/rules_go/releases/download/0.17.1/rules_go-0.17.1.tar.gz"],
+    sha256 = "6776d68ebb897625dead17ae510eac3d5f6342367327875210df44dbe2aeeb19",
 )
 
 http_archive(
     name = "bazel_gazelle",
-    urls = ["https://github.com/bazelbuild/bazel-gazelle/releases/download/0.15.0/bazel-gazelle-0.15.0.tar.gz"],
-    sha256 = "6e875ab4b6bf64a38c352887760f21203ab054676d9c1b274963907e0768740d",
+    urls = ["https://github.com/bazelbuild/bazel-gazelle/releases/download/0.17.0/bazel-gazelle-0.17.0.tar.gz"],
+    sha256 = "3c681998538231a2d24d0c07ed5a7658cb72bfb5fd4bf9911157c0e9ac6a2687",
 )
 
 load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
@@ -54,7 +55,7 @@ go_repository(
 
 go_repository(
     name = "org_golang_x_crypto",
-    commit = "505ab145d0a99da450461ae2c1a9f6cd10d1f447",
+    commit = "8dd112bcdc25174059e45e07517d9fc663123347",
     importpath = "golang.org/x/crypto",
 )
 
@@ -168,7 +169,7 @@ go_repository(
 
 go_repository(
     name = "com_github_docker_docker",
-    commit = "ab318fa6ca3ccc00284b08a6c196f307c508719d",
+    commit = "8aca18d631f3f72d4c6e3dc01b6e5d468ad941b8",
     importpath = "github.com/docker/docker",
 )
 
@@ -340,3 +341,20 @@ go_repository(
     importpath = "github.com/influxdata/platform",
 )
 
+go_repository(
+    name = "com_github_btcsuite_btcd",
+    commit = "306aecffea325e97f513b3ff0cf7895a5310651d",
+    importpath = "github.com/btcsuite/btcd",
+)
+
+go_repository(
+    name = "com_github_graph_gophers_graphql_go",
+    commit = "3e8838d4614c12ab337e796548521744f921e05d",
+    importpath = "github.com/graph-gophers/graphql-go",
+)
+
+go_repository(
+    name = "com_github_allegro_bigcache",
+    commit = "e24eb225f15679bbe54f91bfa7da3b00e59b9768",
+    importpath = "github.com/allegro/bigcache",
+)

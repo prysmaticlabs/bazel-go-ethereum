@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "block_validator.go",
         "blockchain.go",
+        "blockchain_insert.go",
         "blocks.go",
         "chain_indexer.go",
         "chain_makers.go",

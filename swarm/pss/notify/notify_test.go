@@ -13,13 +13,13 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/p2p/discover"
+	"github.com/ethereum/go-ethereum/p2p/enode"
 	"github.com/ethereum/go-ethereum/p2p/simulations"
 	"github.com/ethereum/go-ethereum/p2p/simulations/adapters"
 	"github.com/ethereum/go-ethereum/swarm/network"
 	"github.com/ethereum/go-ethereum/swarm/pss"
 	"github.com/ethereum/go-ethereum/swarm/state"
-	whisper "github.com/ethereum/go-ethereum/whisper/whisperv5"
+	whisper "github.com/ethereum/go-ethereum/whisper/whisperv6"
 )
 
 var (
@@ -51,6 +51,7 @@ func TestStart(t *testing.T) {
 		ID:             "0",
 		DefaultService: "bzz",
 	})
+	defer net.Shutdown()
 	leftNodeConf := adapters.RandomNodeConfig()
 	leftNodeConf.Services = []string{"bzz", "pss"}
 	leftNode, err := net.NewNodeWithConfig(leftNodeConf)
@@ -121,14 +122,14 @@ func TestStart(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 	rmsgC := make(chan *pss.APIMsg)
-	rightSub, err := rightRpc.Subscribe(ctx, "pss", rmsgC, "receive", controlTopic)
+	rightSub, err := rightRpc.Subscribe(ctx, "pss", rmsgC, "receive", controlTopic, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer rightSub.Unsubscribe()
 
 	updateC := make(chan []byte)
-	updateMsg := []byte{}
+	var updateMsg []byte
 	ctrlClient := NewController(psses[rightPub])
 	ctrlNotifier := NewController(psses[leftPub])
 	ctrlNotifier.NewNotifier("foo.eth", 2, updateC)
@@ -145,17 +146,24 @@ func TestStart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	copyOfUpdateMsg := make([]byte, len(updateMsg))
+	copy(copyOfUpdateMsg, updateMsg)
+	ctrlClientError := make(chan error, 1)
 	ctrlClient.Subscribe(rsrcName, pubkey, addrbytes, func(s string, b []byte) error {
-		if s != "foo.eth" || !bytes.Equal(updateMsg, b) {
-			t.Fatalf("unexpected result in client handler: '%s':'%x'", s, b)
+		if s != "foo.eth" || !bytes.Equal(copyOfUpdateMsg, b) {
+			ctrlClientError <- fmt.Errorf("unexpected result in client handler: '%s':'%x'", s, b)
+		} else {
+			log.Info("client handler receive", "s", s, "b", b)
 		}
-		log.Info("client handler receive", "s", s, "b", b)
 		return nil
 	})
 
 	var inMsg *pss.APIMsg
 	select {
 	case inMsg = <-rmsgC:
+	case err := <-ctrlClientError:
+		t.Fatal(err)
 	case <-ctx.Done():
 		t.Fatal(ctx.Err())
 	}
@@ -174,7 +182,7 @@ func TestStart(t *testing.T) {
 		t.Fatalf("expected payload length %d, have %d", len(updateMsg)+symKeyLength, len(dMsg.Payload))
 	}
 
-	rightSubUpdate, err := rightRpc.Subscribe(ctx, "pss", rmsgC, "receive", rsrcTopic)
+	rightSubUpdate, err := rightRpc.Subscribe(ctx, "pss", rmsgC, "receive", rsrcTopic, false, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,20 +211,19 @@ func TestStart(t *testing.T) {
 
 func newServices(allowRaw bool) adapters.Services {
 	stateStore := state.NewInmemoryStore()
-	kademlias := make(map[discover.NodeID]*network.Kademlia)
-	kademlia := func(id discover.NodeID) *network.Kademlia {
+	kademlias := make(map[enode.ID]*network.Kademlia)
+	kademlia := func(id enode.ID) *network.Kademlia {
 		if k, ok := kademlias[id]; ok {
 			return k
 		}
-		addr := network.NewAddrFromNodeID(id)
 		params := network.NewKadParams()
-		params.MinProxBinSize = 2
+		params.NeighbourhoodSize = 2
 		params.MaxBinSize = 3
 		params.MinBinSize = 1
 		params.MaxRetries = 1000
 		params.RetryExponent = 2
 		params.RetryInterval = 1000000
-		kademlias[id] = network.NewKademlia(addr.Over(), params)
+		kademlias[id] = network.NewKademlia(id[:], params)
 		return kademlias[id]
 	}
 	return adapters.Services{
@@ -224,7 +231,13 @@ func newServices(allowRaw bool) adapters.Services {
 			ctxlocal, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			keys, err := wapi.NewKeyPair(ctxlocal)
+			if err != nil {
+				return nil, err
+			}
 			privkey, err := w.GetPrivateKey(keys)
+			if err != nil {
+				return nil, err
+			}
 			pssp := pss.NewPssParams().WithPrivateKey(privkey)
 			pssp.MsgTTL = time.Second * 30
 			pssp.AllowRaw = allowRaw
@@ -238,7 +251,7 @@ func newServices(allowRaw bool) adapters.Services {
 			return ps, nil
 		},
 		"bzz": func(ctx *adapters.ServiceContext) (node.Service, error) {
-			addr := network.NewAddrFromNodeID(ctx.Config.ID)
+			addr := network.NewAddr(ctx.Config.Node())
 			hp := network.NewHiveParams()
 			hp.Discovery = false
 			config := &network.BzzConfig{

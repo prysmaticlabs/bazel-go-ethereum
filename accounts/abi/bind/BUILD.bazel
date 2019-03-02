@@ -22,23 +22,24 @@ go_library(
         "//crypto:go_default_library",
         "//event:go_default_library",
         "//log:go_default_library",
-        "@org_golang_x_tools//imports:go_default_library",
     ],
 )
 
 go_test(
     name = "go_default_test",
     srcs = [
+        "base_test.go",
         "bind_test.go",
         "util_test.go",
     ],
     embed = [":go_default_library"],
     deps = [
+        "//:go_default_library",
+        "//accounts/abi:go_default_library",
         "//accounts/abi/bind/backends:go_default_library",
         "//common:go_default_library",
         "//core:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",
-        "@org_golang_x_tools//imports:go_default_library",
     ],
 )

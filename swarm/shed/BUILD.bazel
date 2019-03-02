@@ -1,0 +1,41 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "db.go",
+        "field_string.go",
+        "field_struct.go",
+        "field_uint64.go",
+        "index.go",
+        "schema.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/swarm/shed",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//metrics:go_default_library",
+        "//rlp:go_default_library",
+        "//swarm/log:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/iterator:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/opt:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "db_test.go",
+        "example_store_test.go",
+        "field_string_test.go",
+        "field_struct_test.go",
+        "field_uint64_test.go",
+        "index_test.go",
+        "schema_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//swarm/storage:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
+    ],
+)

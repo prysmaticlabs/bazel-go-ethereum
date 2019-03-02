@@ -8,7 +8,7 @@ go_library(
     deps = [
         "//log:go_default_library",
         "//node:go_default_library",
-        "//p2p/discover:go_default_library",
+        "//p2p/enode:go_default_library",
         "//p2p/simulations:go_default_library",
         "//p2p/simulations/adapters:go_default_library",
         "//swarm/network:go_default_library",
@@ -28,7 +28,7 @@ go_test(
     srcs = ["overlay_test.go"],
     embed = [":go_default_library"],
     deps = [
-        "//p2p/discover:go_default_library",
+        "//p2p/enode:go_default_library",
         "//p2p/simulations:go_default_library",
         "//swarm/log:go_default_library",
     ],

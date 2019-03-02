@@ -26,13 +26,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/p2p/discover"
+	"github.com/ethereum/go-ethereum/p2p/enode"
 	"github.com/ethereum/go-ethereum/p2p/simulations"
 	"github.com/ethereum/go-ethereum/swarm/log"
 )
 
 var (
-	nodeCount = 16
+	nodeCount = 10
 )
 
 //This test is used to test the overlay simulation.
@@ -43,7 +43,6 @@ var (
 //It also provides a documentation on the steps needed by frontends
 //to use the simulations
 func TestOverlaySim(t *testing.T) {
-	t.Skip("Test is flaky, see: https://github.com/ethersphere/go-ethereum/issues/592")
 	//start the simulation
 	log.Info("Start simulation backend")
 	//get the simulation networ; needed to subscribe for up events
@@ -86,7 +85,7 @@ func TestOverlaySim(t *testing.T) {
 
 	//variables needed to wait for nodes being up
 	var upCount int
-	trigger := make(chan discover.NodeID)
+	trigger := make(chan enode.ID)
 
 	//wait for all nodes to be up
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -169,7 +168,7 @@ LOOP:
 }
 
 //watch for events so we know when all nodes are up
-func watchSimEvents(net *simulations.Network, ctx context.Context, trigger chan discover.NodeID) {
+func watchSimEvents(net *simulations.Network, ctx context.Context, trigger chan enode.ID) {
 	events := make(chan *simulations.Event)
 	sub := net.Events().Subscribe(events)
 	defer sub.Unsubscribe()
@@ -179,7 +178,7 @@ func watchSimEvents(net *simulations.Network, ctx context.Context, trigger chan 
 		case ev := <-events:
 			//only catch node up events
 			if ev.Type == simulations.EventTypeNode {
-				if ev.Node.Up {
+				if ev.Node.Up() {
 					log.Debug("got node up event", "event", ev, "node", ev.Node.Config.ID)
 					select {
 					case trigger <- ev.Node.Config.ID:

@@ -33,5 +33,6 @@ go_test(
         "//core/state:go_default_library",
         "//core/vm:go_default_library",
         "//ethdb:go_default_library",
+        "//params:go_default_library",
     ],
 )

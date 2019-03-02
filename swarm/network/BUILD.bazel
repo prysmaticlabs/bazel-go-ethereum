@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "common.go",
         "discovery.go",
+        "fetcher.go",
         "hive.go",
         "kademlia.go",
         "protocol.go",
@@ -15,13 +16,16 @@ go_library(
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
         "//crypto:go_default_library",
+        "//log:go_default_library",
         "//p2p:go_default_library",
-        "//p2p/discover:go_default_library",
+        "//p2p/enode:go_default_library",
         "//p2p/protocols:go_default_library",
         "//rpc:go_default_library",
         "//swarm/log:go_default_library",
         "//swarm/pot:go_default_library",
         "//swarm/state:go_default_library",
+        "//swarm/storage:go_default_library",
+        "//swarm/version:go_default_library",
     ],
 )
 
@@ -29,6 +33,7 @@ go_test(
     name = "go_default_test",
     srcs = [
         "discovery_test.go",
+        "fetcher_test.go",
         "hive_test.go",
         "kademlia_test.go",
         "networkid_test.go",
@@ -37,10 +42,11 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//common:go_default_library",
+        "//crypto:go_default_library",
         "//log:go_default_library",
         "//node:go_default_library",
         "//p2p:go_default_library",
-        "//p2p/discover:go_default_library",
+        "//p2p/enode:go_default_library",
         "//p2p/protocols:go_default_library",
         "//p2p/simulations:go_default_library",
         "//p2p/simulations/adapters:go_default_library",

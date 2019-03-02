@@ -1,4 +1,0 @@
-alias(
-    name = "go_default_library",
-    actual = "//accounts/usbwallet/internal/trezor:go_default_library",
-)

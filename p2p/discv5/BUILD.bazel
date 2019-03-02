@@ -20,7 +20,6 @@ go_library(
         "//common:go_default_library",
         "//common/mclock:go_default_library",
         "//crypto:go_default_library",
-        "//crypto/sha3:go_default_library",
         "//log:go_default_library",
         "//metrics:go_default_library",
         "//p2p/nat:go_default_library",
@@ -32,6 +31,7 @@ go_library(
         "@com_github_syndtr_goleveldb//leveldb/opt:go_default_library",
         "@com_github_syndtr_goleveldb//leveldb/storage:go_default_library",
         "@com_github_syndtr_goleveldb//leveldb/util:go_default_library",
+        "@org_golang_x_crypto//sha3:go_default_library",
     ],
 )
 

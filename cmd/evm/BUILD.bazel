@@ -5,7 +5,6 @@ go_library(
     srcs = [
         "compiler.go",
         "disasm.go",
-        "json_logger.go",
         "main.go",
         "runner.go",
         "staterunner.go",
@@ -16,7 +15,6 @@ go_library(
         "//cmd/evm/internal/compiler:go_default_library",
         "//cmd/utils:go_default_library",
         "//common:go_default_library",
-        "//common/math:go_default_library",
         "//core:go_default_library",
         "//core/asm:go_default_library",
         "//core/state:go_default_library",

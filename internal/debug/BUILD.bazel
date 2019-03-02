@@ -14,11 +14,11 @@ go_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "//log:go_default_library",
-        "//log/term:go_default_library",
         "//metrics:go_default_library",
         "//metrics/exp:go_default_library",
         "@com_github_fjl_memsize//memsizeui:go_default_library",
         "@com_github_mattn_go_colorable//:go_default_library",
+        "@com_github_mattn_go_isatty//:go_default_library",
         "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )

@@ -9,7 +9,7 @@ go_library(
         "//log:go_default_library",
         "//node:go_default_library",
         "//p2p:go_default_library",
-        "//p2p/discover:go_default_library",
+        "//p2p/enode:go_default_library",
         "//p2p/simulations:go_default_library",
         "//p2p/simulations/adapters:go_default_library",
         "//rpc:go_default_library",

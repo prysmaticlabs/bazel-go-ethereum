@@ -16,7 +16,6 @@ go_library(
         "//core:go_default_library",
         "//core/state:go_default_library",
         "//core/types:go_default_library",
-        "//core/vm:go_default_library",
         "//eth/downloader:go_default_library",
         "//event:go_default_library",
         "//log:go_default_library",

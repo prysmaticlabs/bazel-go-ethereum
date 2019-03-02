@@ -3,7 +3,6 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     srcs = [
-        "database.go",
         "node.go",
         "ntp.go",
         "table.go",
@@ -13,33 +12,30 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//common:go_default_library",
+        "//common/math:go_default_library",
         "//crypto:go_default_library",
         "//crypto/secp256k1:go_default_library",
         "//log:go_default_library",
-        "//p2p/nat:go_default_library",
+        "//p2p/enode:go_default_library",
         "//p2p/netutil:go_default_library",
         "//rlp:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/errors:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/iterator:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/opt:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/storage:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/util:go_default_library",
     ],
 )
 
 go_test(
     name = "go_default_test",
     srcs = [
-        "database_test.go",
-        "node_test.go",
         "table_test.go",
+        "table_util_test.go",
         "udp_test.go",
     ],
     embed = [":go_default_library"],
     deps = [
         "//common:go_default_library",
         "//crypto:go_default_library",
+        "//p2p/enode:go_default_library",
+        "//p2p/enr:go_default_library",
+        "//p2p/netutil:go_default_library",
         "//rlp:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
     ],

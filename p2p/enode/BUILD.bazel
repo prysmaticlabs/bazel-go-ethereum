@@ -1,0 +1,48 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "idscheme.go",
+        "localnode.go",
+        "node.go",
+        "nodedb.go",
+        "urlv4.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/p2p/enode",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common/math:go_default_library",
+        "//crypto:go_default_library",
+        "//log:go_default_library",
+        "//p2p/enr:go_default_library",
+        "//p2p/netutil:go_default_library",
+        "//rlp:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/errors:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/iterator:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/opt:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/storage:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/util:go_default_library",
+        "@org_golang_x_crypto//sha3:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "idscheme_test.go",
+        "localnode_test.go",
+        "node_test.go",
+        "nodedb_test.go",
+        "urlv4_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//crypto:go_default_library",
+        "//p2p/enr:go_default_library",
+        "//rlp:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@com_github_stretchr_testify//require:go_default_library",
+    ],
+)

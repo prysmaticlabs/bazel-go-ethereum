@@ -13,11 +13,11 @@ go_library(
     deps = [
         "//:go_default_library",
         "//accounts:go_default_library",
-        "//accounts/usbwallet/internal/trezor:ethereum_go_proto",
-        "//accounts/usbwallet/internal/trezor:go_default_library",
+        "//accounts/usbwallet/trezor:go_default_library",
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
         "//core/types:go_default_library",
+        "//crypto:go_default_library",
         "//event:go_default_library",
         "//log:go_default_library",
         "//rlp:go_default_library",

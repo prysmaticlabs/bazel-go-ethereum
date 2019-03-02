@@ -12,7 +12,7 @@ go_library(
         "//crypto:go_default_library",
         "//log:go_default_library",
         "//p2p:go_default_library",
-        "//p2p/discover:go_default_library",
+        "//p2p/enode:go_default_library",
         "//p2p/nat:go_default_library",
         "//whisper/mailserver:go_default_library",
         "//whisper/whisperv6:go_default_library",

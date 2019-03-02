@@ -15,6 +15,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//accounts:go_default_library",
+        "//accounts/external:go_default_library",
         "//accounts/keystore:go_default_library",
         "//accounts/usbwallet:go_default_library",
         "//common:go_default_library",
@@ -26,7 +27,7 @@ go_library(
         "//log:go_default_library",
         "//metrics:go_default_library",
         "//p2p:go_default_library",
-        "//p2p/discover:go_default_library",
+        "//p2p/enode:go_default_library",
         "//p2p/nat:go_default_library",
         "//rpc:go_default_library",
         "//vendor/github.com/prometheus/prometheus/util/flock:go_default_library",

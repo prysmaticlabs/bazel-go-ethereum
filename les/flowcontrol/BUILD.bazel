@@ -1,12 +1,24 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
     srcs = [
         "control.go",
+        "logger.go",
         "manager.go",
     ],
     importpath = "github.com/ethereum/go-ethereum/les/flowcontrol",
     visibility = ["//visibility:public"],
+    deps = [
+        "//common/mclock:go_default_library",
+        "//common/prque:go_default_library",
+        "//log:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["manager_test.go"],
+    embed = [":go_default_library"],
     deps = ["//common/mclock:go_default_library"],
 )

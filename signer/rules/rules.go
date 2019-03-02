@@ -46,16 +46,16 @@ func consoleOutput(call otto.FunctionCall) otto.Value {
 	return otto.Value{}
 }
 
-// rulesetUI provides an implementation of SignerUI that evaluates a javascript
+// rulesetUI provides an implementation of UIClientAPI that evaluates a javascript
 // file for each defined UI-method
 type rulesetUI struct {
-	next        core.SignerUI // The next handler, for manual processing
+	next        core.UIClientAPI // The next handler, for manual processing
 	storage     storage.Storage
 	credentials storage.Storage
 	jsRules     string // The rules to use
 }
 
-func NewRuleEvaluator(next core.SignerUI, jsbackend, credentialsBackend storage.Storage) (*rulesetUI, error) {
+func NewRuleEvaluator(next core.UIClientAPI, jsbackend, credentialsBackend storage.Storage) (*rulesetUI, error) {
 	c := &rulesetUI{
 		next:        next,
 		storage:     jsbackend,
@@ -64,6 +64,9 @@ func NewRuleEvaluator(next core.SignerUI, jsbackend, credentialsBackend storage.
 	}
 
 	return c, nil
+}
+func (r *rulesetUI) RegisterUIServer(api *core.UIServerAPI) {
+	// TODO, make it possible to query from js
 }
 
 func (r *rulesetUI) Init(javascriptRules string) error {
@@ -194,6 +197,11 @@ func (r *rulesetUI) ApproveImport(request *core.ImportRequest) (core.ImportRespo
 	return r.next.ApproveImport(request)
 }
 
+// OnInputRequired not handled by rules
+func (r *rulesetUI) OnInputRequired(info core.UserInputRequest) (core.UserInputResponse, error) {
+	return r.next.OnInputRequired(info)
+}
+
 func (r *rulesetUI) ApproveListing(request *core.ListRequest) (core.ListResponse, error) {
 	jsonreq, err := json.Marshal(request)
 	approved, err := r.checkApproval("ApproveListing", jsonreq, err)
@@ -222,6 +230,7 @@ func (r *rulesetUI) ShowInfo(message string) {
 	log.Info(message)
 	r.next.ShowInfo(message)
 }
+
 func (r *rulesetUI) OnSignerStartup(info core.StartupInfo) {
 	jsonInfo, err := json.Marshal(info)
 	if err != nil {

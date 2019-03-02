@@ -29,8 +29,10 @@ go_test(
     srcs = [
         "abi_test.go",
         "event_test.go",
+        "method_test.go",
         "numbers_test.go",
         "pack_test.go",
+        "reflect_test.go",
         "type_test.go",
         "unpack_test.go",
     ],

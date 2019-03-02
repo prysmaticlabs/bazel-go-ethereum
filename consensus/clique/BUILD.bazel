@@ -18,13 +18,13 @@ go_library(
         "//core/state:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",
-        "//crypto/sha3:go_default_library",
         "//ethdb:go_default_library",
         "//log:go_default_library",
         "//params:go_default_library",
         "//rlp:go_default_library",
         "//rpc:go_default_library",
         "@com_github_hashicorp_golang_lru//:go_default_library",
+        "@org_golang_x_crypto//sha3:go_default_library",
     ],
 )
 
@@ -35,8 +35,8 @@ go_test(
     deps = [
         "//common:go_default_library",
         "//core:go_default_library",
-        "//core/rawdb:go_default_library",
         "//core/types:go_default_library",
+        "//core/vm:go_default_library",
         "//crypto:go_default_library",
         "//ethdb:go_default_library",
         "//params:go_default_library",

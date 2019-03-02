@@ -20,9 +20,9 @@ go_library(
         "intpool.go",
         "jump_table.go",
         "logger.go",
+        "logger_json.go",
         "memory.go",
         "memory_table.go",
-        "noop.go",
         "opcodes.go",
         "stack.go",
         "stack_table.go",
@@ -38,6 +38,7 @@ go_library(
         "//crypto/bn256:go_default_library",
         "//params:go_default_library",
         "@org_golang_x_crypto//ripemd160:go_default_library",
+        "@org_golang_x_crypto//sha3:go_default_library",
     ],
 )
 
@@ -54,6 +55,8 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//common:go_default_library",
+        "//core/state:go_default_library",
+        "//crypto:go_default_library",
         "//params:go_default_library",
     ],
 )

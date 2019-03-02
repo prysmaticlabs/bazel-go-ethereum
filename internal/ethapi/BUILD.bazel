@@ -15,6 +15,7 @@ go_library(
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
+        "//consensus/clique:go_default_library",
         "//consensus/ethash:go_default_library",
         "//core:go_default_library",
         "//core/rawdb:go_default_library",

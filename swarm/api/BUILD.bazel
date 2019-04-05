@@ -18,6 +18,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//common:go_default_library",
+        "//common/hexutil:go_default_library",
         "//contracts/ens:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",

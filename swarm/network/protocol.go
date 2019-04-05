@@ -20,12 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
-	"regexp"
+	"math/rand"
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/enode"
 	"github.com/ethereum/go-ethereum/p2p/protocols"
@@ -40,7 +38,7 @@ const (
 	bzzHandshakeTimeout = 3000 * time.Millisecond
 )
 
-var regexpEnodeIP = regexp.MustCompile("@(.+):([0-9]+)")
+var DefaultTestNetworkID = rand.Uint64()
 
 // BzzSpec is the spec of the generic swarm handshake
 var BzzSpec = &protocols.Spec{
@@ -217,24 +215,8 @@ func (b *Bzz) performHandshake(p *protocols.Peer, handshake *HandshakeMsg) error
 		return err
 	}
 	handshake.peerAddr = rsh.(*HandshakeMsg).Addr
-	sanitizeEnodeRemote(p.RemoteAddr(), handshake.peerAddr)
 	handshake.LightNode = rsh.(*HandshakeMsg).LightNode
 	return nil
-}
-
-// the remote enode string may advertise arbitrary host information (e.g. localhost)
-// this method ensures that the addr of the peer will be the one
-// applicable on the interface the connection came in on
-// it modifies the passed bzzaddr in place, and returns the same pointer
-func sanitizeEnodeRemote(paddr net.Addr, baddr *BzzAddr) {
-	hsSubmatch := regexpEnodeIP.FindSubmatch(baddr.UAddr)
-	ip, _, err := net.SplitHostPort(paddr.String())
-	// since we expect nothing else than ipv4 here, a panic on missing submatch is desired
-	if err == nil && string(hsSubmatch[1]) != ip {
-		remoteStr := fmt.Sprintf("@%s:%s", ip, string(hsSubmatch[2]))
-		log.Debug("rewrote peer uaddr host/port", "addr", baddr)
-		baddr.UAddr = regexpEnodeIP.ReplaceAll(baddr.UAddr, []byte(remoteStr))
-	}
 }
 
 // runBzz is the p2p protocol run function for the bzz base protocol
@@ -343,66 +325,11 @@ func (b *Bzz) GetOrCreateHandshake(peerID enode.ID) (*HandshakeMsg, bool) {
 			init:      make(chan bool, 1),
 			done:      make(chan struct{}),
 		}
-		// when handshake is first created for a remote peer
+		// when handhsake is first created for a remote peer
 		// it is initialised with the init
 		handshake.init <- true
 		b.handshakes[peerID] = handshake
 	}
 
 	return handshake, found
-}
-
-// BzzAddr implements the PeerAddr interface
-type BzzAddr struct {
-	OAddr []byte
-	UAddr []byte
-}
-
-// Address implements OverlayPeer interface to be used in Overlay.
-func (a *BzzAddr) Address() []byte {
-	return a.OAddr
-}
-
-// Over returns the overlay address.
-func (a *BzzAddr) Over() []byte {
-	return a.OAddr
-}
-
-// Under returns the underlay address.
-func (a *BzzAddr) Under() []byte {
-	return a.UAddr
-}
-
-// ID returns the node identifier in the underlay.
-func (a *BzzAddr) ID() enode.ID {
-	n, err := enode.ParseV4(string(a.UAddr))
-	if err != nil {
-		return enode.ID{}
-	}
-	return n.ID()
-}
-
-// Update updates the underlay address of a peer record
-func (a *BzzAddr) Update(na *BzzAddr) *BzzAddr {
-	return &BzzAddr{a.OAddr, na.UAddr}
-}
-
-// String pretty prints the address
-func (a *BzzAddr) String() string {
-	return fmt.Sprintf("%x <%s>", a.OAddr, a.UAddr)
-}
-
-// RandomAddr is a utility method generating an address from a public key
-func RandomAddr() *BzzAddr {
-	key, err := crypto.GenerateKey()
-	if err != nil {
-		panic("unable to generate key")
-	}
-	node := enode.NewV4(&key.PublicKey, net.IP{127, 0, 0, 1}, 30303, 30303)
-	return NewAddr(node)
-}
-
-// NewAddr constucts a BzzAddr from a node record.
-func NewAddr(node *enode.Node) *BzzAddr {
-	return &BzzAddr{OAddr: node.ID().Bytes(), UAddr: []byte(node.String())}
 }

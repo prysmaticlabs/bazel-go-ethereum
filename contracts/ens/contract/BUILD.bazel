@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "ens.go",
+        "ensregistry.go",
         "fifsregistrar.go",
         "publicresolver.go",
     ],

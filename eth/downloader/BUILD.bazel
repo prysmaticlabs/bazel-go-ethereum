@@ -47,6 +47,7 @@ go_test(
         "//common:go_default_library",
         "//consensus/ethash:go_default_library",
         "//core:go_default_library",
+        "//core/rawdb:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",
         "//ethdb:go_default_library",

@@ -1,31 +1,12 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
     name = "go_default_library",
     srcs = [
+        "batch.go",
         "database.go",
-        "interface.go",
-        "memory_database.go",
-        "table.go",
-        "table_batch.go",
+        "iterator.go",
     ],
     importpath = "github.com/ethereum/go-ethereum/ethdb",
     visibility = ["//visibility:public"],
-    deps = [
-        "//common:go_default_library",
-        "//log:go_default_library",
-        "//metrics:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/errors:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/filter:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/iterator:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/opt:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb/util:go_default_library",
-    ],
-)
-
-go_test(
-    name = "go_default_test",
-    srcs = ["database_test.go"],
-    embed = [":go_default_library"],
 )

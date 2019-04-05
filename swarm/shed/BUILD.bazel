@@ -9,6 +9,7 @@ go_library(
         "field_uint64.go",
         "index.go",
         "schema.go",
+        "vector_uint64.go",
     ],
     importpath = "github.com/ethereum/go-ethereum/swarm/shed",
     visibility = ["//visibility:public"],
@@ -32,6 +33,7 @@ go_test(
         "field_uint64_test.go",
         "index_test.go",
         "schema_test.go",
+        "vector_uint64_test.go",
     ],
     embed = [":go_default_library"],
     deps = [

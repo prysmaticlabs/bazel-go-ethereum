@@ -94,8 +94,8 @@ func TestSyncingViaGlobalSync(t *testing.T) {
 		//if the `longrunning` flag has been provided
 		//run more test combinations
 		if *longrunning {
-			chunkCounts = []int{1, 8, 32, 256, 1024}
-			nodeCounts = []int{16, 32, 64, 128, 256}
+			chunkCounts = []int{64, 128}
+			nodeCounts = []int{32, 64}
 		}
 
 		for _, chunkCount := range chunkCounts {
@@ -147,20 +147,16 @@ func testSyncingViaGlobalSync(t *testing.T, chunkCount int, nodeCount int) {
 	//array where the generated chunk hashes will be stored
 	conf.hashes = make([]storage.Address, 0)
 
-	err := sim.UploadSnapshot(fmt.Sprintf("testing/snapshot_%d.json", nodeCount))
+	ctx, cancelSimRun := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancelSimRun()
+
+	filename := fmt.Sprintf("testing/snapshot_%d.json", nodeCount)
+	err := sim.UploadSnapshot(ctx, filename)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ctx, cancelSimRun := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancelSimRun()
-
-	if _, err := sim.WaitTillHealthy(ctx); err != nil {
-		t.Fatal(err)
-	}
-
 	result := runSim(conf, ctx, sim, chunkCount)
-
 	if result.Error != nil {
 		t.Fatal(result.Error)
 	}

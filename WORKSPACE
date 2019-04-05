@@ -358,3 +358,21 @@ go_repository(
     commit = "e24eb225f15679bbe54f91bfa7da3b00e59b9768",
     importpath = "github.com/allegro/bigcache",
 )
+
+go_repository(
+    name = "com_github_apilayer_freegeoip",
+    commit = "3f942d1392f6439bda0f67b3c650ce468ebdba8e",
+    importpath = "github.com/apilayer/freegeoip",
+)
+
+go_repository(
+    name = "com_github_howeyc_fsnotify",
+    commit = "f0c08ee9c60704c1879025f2ae0ff3e000082c13",
+    importpath = "github.com/howeyc/fsnotify",
+)
+
+go_repository(
+    name = "com_github_oschwald_maxminddb_golang",
+    commit = "bf634d395cac5372a29afded601522f3ca87aebe",
+    importpath = "github.com/oschwald/maxminddb-golang",
+)

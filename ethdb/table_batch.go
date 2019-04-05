@@ -49,3 +49,7 @@ func (tb *tableBatch) ValueSize() int {
 func (tb *tableBatch) Reset() {
 	tb.batch.Reset()
 }
+
+func (tb *tableBatch) Replay(w Writer) error {
+	return nil
+}

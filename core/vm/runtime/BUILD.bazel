@@ -12,10 +12,10 @@ go_library(
     deps = [
         "//common:go_default_library",
         "//core:go_default_library",
+        "//core/rawdb:go_default_library",
         "//core/state:go_default_library",
         "//core/vm:go_default_library",
         "//crypto:go_default_library",
-        "//ethdb:go_default_library",
         "//params:go_default_library",
     ],
 )
@@ -30,9 +30,9 @@ go_test(
     deps = [
         "//accounts/abi:go_default_library",
         "//common:go_default_library",
+        "//core/rawdb:go_default_library",
         "//core/state:go_default_library",
         "//core/vm:go_default_library",
-        "//ethdb:go_default_library",
         "//params:go_default_library",
     ],
 )

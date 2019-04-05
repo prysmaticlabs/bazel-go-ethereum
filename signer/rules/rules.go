@@ -174,11 +174,6 @@ func (r *rulesetUI) OnInputRequired(info core.UserInputRequest) (core.UserInputR
 	return r.next.OnInputRequired(info)
 }
 
-// OnInputRequired not handled by rules
-func (r *rulesetUI) OnInputRequired(info core.UserInputRequest) (core.UserInputResponse, error) {
-	return r.next.OnInputRequired(info)
-}
-
 func (r *rulesetUI) ApproveListing(request *core.ListRequest) (core.ListResponse, error) {
 	jsonreq, err := json.Marshal(request)
 	approved, err := r.checkApproval("ApproveListing", jsonreq, err)

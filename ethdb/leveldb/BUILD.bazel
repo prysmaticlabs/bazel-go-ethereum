@@ -10,10 +10,10 @@ go_library(
         "//ethdb:go_default_library",
         "//log:go_default_library",
         "//metrics:go_default_library",
-        "//vendor/github.com/syndtr/goleveldb/leveldb:go_default_library",
-        "//vendor/github.com/syndtr/goleveldb/leveldb/opt:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
         "@com_github_syndtr_goleveldb//leveldb/errors:go_default_library",
         "@com_github_syndtr_goleveldb//leveldb/filter:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/opt:go_default_library",
         "@com_github_syndtr_goleveldb//leveldb/util:go_default_library",
     ],
 )

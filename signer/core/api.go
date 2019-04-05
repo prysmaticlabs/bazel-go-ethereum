@@ -45,15 +45,6 @@ const (
 	InternalAPIVersion = "6.0.0"
 )
 
-const (
-	// numberOfAccountsToDerive For hardware wallets, the number of accounts to derive
-	numberOfAccountsToDerive = 10
-	// ExternalAPIVersion -- see extapi_changelog.md
-	ExternalAPIVersion = "6.0.0"
-	// InternalAPIVersion -- see intapi_changelog.md
-	InternalAPIVersion = "4.0.0"
-)
-
 // ExternalAPI defines the external API through which signing requests are made.
 type ExternalAPI interface {
 	// List available accounts

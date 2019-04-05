@@ -46,6 +46,25 @@ func (dt *table) Delete(key []byte) error {
 	return dt.db.Delete(append([]byte(dt.prefix), key...))
 }
 
-func (dt *table) Close() {
+func (dt *table) Close() error {
 	// Do nothing; don't close the underlying DB.
+	return nil
+}
+
+func (dt *table) Compact(start []byte, limit []byte) error {
+	return nil
+}
+
+func (dt *table) NewIterator() Iterator {
+	return nil
+}
+
+// NewIteratorWithPrefix creates a binary-alphabetical iterator over a subset
+// of database content with a particular key prefix.
+func (dt *table) NewIteratorWithPrefix(prefix []byte) Iterator {
+	return nil
+}
+
+func (dt *table) Stat(property string) (string, error) {
+	return "", nil
 }

@@ -19,7 +19,6 @@ package core
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -48,9 +47,6 @@ func (ui *headlessUi) OnInputRequired(info UserInputRequest) (UserInputResponse,
 	input := <-ui.inputCh
 	return UserInputResponse{Text: input}, nil
 }
-func (ui *HeadlessUI) RegisterUIServer(api *UIServerAPI) {
-}
-
 func (ui *headlessUi) OnSignerStartup(info StartupInfo)             {}
 func (ui *headlessUi) RegisterUIServer(api *UIServerAPI)            {}
 func (ui *headlessUi) OnApprovedTx(tx ethapi.SignTransactionResult) {}

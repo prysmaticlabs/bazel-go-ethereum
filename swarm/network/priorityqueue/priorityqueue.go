@@ -28,8 +28,9 @@ package priorityqueue
 import (
 	"context"
 	"errors"
+	"time"
 
-	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/metrics"
 )
 
 var (
@@ -69,8 +70,12 @@ READ:
 		case <-ctx.Done():
 			return
 		case x := <-q:
-			log.Trace("priority.queue f(x)", "p", p, "len(Queues[p])", len(pq.Queues[p]))
-			f(x)
+			val := x.(struct {
+				v interface{}
+				t time.Time
+			})
+			f(val.v)
+			metrics.GetOrRegisterResettingTimer("pq.run", nil).UpdateSince(val.t)
 			p = top
 		default:
 			if p > 0 {
@@ -95,9 +100,15 @@ func (pq *PriorityQueue) Push(x interface{}, p int) error {
 	if p < 0 || p >= len(pq.Queues) {
 		return errBadPriority
 	}
-	log.Trace("priority.queue push", "p", p, "len(Queues[p])", len(pq.Queues[p]))
+	val := struct {
+		v interface{}
+		t time.Time
+	}{
+		x,
+		time.Now(),
+	}
 	select {
-	case pq.Queues[p] <- x:
+	case pq.Queues[p] <- val:
 	default:
 		return ErrContention
 	}

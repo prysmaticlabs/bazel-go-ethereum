@@ -28,6 +28,8 @@ import (
 	"github.com/ethereum/go-ethereum/swarm/log"
 	"github.com/ethereum/go-ethereum/swarm/spancontext"
 	"github.com/opentracing/opentracing-go"
+	olog "github.com/opentracing/opentracing-go/log"
+	"github.com/syndtr/goleveldb/leveldb"
 
 	lru "github.com/hashicorp/golang-lru"
 )
@@ -85,7 +87,9 @@ func (n *NetStore) Put(ctx context.Context, ch Chunk) error {
 
 	// if chunk is now put in the store, check if there was an active fetcher and call deliver on it
 	// (this delivers the chunk to requestors via the fetcher)
+	log.Trace("n.getFetcher", "ref", ch.Address())
 	if f := n.getFetcher(ch.Address()); f != nil {
+		log.Trace("n.getFetcher deliver", "ref", ch.Address())
 		f.deliver(ctx, ch)
 	}
 	return nil
@@ -101,6 +105,14 @@ func (n *NetStore) Get(rctx context.Context, ref Address) (Chunk, error) {
 		return nil, err
 	}
 	if chunk != nil {
+		// this is not measuring how long it takes to get the chunk for the localstore, but
+		// rather just adding a span for clarity when inspecting traces in Jaeger, in order
+		// to make it easier to reason which is the node that actually delivered a chunk.
+		_, sp := spancontext.StartSpan(
+			rctx,
+			"localstore.get")
+		defer sp.Finish()
+
 		return chunk, nil
 	}
 	return fetch(rctx)
@@ -166,7 +178,8 @@ func (n *NetStore) get(ctx context.Context, ref Address) (Chunk, func(context.Co
 
 	chunk, err := n.store.Get(ctx, ref)
 	if err != nil {
-		if err != ErrChunkNotFound {
+		// TODO: Fix comparison - we should be comparing against leveldb.ErrNotFound, this error should be wrapped.
+		if err != ErrChunkNotFound && err != leveldb.ErrNotFound {
 			log.Debug("Received error from LocalStore other than ErrNotFound", "err", err)
 		}
 		// The chunk is not available in the LocalStore, let's get the fetcher for it, or create a new one
@@ -215,6 +228,8 @@ func (n *NetStore) getOrCreateFetcher(ctx context.Context, ref Address) *fetcher
 		cctx,
 		"netstore.fetcher",
 	)
+
+	sp.LogFields(olog.String("ref", ref.String()))
 	fetcher := newFetcher(sp, ref, n.NewNetFetcherFunc(cctx, ref, peers), destroy, peers, n.closeC)
 	n.fetchers.Add(key, fetcher)
 
@@ -328,5 +343,6 @@ func (f *fetcher) deliver(ctx context.Context, ch Chunk) {
 		f.chunk = ch
 		// closing the deliveredC channel will terminate ongoing requests
 		close(f.deliveredC)
+		log.Trace("n.getFetcher close deliveredC", "ref", ch.Address())
 	})
 }

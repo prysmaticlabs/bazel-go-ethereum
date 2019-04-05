@@ -17,11 +17,11 @@
 package network
 
 import (
-	"bytes"
+	"crypto/ecdsa"
 	"flag"
 	"fmt"
-	"net"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -29,14 +29,17 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/ethereum/go-ethereum/p2p/enr"
 	"github.com/ethereum/go-ethereum/p2p/protocols"
 	p2ptest "github.com/ethereum/go-ethereum/p2p/testing"
+	"github.com/ethereum/go-ethereum/swarm/pot"
 )
 
 const (
-	TestProtocolVersion   = 8
-	TestProtocolNetworkID = 3
+	TestProtocolVersion = 8
 )
+
+var TestProtocolNetworkID = DefaultTestNetworkID
 
 var (
 	loglevel = flag.Int("loglevel", 2, "verbosity of logs")
@@ -70,39 +73,75 @@ func HandshakeMsgExchange(lhs, rhs *HandshakeMsg, id enode.ID) []p2ptest.Exchang
 	}
 }
 
-func newBzzBaseTester(t *testing.T, n int, addr *BzzAddr, spec *protocols.Spec, run func(*BzzPeer) error) *bzzTester {
-	cs := make(map[string]chan bool)
+func newBzzBaseTester(n int, prvkey *ecdsa.PrivateKey, spec *protocols.Spec, run func(*BzzPeer) error) (*bzzTester, error) {
+	var addrs [][]byte
+	for i := 0; i < n; i++ {
+		addr := pot.RandomAddress()
+		addrs = append(addrs, addr[:])
+	}
+	pt, _, err := newBzzBaseTesterWithAddrs(prvkey, addrs, spec, run)
+	return pt, err
+}
+
+func newBzzBaseTesterWithAddrs(prvkey *ecdsa.PrivateKey, addrs [][]byte, spec *protocols.Spec, run func(*BzzPeer) error) (*bzzTester, [][]byte, error) {
+	n := len(addrs)
+	cs := make(map[enode.ID]chan bool)
 
 	srv := func(p *BzzPeer) error {
 		defer func() {
-			if cs[p.ID().String()] != nil {
-				close(cs[p.ID().String()])
+			if cs[p.ID()] != nil {
+				close(cs[p.ID()])
 			}
 		}()
 		return run(p)
 	}
-
+	mu := &sync.Mutex{}
+	nodeToAddr := make(map[enode.ID][]byte)
 	protocol := func(p *p2p.Peer, rw p2p.MsgReadWriter) error {
-		return srv(&BzzPeer{Peer: protocols.NewPeer(p, rw, spec), BzzAddr: NewAddr(p.Node())})
+		mu.Lock()
+		defer mu.Unlock()
+		nodeToAddr[p.ID()] = addrs[0]
+		bzzAddr := &BzzAddr{addrs[0], []byte(p.Node().String())}
+		addrs = addrs[1:]
+		return srv(&BzzPeer{Peer: protocols.NewPeer(p, rw, spec), BzzAddr: bzzAddr})
 	}
 
-	s := p2ptest.NewProtocolTester(addr.ID(), n, protocol)
+	s := p2ptest.NewProtocolTester(prvkey, n, protocol)
+	var record enr.Record
+	bzzKey := PrivateKeyToBzzKey(prvkey)
+	record.Set(NewENRAddrEntry(bzzKey))
+	err := enode.SignV4(&record, prvkey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to generate ENR: %v", err)
+	}
+	nod, err := enode.New(enode.V4ID{}, &record)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to create enode: %v", err)
+	}
+	addr := getENRBzzAddr(nod)
 
 	for _, node := range s.Nodes {
-		cs[node.ID().String()] = make(chan bool)
+		log.Warn("node", "node", node)
+		cs[node.ID()] = make(chan bool)
 	}
 
-	return &bzzTester{
+	var nodeAddrs [][]byte
+	pt := &bzzTester{
 		addr:           addr,
 		ProtocolTester: s,
 		cs:             cs,
 	}
+	for _, n := range pt.Nodes {
+		nodeAddrs = append(nodeAddrs, nodeToAddr[n.ID()])
+	}
+
+	return pt, nodeAddrs, nil
 }
 
 type bzzTester struct {
 	*p2ptest.ProtocolTester
 	addr *BzzAddr
-	cs   map[string]chan bool
+	cs   map[enode.ID]chan bool
 	bzz  *Bzz
 }
 
@@ -111,7 +150,7 @@ func newBzz(addr *BzzAddr, lightNode bool) *Bzz {
 		OverlayAddr:  addr.Over(),
 		UnderlayAddr: addr.Under(),
 		HiveParams:   NewHiveParams(),
-		NetworkID:    DefaultNetworkID,
+		NetworkID:    DefaultTestNetworkID,
 		LightNode:    lightNode,
 	}
 	kad := NewKademlia(addr.OAddr, NewKadParams())
@@ -119,15 +158,28 @@ func newBzz(addr *BzzAddr, lightNode bool) *Bzz {
 	return bzz
 }
 
-func newBzzHandshakeTester(n int, addr *BzzAddr, lightNode bool) *bzzTester {
+func newBzzHandshakeTester(n int, prvkey *ecdsa.PrivateKey, lightNode bool) (*bzzTester, error) {
+
+	var record enr.Record
+	bzzkey := PrivateKeyToBzzKey(prvkey)
+	record.Set(NewENRAddrEntry(bzzkey))
+	record.Set(ENRLightNodeEntry(lightNode))
+	err := enode.SignV4(&record, prvkey)
+	if err != nil {
+		return nil, err
+	}
+	nod, err := enode.New(enode.V4ID{}, &record)
+	addr := getENRBzzAddr(nod)
+
 	bzz := newBzz(addr, lightNode)
-	pt := p2ptest.NewProtocolTester(addr.ID(), n, bzz.runBzz)
+
+	pt := p2ptest.NewProtocolTester(prvkey, n, bzz.runBzz)
 
 	return &bzzTester{
 		addr:           addr,
 		ProtocolTester: pt,
 		bzz:            bzz,
-	}
+	}, nil
 }
 
 // should test handshakes in one exchange? parallelisation
@@ -168,14 +220,20 @@ func correctBzzHandshake(addr *BzzAddr, lightNode bool) *HandshakeMsg {
 
 func TestBzzHandshakeNetworkIDMismatch(t *testing.T) {
 	lightNode := false
-	addr := RandomAddr()
-	s := newBzzHandshakeTester(1, addr, lightNode)
+	prvkey, err := crypto.GenerateKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := newBzzHandshakeTester(1, prvkey, lightNode)
+	if err != nil {
+		t.Fatal(err)
+	}
 	node := s.Nodes[0]
 
-	err := s.testHandshake(
-		correctBzzHandshake(addr, lightNode),
+	err = s.testHandshake(
+		correctBzzHandshake(s.addr, lightNode),
 		&HandshakeMsg{Version: TestProtocolVersion, NetworkID: 321, Addr: NewAddr(node)},
-		&p2ptest.Disconnect{Peer: node.ID(), Error: fmt.Errorf("Handshake error: Message handler error: (msg code 0): network id mismatch 321 (!= 3)")},
+		&p2ptest.Disconnect{Peer: node.ID(), Error: fmt.Errorf("Handshake error: Message handler error: (msg code 0): network id mismatch 321 (!= %v)", TestProtocolNetworkID)},
 	)
 
 	if err != nil {
@@ -185,12 +243,18 @@ func TestBzzHandshakeNetworkIDMismatch(t *testing.T) {
 
 func TestBzzHandshakeVersionMismatch(t *testing.T) {
 	lightNode := false
-	addr := RandomAddr()
-	s := newBzzHandshakeTester(1, addr, lightNode)
+	prvkey, err := crypto.GenerateKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := newBzzHandshakeTester(1, prvkey, lightNode)
+	if err != nil {
+		t.Fatal(err)
+	}
 	node := s.Nodes[0]
 
-	err := s.testHandshake(
-		correctBzzHandshake(addr, lightNode),
+	err = s.testHandshake(
+		correctBzzHandshake(s.addr, lightNode),
 		&HandshakeMsg{Version: 0, NetworkID: TestProtocolNetworkID, Addr: NewAddr(node)},
 		&p2ptest.Disconnect{Peer: node.ID(), Error: fmt.Errorf("Handshake error: Message handler error: (msg code 0): version mismatch 0 (!= %d)", TestProtocolVersion)},
 	)
@@ -202,12 +266,18 @@ func TestBzzHandshakeVersionMismatch(t *testing.T) {
 
 func TestBzzHandshakeSuccess(t *testing.T) {
 	lightNode := false
-	addr := RandomAddr()
-	s := newBzzHandshakeTester(1, addr, lightNode)
+	prvkey, err := crypto.GenerateKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := newBzzHandshakeTester(1, prvkey, lightNode)
+	if err != nil {
+		t.Fatal(err)
+	}
 	node := s.Nodes[0]
 
-	err := s.testHandshake(
-		correctBzzHandshake(addr, lightNode),
+	err = s.testHandshake(
+		correctBzzHandshake(s.addr, lightNode),
 		&HandshakeMsg{Version: TestProtocolVersion, NetworkID: TestProtocolNetworkID, Addr: NewAddr(node)},
 	)
 
@@ -227,14 +297,20 @@ func TestBzzHandshakeLightNode(t *testing.T) {
 
 	for _, test := range lightNodeTests {
 		t.Run(test.name, func(t *testing.T) {
-			randomAddr := RandomAddr()
-			pt := newBzzHandshakeTester(1, randomAddr, false)
+			prvkey, err := crypto.GenerateKey()
+			if err != nil {
+				t.Fatal(err)
+			}
+			pt, err := newBzzHandshakeTester(1, prvkey, false)
+			if err != nil {
+				t.Fatal(err)
+			}
 
 			node := pt.Nodes[0]
 			addr := NewAddr(node)
 
-			err := pt.testHandshake(
-				correctBzzHandshake(randomAddr, false),
+			err = pt.testHandshake(
+				correctBzzHandshake(pt.addr, false),
 				&HandshakeMsg{Version: TestProtocolVersion, NetworkID: TestProtocolNetworkID, Addr: addr, LightNode: test.lightNode},
 			)
 
@@ -252,28 +328,5 @@ func TestBzzHandshakeLightNode(t *testing.T) {
 				t.Fatal("test timeout")
 			}
 		})
-	}
-}
-
-// Tests the overwriting of localhost enode in handshake if actual remote ip is known
-// (swarm.network/protocol.go:sanitizeEnodeRemote)
-func TestSanitizeEnodeRemote(t *testing.T) {
-	pk, err := crypto.GenerateKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-	remoteIP := net.IPv4(0x80, 0x40, 0x20, 0x10)
-	remoteAddr := net.TCPAddr{
-		IP:   remoteIP,
-		Port: 30399,
-	}
-	nodLocal := enode.NewV4(&pk.PublicKey, net.IPv4(0x7f, 0x00, 0x00, 0x01), 30341, 30341)
-	nodRemote := enode.NewV4(&pk.PublicKey, remoteIP, 30341, 30341)
-	baddr := RandomAddr()
-	oldUAddr := []byte(nodLocal.String())
-	baddr.UAddr = oldUAddr
-	sanitizeEnodeRemote(&remoteAddr, baddr)
-	if !bytes.Equal(baddr.UAddr, []byte(nodRemote.String())) {
-		t.Fatalf("insane address. expected %v, got %v", nodRemote.String(), string(baddr.UAddr))
 	}
 }

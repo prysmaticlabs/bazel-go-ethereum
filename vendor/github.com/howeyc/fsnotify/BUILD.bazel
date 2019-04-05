@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "fsnotify.go",
+        "fsnotify_bsd.go",
+        "fsnotify_linux.go",
+        "fsnotify_open_bsd.go",
+        "fsnotify_open_darwin.go",
+        "fsnotify_windows.go",
+    ],
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/howeyc/fsnotify",
+    importpath = "github.com/howeyc/fsnotify",
+    visibility = ["//visibility:public"],
+)

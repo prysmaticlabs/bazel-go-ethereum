@@ -30,6 +30,7 @@ go_test(
     srcs = [
         "base_test.go",
         "bind_test.go",
+        "topics_test.go",
         "util_test.go",
     ],
     embed = [":go_default_library"],
@@ -38,8 +39,10 @@ go_test(
         "//accounts/abi:go_default_library",
         "//accounts/abi/bind/backends:go_default_library",
         "//common:go_default_library",
+        "//common/hexutil:go_default_library",
         "//core:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",
+        "//rlp:go_default_library",
     ],
 )

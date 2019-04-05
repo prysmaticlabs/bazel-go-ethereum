@@ -358,3 +358,15 @@ go_repository(
     commit = "e24eb225f15679bbe54f91bfa7da3b00e59b9768",
     importpath = "github.com/allegro/bigcache",
 )
+
+go_repository(
+    name = "com_github_gizak_termui",
+    commit = "d5ea67dfda30b3881742402ad785ec770e066996",
+    importpath = "github.com/gizak/termui",
+)
+
+go_repository(
+    name = "com_github_cjbassi_drawille_go",
+    commit = "27dc511fe6fd820bf8537298e1d447b450210b28",
+    importpath = "github.com/cjbassi/drawille-go",
+)

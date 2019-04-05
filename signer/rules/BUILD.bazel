@@ -6,7 +6,6 @@ go_library(
     importpath = "github.com/ethereum/go-ethereum/signer/rules",
     visibility = ["//visibility:public"],
     deps = [
-        "//common:go_default_library",
         "//internal/ethapi:go_default_library",
         "//log:go_default_library",
         "//signer/core:go_default_library",

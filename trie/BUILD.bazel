@@ -24,7 +24,7 @@ go_library(
         "//log:go_default_library",
         "//metrics:go_default_library",
         "//rlp:go_default_library",
-        "@com_github_allegro_bigcache//:go_default_library",
+        "//vendor/github.com/allegro/bigcache:go_default_library",
         "@org_golang_x_crypto//sha3:go_default_library",
     ],
 )
@@ -32,9 +32,9 @@ go_library(
 go_test(
     name = "go_default_test",
     srcs = [
+        "database_test.go",
         "encoding_test.go",
         "iterator_test.go",
-        "node_test.go",
         "proof_test.go",
         "secure_trie_test.go",
         "sync_test.go",
@@ -45,6 +45,8 @@ go_test(
         "//common:go_default_library",
         "//crypto:go_default_library",
         "//ethdb:go_default_library",
+        "//ethdb/leveldb:go_default_library",
+        "//ethdb/memorydb:go_default_library",
         "//rlp:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
     ],

@@ -15,6 +15,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//common:go_default_library",
+        "//crypto:go_default_library",
         "//log:go_default_library",
         "//node:go_default_library",
         "//p2p/enode:go_default_library",

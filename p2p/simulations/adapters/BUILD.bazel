@@ -16,6 +16,7 @@ go_library(
         "//node:go_default_library",
         "//p2p:go_default_library",
         "//p2p/enode:go_default_library",
+        "//p2p/enr:go_default_library",
         "//p2p/simulations/pipes:go_default_library",
         "//rpc:go_default_library",
         "@com_github_docker_docker//pkg/reexec:go_default_library",

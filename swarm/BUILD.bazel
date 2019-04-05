@@ -13,7 +13,6 @@ go_library(
         "//ethclient:go_default_library",
         "//metrics:go_default_library",
         "//p2p:go_default_library",
-        "//p2p/enode:go_default_library",
         "//p2p/protocols:go_default_library",
         "//params:go_default_library",
         "//rpc:go_default_library",

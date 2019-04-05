@@ -21,7 +21,6 @@ go_library(
     deps = [
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
-        "//common/math:go_default_library",
         "//crypto:go_default_library",
         "//crypto/ecies:go_default_library",
         "//log:go_default_library",

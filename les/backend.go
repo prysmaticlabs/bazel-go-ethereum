@@ -79,7 +79,7 @@ type LightEthereum struct {
 }
 
 func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
-	chainDb, err := eth.CreateDB(ctx, config, "lightchaindata")
+	chainDb, err := ctx.OpenDatabase("lightchaindata", config.DatabaseCache, config.DatabaseHandles, "eth/db/chaindata/")
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func New(ctx *node.ServiceContext, config *eth.Config) (*LightEthereum, error) {
 		log.Warn("Ultra light client is enabled", "trustedNodes", len(leth.protocolManager.ulc.trustedKeys), "minTrustedFraction", leth.protocolManager.ulc.minTrustedFraction)
 		leth.blockchain.DisableCheckFreq()
 	}
-	leth.ApiBackend = &LesApiBackend{leth, nil}
+	leth.ApiBackend = &LesApiBackend{ctx.ExtRPCEnabled(), leth, nil}
 
 	gpoParams := config.GPO
 	if gpoParams.Default == nil {
@@ -193,12 +193,12 @@ type LightDummyAPI struct{}
 
 // Etherbase is the address that mining rewards will be send to
 func (s *LightDummyAPI) Etherbase() (common.Address, error) {
-	return common.Address{}, fmt.Errorf("not supported")
+	return common.Address{}, fmt.Errorf("mining is not supported in light mode")
 }
 
 // Coinbase is the address that mining rewards will be send to (alias for Etherbase)
 func (s *LightDummyAPI) Coinbase() (common.Address, error) {
-	return common.Address{}, fmt.Errorf("not supported")
+	return common.Address{}, fmt.Errorf("mining is not supported in light mode")
 }
 
 // Hashrate returns the POW hashrate

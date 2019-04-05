@@ -27,6 +27,7 @@ go_library(
         "//swarm/storage:go_default_library",
         "//swarm/tracing:go_default_library",
         "@com_github_opentracing_opentracing_go//:go_default_library",
+        "@com_github_opentracing_opentracing_go//log:go_default_library",
     ],
 )
 
@@ -45,6 +46,7 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//common:go_default_library",
+        "//crypto:go_default_library",
         "//log:go_default_library",
         "//node:go_default_library",
         "//p2p:go_default_library",

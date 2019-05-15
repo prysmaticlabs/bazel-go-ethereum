@@ -50,11 +50,20 @@ func newTestTable(t transport) (*Table, *enode.DB) {
 	return tab, db
 }
 
-// nodeAtDistance creates a node for which enode.LogDist(base, n.id) == ld.
+// nodeAtDistance creates a node for which enode.LogDist(base, node.ID()) == ld.
 func nodeAtDistance(base enode.ID, ld int, ip net.IP) *node {
 	var r enr.Record
 	r.Set(enr.IP(ip))
 	return wrapNode(enode.SignNull(&r, idAtDistance(base, ld)))
+}
+
+// nodesAtDistance creates n nodes for which enode.LogDist(base, node.ID()) == ld.
+func nodesAtDistance(base enode.ID, ld int, n int) []*enode.Node {
+	results := make([]*enode.Node, n)
+	for i := range results {
+		results[i] = unwrapNode(nodeAtDistance(base, ld, intIP(i)))
+	}
+	return results
 }
 
 // idAtDistance returns a random hash such that enode.LogDist(a, b) == n
@@ -75,6 +84,14 @@ func idAtDistance(a enode.ID, n int) (b enode.ID) {
 		b[i] = byte(rand.Intn(255))
 	}
 	return b
+}
+
+func nodesToRecords(nodes []*enode.Node) []*enr.Record {
+	records := make([]*enr.Record, len(nodes))
+	for i := range nodes {
+		records[i] = nodes[i].Record()
+	}
+	return records
 }
 
 func intIP(i int) net.IP {
@@ -336,12 +353,17 @@ func (tn *preminedTestnet) nodesAtDistance(dist int) []rpcNode {
 	return result
 }
 
-func (tn *preminedTestnet) recordsAtDistance(dist int) []*enr.Record {
-	result := make([]*enr.Record, len(tn.dists[dist]))
-	for i := range result {
-		result[i] = tn.node(dist, i).Record()
+func (tn *preminedTestnet) neighborsAtDistance(base *enode.Node, distance uint, elems int) []*enode.Node {
+	nodes := nodesByDistance{target: base.ID()}
+	for d := range lookupTestnet.dists {
+		for i := range lookupTestnet.dists[d] {
+			n := lookupTestnet.node(d, i)
+			if uint(enode.LogDist(n.ID(), base.ID())) == distance {
+				nodes.push(wrapNode(n), elems)
+			}
+		}
 	}
-	return result
+	return unwrapNodes(nodes.entries)
 }
 
 func (tn *preminedTestnet) closest(target enode.ID, n int) (nodes []*enode.Node) {

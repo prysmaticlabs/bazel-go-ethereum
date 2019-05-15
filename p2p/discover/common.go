@@ -20,8 +20,10 @@ import (
 	"crypto/ecdsa"
 	"net"
 
+	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p/enode"
+	"github.com/ethereum/go-ethereum/p2p/enr"
 	"github.com/ethereum/go-ethereum/p2p/netutil"
 )
 
@@ -38,10 +40,25 @@ type Config struct {
 	PrivateKey *ecdsa.PrivateKey
 
 	// These settings are optional:
-	NetRestrict *netutil.Netlist  // network whitelist
-	Bootnodes   []*enode.Node     // list of bootstrap nodes
-	Unhandled   chan<- ReadPacket // unhandled packets are sent on this channel
-	Log         log.Logger        // if set, log messages go here
+	NetRestrict  *netutil.Netlist   // network whitelist
+	Bootnodes    []*enode.Node      // list of bootstrap nodes
+	Unhandled    chan<- ReadPacket  // unhandled packets are sent on this channel
+	Log          log.Logger         // if set, log messages go here
+	ValidSchemes enr.IdentityScheme // allowed identity schemes
+	Clock        mclock.Clock
+}
+
+func (cfg Config) withDefaults() Config {
+	if cfg.Log == nil {
+		cfg.Log = log.Root()
+	}
+	if cfg.ValidSchemes == nil {
+		cfg.ValidSchemes = enode.ValidSchemes
+	}
+	if cfg.Clock == nil {
+		cfg.Clock = mclock.System{}
+	}
+	return cfg
 }
 
 // ListenUDP starts listening for discovery packets on the given UDP socket.
@@ -54,4 +71,11 @@ func ListenUDP(c UDPConn, ln *enode.LocalNode, cfg Config) (*UDPv4, error) {
 type ReadPacket struct {
 	Data []byte
 	Addr *net.UDPAddr
+}
+
+func min(x, y int) int {
+	if x > y {
+		return y
+	}
+	return x
 }

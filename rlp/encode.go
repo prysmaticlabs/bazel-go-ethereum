@@ -349,16 +349,14 @@ func makeWriter(typ reflect.Type, ts tags) (writer, error) {
 	switch {
 	case typ == rawValueType:
 		return writeRawValue, nil
-	case typ.Implements(encoderInterface):
-		return writeEncoder, nil
-	case kind != reflect.Ptr && reflect.PtrTo(typ).Implements(encoderInterface):
-		return writeEncoderNoPtr, nil
-	case kind == reflect.Interface:
-		return writeInterface, nil
 	case typ.AssignableTo(reflect.PtrTo(bigInt)):
 		return writeBigIntPtr, nil
 	case typ.AssignableTo(bigInt):
 		return writeBigIntNoPtr, nil
+	case kind == reflect.Ptr:
+		return makePtrWriter(typ)
+	case reflect.PtrTo(typ).Implements(encoderInterface):
+		return makeEncoderWriter(typ), nil
 	case isUint(kind):
 		return writeUint, nil
 	case kind == reflect.Bool:
@@ -373,8 +371,8 @@ func makeWriter(typ reflect.Type, ts tags) (writer, error) {
 		return makeSliceWriter(typ, ts)
 	case kind == reflect.Struct:
 		return makeStructWriter(typ)
-	case kind == reflect.Ptr:
-		return makePtrWriter(typ)
+	case kind == reflect.Interface:
+		return writeInterface, nil
 	default:
 		return nil, fmt.Errorf("rlp: type %v is not RLP-serializable", typ)
 	}
@@ -470,26 +468,6 @@ func writeString(val reflect.Value, w *encbuf) error {
 	return nil
 }
 
-func writeEncoder(val reflect.Value, w *encbuf) error {
-	return val.Interface().(Encoder).EncodeRLP(w)
-}
-
-// writeEncoderNoPtr handles non-pointer values that implement Encoder
-// with a pointer receiver.
-func writeEncoderNoPtr(val reflect.Value, w *encbuf) error {
-	if !val.CanAddr() {
-		// We can't get the address. It would be possible to make the
-		// value addressable by creating a shallow copy, but this
-		// creates other problems so we're not doing it (yet).
-		//
-		// package json simply doesn't call MarshalJSON for cases like
-		// this, but encodes the value as if it didn't implement the
-		// interface. We don't want to handle it that way.
-		return fmt.Errorf("rlp: game over: unadressable value of type %v, EncodeRLP is pointer method", val.Type())
-	}
-	return val.Addr().Interface().(Encoder).EncodeRLP(w)
-}
-
 func writeInterface(val reflect.Value, w *encbuf) error {
 	if val.IsNil() {
 		// Write empty list. This is consistent with the previous RLP
@@ -580,6 +558,24 @@ func makePtrWriter(typ reflect.Type) (writer, error) {
 		return etypeinfo.writer(val.Elem(), w)
 	}
 	return writer, nil
+}
+
+func makeEncoderWriter(typ reflect.Type) writer {
+	if typ.Implements(encoderInterface) {
+		return func(val reflect.Value, w *encbuf) error {
+			return val.Interface().(Encoder).EncodeRLP(w)
+		}
+	}
+	w := func(val reflect.Value, w *encbuf) error {
+		if !val.CanAddr() {
+			// package json simply doesn't call MarshalJSON for this case, but encodes the
+			// value as if it didn't implement the interface. We don't want to handle it that
+			// way.
+			return fmt.Errorf("rlp: unadressable value of type %v, EncodeRLP is pointer method", val.Type())
+		}
+		return val.Addr().Interface().(Encoder).EncodeRLP(w)
+	}
+	return w
 }
 
 // putint writes i to the beginning of b in big endian byte

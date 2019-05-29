@@ -211,14 +211,18 @@ func makeDecoder(typ reflect.Type, tags tags) (dec decoder, err error) {
 	switch {
 	case typ == rawValueType:
 		return decodeRawValue, nil
-	case typ.Implements(decoderInterface):
 		return decodeDecoder, nil
-	case kind != reflect.Ptr && reflect.PtrTo(typ).Implements(decoderInterface):
-		return decodeDecoderNoPtr, nil
 	case typ.AssignableTo(reflect.PtrTo(bigInt)):
 		return decodeBigInt, nil
 	case typ.AssignableTo(bigInt):
 		return decodeBigIntNoPtr, nil
+	case kind == reflect.Ptr:
+		if tags.nilOK {
+			return makeOptionalPtrDecoder(typ)
+		}
+		return makePtrDecoder(typ)
+	case reflect.PtrTo(typ).Implements(decoderInterface):
+		return decodeDecoder, nil
 	case isUint(kind):
 		return decodeUint, nil
 	case kind == reflect.Bool:
@@ -229,11 +233,6 @@ func makeDecoder(typ reflect.Type, tags tags) (dec decoder, err error) {
 		return makeListDecoder(typ, tags)
 	case kind == reflect.Struct:
 		return makeStructDecoder(typ)
-	case kind == reflect.Ptr:
-		if tags.nilOK {
-			return makeOptionalPtrDecoder(typ)
-		}
-		return makePtrDecoder(typ)
 	case kind == reflect.Interface:
 		return decodeInterface, nil
 	default:
@@ -546,21 +545,8 @@ func decodeInterface(s *Stream, val reflect.Value) error {
 	return nil
 }
 
-// This decoder is used for non-pointer values of types
-// that implement the Decoder interface using a pointer receiver.
-func decodeDecoderNoPtr(s *Stream, val reflect.Value) error {
-	return val.Addr().Interface().(Decoder).DecodeRLP(s)
-}
-
 func decodeDecoder(s *Stream, val reflect.Value) error {
-	// Decoder instances are not handled using the pointer rule if the type
-	// implements Decoder with pointer receiver (i.e. always)
-	// because it might handle empty values specially.
-	// We need to allocate one here in this case, like makePtrDecoder does.
-	if val.Kind() == reflect.Ptr && val.IsNil() {
-		val.Set(reflect.New(val.Type().Elem()))
-	}
-	return val.Interface().(Decoder).DecodeRLP(s)
+	return val.Addr().Interface().(Decoder).DecodeRLP(s)
 }
 
 // Kind represents the kind of value contained in an RLP stream.

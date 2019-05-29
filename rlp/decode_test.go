@@ -672,6 +672,22 @@ func TestDecodeDecoder(t *testing.T) {
 	}
 }
 
+func TestDecodeDecoderNilPointer(t *testing.T) {
+	var s struct {
+		T1 *testDecoder `rlp:"nil"`
+		T2 *testDecoder
+	}
+	if err := Decode(bytes.NewReader(unhex("C2C002")), &s); err != nil {
+		t.Fatalf("Decode error: %v", err)
+	}
+	if s.T1 != nil {
+		t.Errorf("decoder T1 allocated for empty input (called: %v)", s.T1.called)
+	}
+	if s.T2 == nil || !s.T2.called {
+		t.Errorf("decoder T2 not allocated/called")
+	}
+}
+
 type byteDecoder byte
 
 func (bd *byteDecoder) DecodeRLP(s *Stream) error {

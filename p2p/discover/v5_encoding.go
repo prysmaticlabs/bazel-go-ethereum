@@ -75,11 +75,6 @@ type (
 		sent mclock.AbsTime
 	}
 
-	whoareyouBodyV5 struct {
-		IDNonce   [32]byte
-		RecordSeq uint64
-	}
-
 	// PING is sent during liveness checks.
 	pingV5 struct {
 		ReqID  []byte
@@ -283,8 +278,7 @@ func (c *wireCodec) encodeWhoareyou(toID enode.ID, packet *whoareyouV5) ([]byte,
 	}
 	b := new(bytes.Buffer)
 	b.Write(c.sha256sum(toID[:], []byte("WHOAREYOU")))
-	rlp.Encode(b, [][]byte{packet.AuthTag})
-	err := rlp.Encode(b, &whoareyouBodyV5{IDNonce: packet.IDNonce, RecordSeq: packet.RecordSeq})
+	err := rlp.Encode(b, packet)
 	return b.Bytes(), err
 }
 
@@ -431,22 +425,9 @@ func (c *wireCodec) decode(input []byte, addr *net.UDPAddr) (enode.ID, *enode.No
 
 // decodeWhoareyou decode a WHOAREYOU packet.
 func (c *wireCodec) decodeWhoareyou(input []byte) (packetV5, error) {
-	var (
-		packet = new(whoareyouV5)
-		r      = bytes.NewReader(input)
-		token  [1][]byte
-		body   whoareyouBodyV5
-	)
-	if err := rlp.Decode(r, &token); err != nil {
-		return nil, err
-	}
-	if err := rlp.Decode(r, &body); err != nil {
-		return nil, err
-	}
-	packet.AuthTag = token[0]
-	packet.IDNonce = body.IDNonce
-	packet.RecordSeq = body.RecordSeq
-	return packet, nil
+	packet := new(whoareyouV5)
+	err := rlp.DecodeBytes(input, packet)
+	return packet, err
 }
 
 // decodeEncrypted decodes an encrypted discovery packet.

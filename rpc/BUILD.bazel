@@ -4,6 +4,8 @@ go_library(
     name = "go_default_library",
     srcs = [
         "client.go",
+        "constants_unix.go",
+        "constants_unix_nocgo.go",
         "doc.go",
         "endpoints.go",
         "errors.go",

@@ -26,7 +26,6 @@ import (
 	"math"
 	"net"
 	"sync"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/log"
@@ -111,13 +110,13 @@ type callV5 struct {
 	authTag        []byte
 	handshakeCount int
 	challenge      *whoareyouV5
-	timeout        mclock.Timer
+	timeout        mclock.Event
 }
 
 // callTimeout is the response timeout event of a call.
 type callTimeout struct {
 	c     *callV5
-	timer mclock.Timer
+	timer mclock.Event
 }
 
 // ListenV5 listens on the given connection.
@@ -188,6 +187,12 @@ func (t *UDPv5) ReadRandomNodes(buf []*enode.Node) int {
 	return t.tab.ReadRandomNodes(buf)
 }
 
+// Ping sends a ping message to the given node.
+func (t *UDPv5) Ping(n *enode.Node) error {
+	_, err := t.ping(n)
+	return err
+}
+
 // Resolve searches for a specific node with the given ID and tries to get the most recent
 // version of the node record for it. It returns n if the node could not be resolved.
 func (t *UDPv5) Resolve(n *enode.Node) *enode.Node {
@@ -195,7 +200,7 @@ func (t *UDPv5) Resolve(n *enode.Node) *enode.Node {
 		n = intable
 	}
 	// Try asking directly. This works if the node is still responding on the endpoint we have.
-	if resp, err := t.requestENR(n); err == nil {
+	if resp, err := t.RequestENR(n); err == nil {
 		return resp
 	}
 	// Otherwise do a network lookup.
@@ -352,7 +357,7 @@ func (t *UDPv5) ping(n *enode.Node) (uint64, error) {
 }
 
 // requestENR requests n's record.
-func (t *UDPv5) requestENR(n *enode.Node) (*enode.Node, error) {
+func (t *UDPv5) RequestENR(n *enode.Node) (*enode.Node, error) {
 	nodes, err := t.findnode(n, 0)
 	if err != nil {
 		return nil, err
@@ -508,7 +513,7 @@ func (t *UDPv5) dispatch() {
 			if active != c {
 				panic("BUG: callDone for inactive call")
 			}
-			c.timeout.Stop()
+			c.timeout.Cancel()
 			delete(t.activeCallByAuth, string(c.authTag))
 			delete(t.activeCallByNode, id)
 			t.sendNextCall(id)
@@ -536,13 +541,13 @@ func (t *UDPv5) dispatch() {
 // startResponseTimeout sets the response timer for a call.
 func (t *UDPv5) startResponseTimeout(c *callV5) {
 	if c.timeout != nil {
-		c.timeout.Stop()
+		c.timeout.Cancel()
 	}
 	var (
-		timer mclock.Timer
+		timer mclock.Event
 		done  = make(chan struct{})
 	)
-	timer = time.AfterFunc(respTimeout, func() {
+	timer = t.clock.AfterFunc(respTimeout, func() {
 		<-done
 		select {
 		case t.respTimeoutCh <- &callTimeout{c, timer}:

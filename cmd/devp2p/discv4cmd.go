@@ -19,7 +19,6 @@ package main
 import (
 	"fmt"
 	"net"
-	"sort"
 	"strings"
 	"time"
 
@@ -64,10 +63,8 @@ var bootnodesFlag = cli.StringFlag{
 }
 
 func discv4Ping(ctx *cli.Context) error {
-	n, disc, err := getNodeArgAndStartV4(ctx)
-	if err != nil {
-		return err
-	}
+	n := getNodeArg(ctx)
+	disc := startV4(ctx)
 	defer disc.Close()
 
 	start := time.Now()
@@ -79,10 +76,8 @@ func discv4Ping(ctx *cli.Context) error {
 }
 
 func discv4RequestRecord(ctx *cli.Context) error {
-	n, disc, err := getNodeArgAndStartV4(ctx)
-	if err != nil {
-		return err
-	}
+	n := getNodeArg(ctx)
+	disc := startV4(ctx)
 	defer disc.Close()
 
 	respN, err := disc.RequestENR(n)
@@ -94,33 +89,12 @@ func discv4RequestRecord(ctx *cli.Context) error {
 }
 
 func discv4Resolve(ctx *cli.Context) error {
-	n, disc, err := getNodeArgAndStartV4(ctx)
-	if err != nil {
-		return err
-	}
+	n := getNodeArg(ctx)
+	disc := startV4(ctx)
 	defer disc.Close()
 
 	fmt.Println(disc.Resolve(n).String())
 	return nil
-}
-
-func getNodeArgAndStartV4(ctx *cli.Context) (*enode.Node, *discover.UDPv4, error) {
-	if ctx.NArg() != 1 {
-		return nil, nil, fmt.Errorf("missing node as command-line argument")
-	}
-	n, err := parseNode(ctx.Args()[0])
-	if err != nil {
-		return nil, nil, err
-	}
-	var bootnodes []*enode.Node
-	if commandHasFlag(ctx, bootnodesFlag) {
-		bootnodes, err = parseBootnodes(ctx)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	disc, err := startV4(bootnodes)
-	return n, disc, err
 }
 
 func parseBootnodes(ctx *cli.Context) ([]*enode.Node, error) {
@@ -139,28 +113,39 @@ func parseBootnodes(ctx *cli.Context) ([]*enode.Node, error) {
 	return nodes, nil
 }
 
-// commandHasFlag returns true if the current command supports the given flag.
-func commandHasFlag(ctx *cli.Context, flag cli.Flag) bool {
-	flags := ctx.FlagNames()
-	sort.Strings(flags)
-	i := sort.SearchStrings(flags, flag.GetName())
-	return i != len(flags) && flags[i] == flag.GetName()
+// startV4 starts an ephemeral discovery V4 node.
+func startV4(ctx *cli.Context) *discover.UDPv4 {
+	socket, ln, cfg, err := listen()
+	if err != nil {
+		exit(err)
+	}
+	if commandHasFlag(ctx, bootnodesFlag) {
+		bn, err := parseBootnodes(ctx)
+		if err != nil {
+			exit(err)
+		}
+		cfg.Bootnodes = bn
+	}
+	disc, err := discover.ListenV4(socket, ln, cfg)
+	if err != nil {
+		exit(err)
+	}
+	return disc
 }
 
-// startV4 starts an ephemeral discovery V4 node.
-func startV4(bootnodes []*enode.Node) (*discover.UDPv4, error) {
+func listen() (*net.UDPConn, *enode.LocalNode, discover.Config, error) {
 	var cfg discover.Config
-	cfg.Bootnodes = bootnodes
 	cfg.PrivateKey, _ = crypto.GenerateKey()
 	db, _ := enode.OpenDB("")
 	ln := enode.NewLocalNode(db, cfg.PrivateKey)
 
 	socket, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.IP{0, 0, 0, 0}})
 	if err != nil {
-		return nil, err
+		db.Close()
+		return nil, nil, cfg, err
 	}
 	addr := socket.LocalAddr().(*net.UDPAddr)
 	ln.SetFallbackIP(net.IP{127, 0, 0, 1})
 	ln.SetFallbackUDP(addr.Port)
-	return discover.ListenUDP(socket, ln, cfg)
+	return socket, ln, cfg, nil
 }

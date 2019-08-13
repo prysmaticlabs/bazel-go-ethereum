@@ -563,6 +563,12 @@
 			"revisionTime": "2018-07-25T11:53:45Z"
 		},
 		{
+			"checksumSHA1": "ELSEW2KG0p3oua5lIxl1xW2oFBo=",
+			"path": "golang.org/x/crypto/hkdf",
+			"revision": "4def268fd1a49955bfb3dda92fe3db4f924f2285",
+			"revisionTime": "2019-07-01T08:59:26Z"
+		},
+		{
 			"checksumSHA1": "fhxj9uzosD3dQefNF5JuGJzGZwg=",
 			"path": "golang.org/x/crypto/internal/chacha20",
 			"revision": "ff983b9c42bc9fbf91556e191cc8efb585c16908",

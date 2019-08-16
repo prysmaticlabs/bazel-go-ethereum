@@ -118,6 +118,7 @@ type (
 	regtopicV5 struct {
 		ReqID  []byte
 		Ticket []byte
+		ENR    *enr.Record
 	}
 
 	// REGCONFIRMATION is the reply to REGTOPIC.
@@ -143,13 +144,14 @@ const (
 )
 
 var (
-	errTooShort            = errors.New("packet too short")
-	errUnexpectedHandshake = errors.New("unexpected auth response, not in handshake")
-	errInvalidAuthKey      = errors.New("invalid ephemeral pubkey")
-	errUnknownAuthScheme   = errors.New("unknown auth scheme in handshake")
-	errNoRecord            = errors.New("expected ENR in handshake but none sent")
-	errInvalidNonceSig     = errors.New("invalid ID nonce signature")
-	zeroNonce              = make([]byte, gcmNonceSize)
+	errTooShort               = errors.New("packet too short")
+	errUnexpectedHandshake    = errors.New("unexpected auth response, not in handshake")
+	errHandshakeNonceMismatch = errors.New("wrong nonce in auth response")
+	errInvalidAuthKey         = errors.New("invalid ephemeral pubkey")
+	errUnknownAuthScheme      = errors.New("unknown auth scheme in handshake")
+	errNoRecord               = errors.New("expected ENR in handshake but none sent")
+	errInvalidNonceSig        = errors.New("invalid ID nonce signature")
+	zeroNonce                 = make([]byte, gcmNonceSize)
 )
 
 // wireCodec encodes and decodes discovery v5 packets.
@@ -181,13 +183,15 @@ type authHeader struct {
 }
 
 type authHeaderList struct {
-	Auth         []byte // authentication info of packet
-	Scheme       string // name of encryption/authentication scheme
-	EphemeralKey []byte // ephemeral public key
-	Response     []byte // encrypted authResponse
+	Auth         []byte   // authentication info of packet
+	Scheme       string   // name of encryption/authentication scheme
+	IDNonce      [32]byte // IDNonce of WHOAREYOU
+	EphemeralKey []byte   // ephemeral public key
+	Response     []byte   // encrypted authResponse
 }
 
 type authResponse struct {
+	Version   uint
 	Signature []byte
 	Record    *enr.Record `rlp:"nil"` // sender's record
 }
@@ -325,7 +329,7 @@ func (c *wireCodec) encodeEncrypted(toID enode.ID, toAddr *net.UDPAddr, packet p
 
 // encodeAuthHeader creates the auth header on a call packet following WHOAREYOU.
 func (c *wireCodec) makeAuthHeader(nonce []byte, challenge *whoareyouV5) (*authHeaderList, *handshakeSecrets, error) {
-	resp := new(authResponse)
+	resp := &authResponse{Version: 5}
 	idsig, err := c.signIDNonce(challenge.IDNonce[:])
 	if err != nil {
 		return nil, nil, fmt.Errorf("can't sign: %v", err)
@@ -360,6 +364,7 @@ func (c *wireCodec) makeAuthHeader(nonce []byte, challenge *whoareyouV5) (*authH
 	head := &authHeaderList{
 		Auth:         nonce,
 		Scheme:       authSchemeName,
+		IDNonce:      challenge.IDNonce,
 		EphemeralKey: elliptic.Marshal(ephkey.Curve, ephkey.X, ephkey.Y),
 		Response:     respEnc,
 	}
@@ -475,6 +480,9 @@ func (c *wireCodec) decodeAuth(fromID enode.ID, fromAddr *net.UDPAddr, head *aut
 	challenge := c.getHandshake(fromID, fromAddr)
 	if challenge == nil {
 		return nil, nil, errUnexpectedHandshake
+	}
+	if head.IDNonce != challenge.IDNonce {
+		return nil, nil, errHandshakeNonceMismatch
 	}
 	sec, n, err := c.decodeAuthResp(fromID, fromAddr, &head.authHeaderList, challenge)
 	if err != nil {

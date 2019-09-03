@@ -17,14 +17,7 @@
 package discover
 
 import (
-	"crypto/ecdsa"
 	"net"
-
-	"github.com/ethereum/go-ethereum/common/mclock"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/p2p/netutil"
 )
 
 type UDPConn interface {
@@ -34,6 +27,7 @@ type UDPConn interface {
 	LocalAddr() net.Addr
 }
 
+/*
 // Config holds Table-related settings.
 type Config struct {
 	// These settings are required and configure the UDP listener:
@@ -61,10 +55,12 @@ func (cfg Config) withDefaults() Config {
 	return cfg
 }
 
+
 // ListenUDP starts listening for discovery packets on the given UDP socket.
 func ListenUDP(c UDPConn, ln *enode.LocalNode, cfg Config) (*UDPv4, error) {
 	return ListenV4(c, ln, cfg)
 }
+
 
 // ReadPacket is a packet that couldn't be handled. Those packets are sent to the unhandled
 // channel if configured.
@@ -72,6 +68,7 @@ type ReadPacket struct {
 	Data []byte
 	Addr *net.UDPAddr
 }
+*/
 
 func min(x, y int) int {
 	if x > y {

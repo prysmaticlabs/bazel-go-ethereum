@@ -51,6 +51,7 @@ const (
 	expiration     = 20 * time.Second
 	bondExpiration = 24 * time.Hour
 
+	maxFindnodeFailures = 5                // nodes exceeding this limit are dropped
 	ntpFailureThreshold = 32               // Continuous timeouts after which to check NTP
 	ntpWarningCooldown  = 10 * time.Minute // Minimum amount of time to pass before repeating NTP warning
 	driftThreshold      = 10 * time.Second // Allowed clock drift before warning user

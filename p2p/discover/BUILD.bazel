@@ -47,12 +47,12 @@ go_test(
         "//common:go_default_library",
         "//common/mclock:go_default_library",
         "//crypto:go_default_library",
+        "//internal/testlog:go_default_library",
         "//log:go_default_library",
         "//p2p/enode:go_default_library",
         "//p2p/enr:go_default_library",
         "//p2p/netutil:go_default_library",
         "//rlp:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
-        "@com_github_ethereum_go_ethereum//internal/testlog:go_default_library",
     ],
 )

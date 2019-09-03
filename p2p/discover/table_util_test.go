@@ -43,6 +43,37 @@ func init() {
 	nullNode = enode.SignNull(&r, enode.ID{})
 }
 
+type rpcNode struct {
+	IP  net.IP // len 4 for IPv4 or 16 for IPv6
+	UDP uint16 // for discovery protocol
+	TCP uint16 // for RLPx protocol
+	ID  encPubkey
+}
+
+type rpcEndpoint struct {
+	IP  net.IP // len 4 for IPv4 or 16 for IPv6
+	UDP uint16 // for discovery protocol
+	TCP uint16 // for RLPx protocol
+}
+
+func nodeToRPC(n *node) rpcNode {
+	var key ecdsa.PublicKey
+	var ekey encPubkey
+	if err := n.Load((*enode.Secp256k1)(&key)); err == nil {
+		ekey = encodePubkey(&key)
+	}
+	return rpcNode{ID: ekey, IP: n.IP(), UDP: uint16(n.UDP()), TCP: uint16(n.TCP())}
+}
+
+// shared test variables
+var (
+	futureExp          = uint64(time.Now().Add(10 * time.Hour).Unix())
+	testTarget         = encPubkey{0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1}
+	testRemote         = rpcEndpoint{IP: net.ParseIP("1.1.1.1").To4(), UDP: 1, TCP: 2}
+	testLocalAnnounced = rpcEndpoint{IP: net.ParseIP("2.2.2.2").To4(), UDP: 3, TCP: 4}
+	testLocal          = rpcEndpoint{IP: net.ParseIP("3.3.3.3").To4(), UDP: 5, TCP: 6}
+)
+
 func newTestTable(t transport) (*Table, *enode.DB) {
 	db, _ := enode.OpenDB("")
 	tab, _ := newTable(t, db, nil, log.Root())

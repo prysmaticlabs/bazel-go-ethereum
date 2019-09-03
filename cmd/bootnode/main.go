@@ -130,7 +130,7 @@ func main() {
 			PrivateKey:  nodeKey,
 			NetRestrict: restrictList,
 		}
-		if _, err := discover.ListenUDP(conn, ln, cfg); err != nil {
+		if _, err := discover.ListenV5(conn, ln, cfg); err != nil {
 			utils.Fatalf("%v", err)
 		}
 	}

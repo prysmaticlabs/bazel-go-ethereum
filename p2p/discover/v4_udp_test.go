@@ -16,28 +16,9 @@
 
 package discover
 
-import (
-	"bytes"
-	"crypto/ecdsa"
-	crand "crypto/rand"
-	"encoding/binary"
-	"encoding/hex"
-	"math/rand"
-	"net"
-	"reflect"
-	"testing"
-	"time"
+import ()
 
-	"github.com/davecgh/go-spew/spew"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/internal/testlog"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/rlp"
-)
-
+/*
 // shared test variables
 var (
 	futureExp          = uint64(time.Now().Add(10 * time.Hour).Unix())
@@ -45,8 +26,9 @@ var (
 	testRemote         = rpcEndpoint{IP: net.ParseIP("1.1.1.1").To4(), UDP: 1, TCP: 2}
 	testLocalAnnounced = rpcEndpoint{IP: net.ParseIP("2.2.2.2").To4(), UDP: 3, TCP: 4}
 	testLocal          = rpcEndpoint{IP: net.ParseIP("3.3.3.3").To4(), UDP: 5, TCP: 6}
-)
+)*/
 
+/*
 func TestUDPv4_packetErrors(t *testing.T) {
 	test := newUDPV4Test(t)
 	defer test.close()
@@ -654,3 +636,4 @@ func (test *udpV4Test) waitPacketOut(validate interface{}) (closed bool) {
 	fn.Call([]reflect.Value{reflect.ValueOf(p), reflect.ValueOf(&dgram.to), reflect.ValueOf(hash)})
 	return false
 }
+*/

@@ -16,25 +16,7 @@
 
 package discover
 
-import (
-	"bytes"
-	"container/list"
-	"crypto/ecdsa"
-	crand "crypto/rand"
-	"errors"
-	"fmt"
-	"io"
-	"net"
-	"sync"
-	"time"
-
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/enr"
-	"github.com/ethereum/go-ethereum/p2p/netutil"
-	"github.com/ethereum/go-ethereum/rlp"
-)
+import ()
 
 // RPC packet types
 const (
@@ -46,6 +28,7 @@ const (
 	p_enrResponseV4
 )
 
+/*
 // RPC request structures
 type (
 	pingV4 struct {
@@ -943,3 +926,4 @@ func (req *enrResponseV4) preverify(t *UDPv4, from *net.UDPAddr, fromID enode.ID
 
 func (req *enrResponseV4) handle(t *UDPv4, from *net.UDPAddr, fromID enode.ID, mac []byte) {
 }
+*/

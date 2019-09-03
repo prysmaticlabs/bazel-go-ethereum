@@ -17,34 +17,14 @@
 package discover
 
 import (
-	"bytes"
-	"crypto/ecdsa"
-	crand "crypto/rand"
-	"encoding/binary"
-	"encoding/hex"
-	"errors"
-	"fmt"
-	"io"
-	"math/rand"
-	"net"
-	"path/filepath"
-	"reflect"
-	"runtime"
-	"sync"
-	"testing"
-	"time"
-
 	"github.com/davecgh/go-spew/spew"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/rlp"
 )
 
 func init() {
 	spew.Config.DisableMethods = true
 }
 
+/*
 // shared test variables
 var (
 	futureExp          = uint64(time.Now().Add(10 * time.Hour).Unix())
@@ -64,7 +44,8 @@ type udpTest struct {
 	localkey, remotekey *ecdsa.PrivateKey
 	remoteaddr          *net.UDPAddr
 }
-
+*/
+/*
 func newUDPTest(t *testing.T) *udpTest {
 	test := &udpTest{
 		t:          t,
@@ -628,3 +609,4 @@ func (c *dgramPipe) waitPacketOut() dgram {
 	c.queue = c.queue[:len(c.queue)-1]
 	return p
 }
+*/

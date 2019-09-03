@@ -17,20 +17,8 @@
 package discover
 
 import (
-	"bytes"
-	"container/list"
-	"crypto/ecdsa"
 	"errors"
-	"fmt"
-	"net"
-	"sync"
 	"time"
-
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/p2p/enode"
-	"github.com/ethereum/go-ethereum/p2p/netutil"
-	"github.com/ethereum/go-ethereum/rlp"
 )
 
 // Errors
@@ -43,6 +31,7 @@ var (
 	errTimeout          = errors.New("RPC timeout")
 	errClockWarp        = errors.New("reply deadline too far in the future")
 	errClosed           = errors.New("socket closed")
+	errLowPort          = errors.New("low port")
 )
 
 // Timeouts
@@ -62,6 +51,7 @@ const (
 	maxPacketSize = 1280
 )
 
+/*
 // RPC packet types
 const (
 	pingPacket = iota + 1 // zero is 'reserved'
@@ -135,6 +125,7 @@ func makeEndpoint(addr *net.UDPAddr, tcpPort uint16) rpcEndpoint {
 	return rpcEndpoint{IP: ip, UDP: uint16(addr.Port), TCP: tcpPort}
 }
 
+/*
 func (t *udp) nodeFromRPC(sender *net.UDPAddr, rn rpcNode) (*node, error) {
 	if rn.UDP <= 1024 {
 		return nil, errors.New("low port")
@@ -262,7 +253,8 @@ func ListenUDP(c conn, ln *enode.LocalNode, cfg Config) (*Table, error) {
 	}
 	return tab, nil
 }
-
+*/
+/*
 func newUDP(c conn, ln *enode.LocalNode, cfg Config) (*Table, *udp, error) {
 	udp := &udp{
 		conn:            c,
@@ -524,6 +516,7 @@ func init() {
 	}
 }
 
+
 func (t *udp) send(toaddr *net.UDPAddr, toid enode.ID, ptype byte, req packet) ([]byte, error) {
 	packet, hash, err := encodePacket(t.priv, ptype, req)
 	if err != nil {
@@ -537,6 +530,7 @@ func (t *udp) write(toaddr *net.UDPAddr, toid enode.ID, what string, packet []by
 	log.Trace(">> "+what, "id", toid, "addr", toaddr, "err", err)
 	return err
 }
+
 
 func encodePacket(priv *ecdsa.PrivateKey, ptype byte, req interface{}) (packet, hash []byte, err error) {
 	b := new(bytes.Buffer)
@@ -560,6 +554,7 @@ func encodePacket(priv *ecdsa.PrivateKey, ptype byte, req interface{}) (packet, 
 	copy(packet, hash)
 	return packet, hash, nil
 }
+
 
 // readLoop runs in its own goroutine. it handles incoming UDP packets.
 func (t *udp) readLoop(unhandled chan<- ReadPacket) {
@@ -710,6 +705,7 @@ func (req *findnode) preverify(t *udp, from *net.UDPAddr, fromID enode.ID, fromK
 	return nil
 }
 
+
 func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID enode.ID, mac []byte) {
 	// Determine closest nodes.
 	target := enode.ID(crypto.Keccak256Hash(req.Target[:]))
@@ -738,6 +734,7 @@ func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID enode.ID, mac []by
 
 func (req *findnode) name() string { return "FINDNODE/v4" }
 
+
 func (req *neighbors) preverify(t *udp, from *net.UDPAddr, fromID enode.ID, fromKey encPubkey) error {
 	if expired(req.Expiration) {
 		return errExpired
@@ -756,3 +753,4 @@ func (req *neighbors) name() string { return "NEIGHBORS/v4" }
 func expired(ts uint64) bool {
 	return time.Unix(int64(ts), 0).Before(time.Now())
 }
+*/

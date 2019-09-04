@@ -330,6 +330,7 @@ func (c *wireCodec) encodeEncrypted(toID enode.ID, toAddr *net.UDPAddr, packet p
 // encodeAuthHeader creates the auth header on a call packet following WHOAREYOU.
 func (c *wireCodec) makeAuthHeader(nonce []byte, challenge *whoareyouV5) (*authHeaderList, *handshakeSecrets, error) {
 	resp := &authResponse{Version: 5}
+	resp.Record = &enr.Record{}
 	idsig, err := c.signIDNonce(challenge.IDNonce[:])
 	if err != nil {
 		return nil, nil, fmt.Errorf("can't sign: %v", err)
@@ -492,7 +493,7 @@ func (c *wireCodec) decodeAuth(fromID enode.ID, fromAddr *net.UDPAddr, head *aut
 	sec.readKey, sec.writeKey = sec.writeKey, sec.readKey
 	c.storeKeys(fromID, fromAddr, sec.readKey, sec.writeKey)
 	c.deleteHandshake(fromID, fromAddr)
-	return sec.readKey, nil, err
+	return sec.readKey, n, err
 }
 
 // decodeAuthResp decodes and verifies an authentication response.

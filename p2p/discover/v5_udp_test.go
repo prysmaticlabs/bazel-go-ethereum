@@ -35,8 +35,6 @@ import (
 
 // Real sockets, real crypto: this test checks end-to-end connectivity for UDPv5.
 func TestEndToEndV5(t *testing.T) {
-	t.Skip("MAKE IT WORK")
-
 	t.Parallel()
 	node1 := startLocalhostV5(t, Config{})
 	node2 := startLocalhostV5(t, Config{Bootnodes: []*enode.Node{node1.Self()}})

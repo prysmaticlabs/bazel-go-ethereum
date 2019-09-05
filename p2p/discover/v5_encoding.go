@@ -492,7 +492,7 @@ func (c *wireCodec) decodeAuth(fromID enode.ID, fromAddr *net.UDPAddr, head *aut
 	sec.readKey, sec.writeKey = sec.writeKey, sec.readKey
 	c.storeKeys(fromID, fromAddr, sec.readKey, sec.writeKey)
 	c.deleteHandshake(fromID, fromAddr)
-	return sec.readKey, nil, err
+	return sec.readKey, n, err
 }
 
 // decodeAuthResp decodes and verifies an authentication response.

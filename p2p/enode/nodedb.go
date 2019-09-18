@@ -160,22 +160,28 @@ func nodeItemKey(id ID, ip net.IP, field string) []byte {
 }
 
 // splitNodeItemKey returns the components of a key created by nodeItemKey.
-func splitNodeItemKey(key []byte) (id ID, ip net.IP, field string) {
+func splitNodeItemKey(key []byte) (id ID, ip net.IP, field string, err error) {
 	id, key = splitNodeKey(key)
 	// Skip discover root.
 	if string(key) == dbDiscoverRoot {
-		return id, nil, ""
+		return id, nil, "", nil
 	}
 	key = key[len(dbDiscoverRoot)+1:]
+	if len(key) < 16 {
+		return id, ip, "", fmt.Errorf("key is only %d bytes", len(key))
+	}
 	// Split out the IP.
 	ip = net.IP(key[:16])
 	if ip4 := ip.To4(); ip4 != nil {
 		ip = ip4
 	}
+	if len(key) <= 17 {
+		return id, ip, "", fmt.Errorf("key is only %d bytes", len(key))
+	}
 	key = key[16+1:]
 	// Field is the remainder of key.
 	field = string(key)
-	return id, ip, field
+	return id, ip, field, nil
 }
 
 func v5Key(id ID, field string) []byte {
@@ -336,8 +342,8 @@ func (db *DB) expireNodes() {
 		atEnd        = false
 	)
 	for !atEnd {
-		id, ip, field := splitNodeItemKey(it.Key())
-		if field == dbNodePong {
+		id, ip, field, err := splitNodeItemKey(it.Key())
+		if err == nil && field == dbNodePong {
 			time, _ := binary.Varint(it.Value())
 			if time > youngestPong {
 				youngestPong = time

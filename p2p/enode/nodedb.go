@@ -67,6 +67,7 @@ const (
 )
 
 var zeroIP = make(net.IP, 16)
+var bootNodes = make(map[ID]bool)
 
 // DB is the node database, storing previously seen nodes and any collected metadata about
 // them for QoS purposes.
@@ -272,6 +273,10 @@ func (db *DB) UpdateNode(node *Node) error {
 	return db.storeUint64(nodeItemKey(node.ID(), zeroIP, dbNodeSeq), node.Seq())
 }
 
+func (db *DB) AddBootNode(node *Node) {
+	bootNodes[node.ID()] = true
+}
+
 // NodeSeq returns the stored record sequence number of the given node.
 func (db *DB) NodeSeq(id ID) uint64 {
 	return db.fetchUint64(nodeItemKey(id, zeroIP, dbNodeSeq))
@@ -343,7 +348,8 @@ func (db *DB) expireNodes() {
 	)
 	for !atEnd {
 		id, ip, field, err := splitNodeItemKey(it.Key())
-		if err == nil && field == dbNodePong {
+		isBootNode := bootNodes[id]
+		if err == nil && field == dbNodePong && !isBootNode {
 			time, _ := binary.Varint(it.Value())
 			if time > youngestPong {
 				youngestPong = time

@@ -67,7 +67,7 @@ func TestDBNodeItemKey(t *testing.T) {
 	if !bytes.Equal(enc, want) {
 		t.Errorf("wrong encoded key:\ngot  %q\nwant %q", enc, want)
 	}
-	id, ip, field,err := splitNodeItemKey(enc)
+	id, ip, field, err := splitNodeItemKey(enc)
 	if err != nil {
 		t.Error(err)
 	}

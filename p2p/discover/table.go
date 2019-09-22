@@ -346,6 +346,12 @@ func (tab *Table) doRevalidate(done chan<- struct{}) {
 		tab.bumpInBucket(b, last)
 		return
 	}
+
+	for _,nd := range tab.nursery {
+		if unwrapNode(nd).ID() == last.ID() {
+			return
+		}
+	}
 	// No reply received, pick a replacement or delete the node if there aren't
 	// any replacements.
 	if r := tab.replace(b, last); r != nil {

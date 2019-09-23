@@ -273,8 +273,14 @@ func (db *DB) UpdateNode(node *Node) error {
 	return db.storeUint64(nodeItemKey(node.ID(), zeroIP, dbNodeSeq), node.Seq())
 }
 
+// AddBootNode adds a bootnode to the map.
 func (db *DB) AddBootNode(node *Node) {
 	bootNodes[node.ID()] = true
+}
+
+// BootNodes returns all the bootnodes in the db.
+func (db *DB) BootNodes() map[ID]bool {
+	return bootNodes
 }
 
 // NodeSeq returns the stored record sequence number of the given node.

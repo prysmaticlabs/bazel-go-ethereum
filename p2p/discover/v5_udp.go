@@ -193,6 +193,20 @@ func (t *UDPv5) Ping(n *enode.Node) error {
 	return err
 }
 
+// AllNodes returns all the nodes stored in the local table.
+func (t *UDPv5) AllNodes() []*enode.Node {
+	t.tab.mutex.Lock()
+	defer t.tab.mutex.Unlock()
+	nodes := make([]*enode.Node,0)
+
+	for _, b := range &t.tab.buckets {
+		for _,n := range b.entries {
+			nodes = append(nodes,unwrapNode(n))
+		}
+ 	}
+	return nodes
+}
+
 // Resolve searches for a specific node with the given ID and tries to get the most recent
 // version of the node record for it. It returns n if the node could not be resolved.
 func (t *UDPv5) Resolve(n *enode.Node) *enode.Node {
@@ -306,6 +320,11 @@ func (t *UDPv5) lookupWorker(destNode *node, target enode.ID, response chan<- []
 			t.log.Trace("FINDNODE/v5 call found no useful nodes", "id", destNode.ID(), "d", dists[i], "failcount", fails, "err", err)
 			if fails >= maxFindnodeFailures {
 				t.log.Trace("Too many findnode failures, dropping", "id", destNode.ID(), "failcount", fails)
+				bootNodes := t.db.BootNodes()
+				if bootNodes[destNode.ID()] {
+					t.log.Trace("Not removing bootnode", "id", destNode.ID(), "failcount", fails)
+					break
+				}
 				t.tab.delete(destNode)
 				break
 			}

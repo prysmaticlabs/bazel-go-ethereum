@@ -38,7 +38,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//log:go_default_library",
-        "@com_github_elastic_gosigar//:go_default_library",
     ],
 )
 

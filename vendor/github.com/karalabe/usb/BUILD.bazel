@@ -3,19 +3,12 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library")
 go_library(
     name = "go_default_library",
     srcs = [
-        #"hid_disabled.go",
-        #"hid_enabled.go",
-        "libs.go",
-        "raw_disabled.go",
+        #"usb_enabled.go",
+        "stub_usb_enabled.go",
         #"raw_enabled.go",
         #"raw_errors.go",
         "usb.go",
-        "usb_disabled.go",
-        #"usb_enabled.go",
-        "stub_usb_enabled.go",
-        "wchar.go",
     ],
-    cgo = True,
     #clinkopts = select({
     #    "@io_bazel_rules_go//go/platform:darwin": [
     #        "-framework CoreFoundation -framework IOKit -lobjc",

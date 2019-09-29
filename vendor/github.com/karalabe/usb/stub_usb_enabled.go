@@ -1,6 +1,6 @@
 package usb
 
-// A lot of the cgo code in this package has been commented out in bazel, this file is
+// A lot of the cgo code in this package has been deleted and commented out in bazel, this file is
 // used as a stub in the timebeing so that any other packages using this library can
 // still function properly and will not be broken.
 

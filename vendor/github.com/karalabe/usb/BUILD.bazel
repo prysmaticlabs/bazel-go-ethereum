@@ -4,7 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "hid_disabled.go",
-        "hid_enabled.go",
+        #  "hid_enabled.go",
         "libs.go",
         "raw_disabled.go",
         "raw_enabled.go",
@@ -15,52 +15,52 @@ go_library(
         "wchar.go",
     ],
     cgo = True,
-    clinkopts = select({
-        "@io_bazel_rules_go//go/platform:darwin": [
-            "-framework CoreFoundation -framework IOKit -lobjc",
-        ],
-        "@io_bazel_rules_go//go/platform:freebsd": [
-            "-lusb",
-        ],
-        "@io_bazel_rules_go//go/platform:linux": [
-            "-lrt",
-        ],
-        "@io_bazel_rules_go//go/platform:windows": [
-            "-lsetupapi",
-        ],
-        "//conditions:default": [],
-    }),
-    copts = select({
-        "@io_bazel_rules_go//go/platform:darwin": [
-            "-DDEFAULT_VISIBILITY=",
-            "-DOS_DARWIN -DHAVE_SYS_TIME_H",
-            "-DPOLL_NFDS_TYPE=int",
-            "-Ivendor/github.com/karalabe/usb/hidapi/hidapi",
-            "-Ivendor/github.com/karalabe/usb/libusb/libusb",
-        ],
-        "@io_bazel_rules_go//go/platform:freebsd": [
-            "-DDEFAULT_VISIBILITY=",
-            "-DOS_FREEBSD",
-            "-DPOLL_NFDS_TYPE=int",
-            "-Ivendor/github.com/karalabe/usb/hidapi/hidapi",
-            "-Ivendor/github.com/karalabe/usb/libusb/libusb",
-        ],
-        "@io_bazel_rules_go//go/platform:linux": [
-            "-DDEFAULT_VISIBILITY=",
-            "-DOS_LINUX -D_GNU_SOURCE -DHAVE_SYS_TIME_H",
-            "-DPOLL_NFDS_TYPE=int",
-            "-Ivendor/github.com/karalabe/usb/hidapi/hidapi",
-            "-Ivendor/github.com/karalabe/usb/libusb/libusb",
-        ],
-        "@io_bazel_rules_go//go/platform:windows": [
-            "-DDEFAULT_VISIBILITY=",
-            "-DOS_WINDOWS",
-            "-DPOLL_NFDS_TYPE=int",
-            "-Ivendor/github.com/karalabe/usb/hidapi/hidapi",
-            "-Ivendor/github.com/karalabe/usb/libusb/libusb",
-        ],
-        "//conditions:default": [],
-    }),
+    #clinkopts = select({
+    #    "@io_bazel_rules_go//go/platform:darwin": [
+    #        "-framework CoreFoundation -framework IOKit -lobjc",
+    #    ],
+    #    "@io_bazel_rules_go//go/platform:freebsd": [
+    #        "-lusb",
+    #    ],
+    #    "@io_bazel_rules_go//go/platform:linux": [
+    #        "-lrt",
+    #    ],
+    #     "@io_bazel_rules_go//go/platform:windows": [
+    #       "-lsetupapi",
+    #     ],
+    #    "//conditions:default": [],
+    # }),
+    # copts = select({
+    #     "@io_bazel_rules_go//go/platform:darwin": [
+    #         "-DDEFAULT_VISIBILITY=",
+    #         "-DOS_DARWIN -DHAVE_SYS_TIME_H",
+    #         "-DPOLL_NFDS_TYPE=int",
+    #         "-Ivendor/github.com/karalabe/usb/hidapi/hidapi",
+    #         "-Ivendor/github.com/karalabe/usb/libusb/libusb",
+    #     ],
+    #     "@io_bazel_rules_go//go/platform:freebsd": [
+    #         "-DDEFAULT_VISIBILITY=",
+    #         "-DOS_FREEBSD",
+    #         "-DPOLL_NFDS_TYPE=int",
+    #         "-Ivendor/github.com/karalabe/usb/hidapi/hidapi",
+    #         "-Ivendor/github.com/karalabe/usb/libusb/libusb",
+    #     ],
+    #     "@io_bazel_rules_go//go/platform:linux": [
+    #         "-DDEFAULT_VISIBILITY=",
+    #         "-DOS_LINUX -D_GNU_SOURCE -DHAVE_SYS_TIME_H",
+    #         "-DPOLL_NFDS_TYPE=int",
+    #         "-Ivendor/github.com/karalabe/usb/hidapi/hidapi",
+    #         "-Ivendor/github.com/karalabe/usb/libusb/libusb",
+    #     ],
+    #     "@io_bazel_rules_go//go/platform:windows": [
+    #         "-DDEFAULT_VISIBILITY=",
+    #         "-DOS_WINDOWS",
+    #         "-DPOLL_NFDS_TYPE=int",
+    #         "-Ivendor/github.com/karalabe/usb/hidapi/hidapi",
+    #         "-Ivendor/github.com/karalabe/usb/libusb/libusb",
+    #     ],
+    #     "//conditions:default": [],
+    # }),
     importmap = "github.com/ethereum/go-ethereum/vendor/github.com/karalabe/usb",
     importpath = "github.com/karalabe/usb",
     visibility = ["//visibility:public"],

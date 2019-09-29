@@ -19,7 +19,7 @@ package usb
 
 /*
 #include <stdlib.h>
-#include "./hidapi/hidapi/hidapi.h"
+#include "hidapi/hidapi/hidapi.h"
 */
 import "C"
 

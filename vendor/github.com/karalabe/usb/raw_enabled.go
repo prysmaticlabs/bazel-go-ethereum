@@ -18,7 +18,7 @@
 package usb
 
 /*
-	#include "./libusb/libusb/libusb.h"
+	#include "libusb/libusb/libusb.h"
 
 	// ctx is a global libusb context to interact with devices through.
 	libusb_context* ctx;

@@ -63,7 +63,7 @@ package usb
 #endif
 
 #ifndef OS_FREEBSD
-	#include "core.c"
+	#include "libusb/libusb/core.c"
 	#include "descriptor.c"
 	#include "hotplug.c"
 	#include "io.c"

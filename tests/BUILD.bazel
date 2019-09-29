@@ -9,7 +9,6 @@ go_library(
         "gen_difficultytest.go",
         "gen_stenv.go",
         "gen_sttransaction.go",
-        "gen_tttransaction.go",
         "gen_vmexec.go",
         "init.go",
         "rlp_test_util.go",
@@ -52,7 +51,6 @@ go_test(
     data = glob(["testdata/**"]),
     embed = [":go_default_library"],
     deps = [
-        "//cmd/utils:go_default_library",
         "//common:go_default_library",
         "//core/vm:go_default_library",
         "//params:go_default_library",

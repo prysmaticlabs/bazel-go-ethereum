@@ -21,7 +21,7 @@ go_library(
         "//event:go_default_library",
         "//log:go_default_library",
         "//rlp:go_default_library",
-        "//vendor/github.com/karalabe/hid:go_default_library",
+        "//vendor/github.com/karalabe/usb:go_default_library",
         "@com_github_golang_protobuf//proto:go_default_library",
     ],
 )

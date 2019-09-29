@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "core.go",
+        "defaultlog.go",
         "defaultlog_syslog.go",
         "defaultlog_windows.go",
         "doc.go",
@@ -16,4 +17,5 @@ go_library(
     importmap = "github.com/ethereum/go-ethereum/vendor/github.com/Azure/azure-pipeline-go/pipeline",
     importpath = "github.com/Azure/azure-pipeline-go/pipeline",
     visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/mattn/go-ieproxy:go_default_library"],
 )

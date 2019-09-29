@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
@@ -15,5 +15,17 @@ go_library(
         "@com_github_syndtr_goleveldb//leveldb/filter:go_default_library",
         "@com_github_syndtr_goleveldb//leveldb/opt:go_default_library",
         "@com_github_syndtr_goleveldb//leveldb/util:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["leveldb_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//ethdb:go_default_library",
+        "//ethdb/dbtest:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
+        "@com_github_syndtr_goleveldb//leveldb/storage:go_default_library",
     ],
 )

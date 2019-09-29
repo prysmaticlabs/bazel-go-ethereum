@@ -10,6 +10,7 @@ go_library(
     importpath = "github.com/ethereum/go-ethereum/console",
     visibility = ["//visibility:public"],
     deps = [
+        "//accounts/scwallet:go_default_library",
         "//accounts/usbwallet:go_default_library",
         "//internal/jsre:go_default_library",
         "//internal/web3ext:go_default_library",
@@ -32,6 +33,7 @@ go_test(
         "//core:go_default_library",
         "//eth:go_default_library",
         "//internal/jsre:go_default_library",
+        "//miner:go_default_library",
         "//node:go_default_library",
     ],
 )

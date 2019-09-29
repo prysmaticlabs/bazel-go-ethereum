@@ -12,12 +12,14 @@ go_library(
     deps = [
         "//accounts:go_default_library",
         "//accounts/keystore:go_default_library",
+        "//accounts/scwallet:go_default_library",
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
         "//consensus/clique:go_default_library",
         "//consensus/ethash:go_default_library",
         "//core:go_default_library",
+        "//core/bloombits:go_default_library",
         "//core/rawdb:go_default_library",
         "//core/state:go_default_library",
         "//core/types:go_default_library",
@@ -31,7 +33,7 @@ go_library(
         "//params:go_default_library",
         "//rlp:go_default_library",
         "//rpc:go_default_library",
+        "//vendor/github.com/tyler-smith/go-bip39:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
-        "@com_github_syndtr_goleveldb//leveldb:go_default_library",
     ],
 )

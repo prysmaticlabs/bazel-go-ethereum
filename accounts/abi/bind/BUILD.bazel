@@ -15,7 +15,9 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:go_default_library",
+        "//accounts:go_default_library",
         "//accounts/abi:go_default_library",
+        "//accounts/external:go_default_library",
         "//accounts/keystore:go_default_library",
         "//common:go_default_library",
         "//core/types:go_default_library",

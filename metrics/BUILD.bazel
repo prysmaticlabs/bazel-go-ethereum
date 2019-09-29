@@ -4,6 +4,9 @@ go_library(
     name = "go_default_library",
     srcs = [
         "counter.go",
+        "cpu.go",
+        "cpu_syscall.go",
+        "cpu_windows.go",
         "debug.go",
         "disk.go",
         "disk_linux.go",
@@ -35,6 +38,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//log:go_default_library",
+        "@com_github_elastic_gosigar//:go_default_library",
     ],
 )
 

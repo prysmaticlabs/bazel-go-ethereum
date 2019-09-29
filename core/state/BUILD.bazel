@@ -7,7 +7,6 @@ go_library(
         "dump.go",
         "iterator.go",
         "journal.go",
-        "managed_state.go",
         "state_object.go",
         "statedb.go",
         "sync.go",
@@ -16,6 +15,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//common:go_default_library",
+        "//common/hexutil:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",
         "//ethdb:go_default_library",
@@ -32,7 +32,7 @@ go_test(
     srcs = [
         "iterator_test.go",
         "main_test.go",
-        "managed_state_test.go",
+        "state_object_test.go",
         "state_test.go",
         "statedb_test.go",
         "sync_test.go",
@@ -44,6 +44,7 @@ go_test(
         "//core/types:go_default_library",
         "//crypto:go_default_library",
         "//ethdb:go_default_library",
+        "//ethdb/memorydb:go_default_library",
         "//trie:go_default_library",
         "@in_gopkg_check_v1//:go_default_library",
     ],

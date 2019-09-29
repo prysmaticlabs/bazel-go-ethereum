@@ -7,7 +7,11 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//accounts/abi/bind:go_default_library",
+        "//cmd/utils:go_default_library",
         "//common/compiler:go_default_library",
+        "//crypto:go_default_library",
+        "//log:go_default_library",
+        "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )
 

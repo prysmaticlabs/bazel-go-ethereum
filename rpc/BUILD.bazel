@@ -9,6 +9,7 @@ go_library(
         "doc.go",
         "endpoints.go",
         "errors.go",
+        "gzip.go",
         "handler.go",
         "http.go",
         "inproc.go",
@@ -30,9 +31,9 @@ go_library(
         "//common/hexutil:go_default_library",
         "//log:go_default_library",
         "//p2p/netutil:go_default_library",
+        "//vendor/github.com/gorilla/websocket:go_default_library",
         "@com_github_deckarep_golang_set//:go_default_library",
         "@com_github_rs_cors//:go_default_library",
-        "@org_golang_x_net//websocket:go_default_library",
     ] + select({
         "@io_bazel_rules_go//go/platform:windows": [
             "@in_gopkg_natefinch_npipe_v2//:go_default_library",
@@ -58,6 +59,7 @@ go_test(
     deps = [
         "//common/math:go_default_library",
         "//log:go_default_library",
+        "//vendor/github.com/gorilla/websocket:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
     ],
 )

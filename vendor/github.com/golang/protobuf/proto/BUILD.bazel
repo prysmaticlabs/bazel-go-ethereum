@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "deprecated.go",
+        "discard.go",
+        "table_marshal.go",
+        "table_merge.go",
+        "table_unmarshal.go",
+    ],
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/golang/protobuf/proto",
+    importpath = "github.com/golang/protobuf/proto",
+    visibility = ["//visibility:public"],
+)

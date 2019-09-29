@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "decoder.go",
+        "encoder.go",
+    ],
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/status-im/keycard-go/derivationpath",
+    importpath = "github.com/status-im/keycard-go/derivationpath",
+    visibility = ["//visibility:public"],
+)

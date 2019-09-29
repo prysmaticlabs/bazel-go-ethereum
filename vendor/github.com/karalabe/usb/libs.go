@@ -62,13 +62,13 @@ package usb
 	#include "hidapi/libusb/hid.c"
 #endif
 
-#ifndef OS_FREEBSD
-	#include "libusb/libusb/core.c"
-	#include "descriptor.c"
-	#include "hotplug.c"
-	#include "io.c"
-	#include "strerror.c"
-	#include "sync.c"
-#endif
+//#ifndef OS_FREEBSD
+//	#include "core.c"
+//	#include "descriptor.c"
+//	#include "hotplug.c"
+//	#include "io.c"
+//	#include "strerror.c"
+//	#include "sync.c"
+//#endif
 */
 import "C"

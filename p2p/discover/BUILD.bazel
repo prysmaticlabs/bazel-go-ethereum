@@ -7,7 +7,6 @@ go_library(
         "node.go",
         "ntp.go",
         "table.go",
-        "udp.go",
         "v4_udp.go",
         "v5_encoding.go",
         "v5_radius.go",
@@ -36,7 +35,6 @@ go_test(
     srcs = [
         "table_test.go",
         "table_util_test.go",
-        "udp_test.go",
         "v4_udp_test.go",
         "v5_encoding_test.go",
         "v5_topic_test.go",

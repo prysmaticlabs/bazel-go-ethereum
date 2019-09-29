@@ -104,7 +104,7 @@ func discv4Resolve(ctx *cli.Context) error {
 	return nil
 }
 
-func getNodeArgAndStartV4(ctx *cli.Context) (*enode.Node, *discover.UDPv4, error) {
+func getNodeArgAndStartV4(ctx *cli.Context) (*enode.Node, *discover.UDPv5, error) {
 	if ctx.NArg() != 1 {
 		return nil, nil, fmt.Errorf("missing node as command-line argument")
 	}
@@ -148,7 +148,7 @@ func commandHasFlag(ctx *cli.Context, flag cli.Flag) bool {
 }
 
 // startV4 starts an ephemeral discovery V4 node.
-func startV4(bootnodes []*enode.Node) (*discover.UDPv4, error) {
+func startV4(bootnodes []*enode.Node) (*discover.UDPv5, error) {
 	var cfg discover.Config
 	cfg.Bootnodes = bootnodes
 	cfg.PrivateKey, _ = crypto.GenerateKey()
@@ -162,5 +162,5 @@ func startV4(bootnodes []*enode.Node) (*discover.UDPv4, error) {
 	addr := socket.LocalAddr().(*net.UDPAddr)
 	ln.SetFallbackIP(net.IP{127, 0, 0, 1})
 	ln.SetFallbackUDP(addr.Port)
-	return discover.ListenUDP(socket, ln, cfg)
+	return discover.ListenV5(socket, ln, cfg)
 }

@@ -129,6 +129,7 @@ func parseComplete(rawurl string) (*Node, error) {
 	if err != nil {
 		return nil, err
 	}
+	ip = ips[0]
 	// Parse the port numbers.
 	if tcpPort, err = strconv.ParseUint(u.Port(), 10, 16); err != nil {
 		return nil, errors.New("invalid port")

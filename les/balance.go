@@ -42,7 +42,7 @@ type balanceTracker struct {
 	negTimeFactor, negRequestFactor  float64
 	sumReqCost                       uint64
 	lastUpdate, nextUpdate, initTime mclock.AbsTime
-	updateEvent                      mclock.Timer
+	updateEvent                      mclock.Event
 	// since only a limited and fixed number of callbacks are needed, they are
 	// stored in a fixed size array ordered by priority threshold.
 	callbacks [balanceCallbackCount]balanceCallback
@@ -85,10 +85,8 @@ func (bt *balanceTracker) stop(now mclock.AbsTime) {
 	bt.negRequestFactor = 0
 	bt.timeFactor = 0
 	bt.requestFactor = 0
-	if bt.updateEvent != nil {
-		bt.updateEvent.Stop()
-		bt.updateEvent = nil
-	}
+	bt.updateEvent.Cancel()
+
 }
 
 // balanceToPriority converts a balance to a priority value. Higher priority means
@@ -235,10 +233,7 @@ func (bt *balanceTracker) checkCallbacks(now mclock.AbsTime) {
 
 // updateAfter schedules a balance update and callback check in the future
 func (bt *balanceTracker) updateAfter(dt time.Duration) {
-	if bt.updateEvent == nil || bt.updateEvent.Stop() {
-		if dt == 0 {
-			bt.updateEvent = nil
-		} else {
+
 			bt.updateEvent = bt.clock.AfterFunc(dt, func() {
 				bt.lock.Lock()
 				defer bt.lock.Unlock()
@@ -249,8 +244,8 @@ func (bt *balanceTracker) updateAfter(dt time.Duration) {
 					bt.checkCallbacks(now)
 				}
 			})
-		}
-	}
+
+
 }
 
 // requestCost should be called after serving a request for the given peer

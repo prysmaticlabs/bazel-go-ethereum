@@ -17,6 +17,7 @@ go_library(
         "//accounts:go_default_library",
         "//accounts/external:go_default_library",
         "//accounts/keystore:go_default_library",
+        "//accounts/scwallet:go_default_library",
         "//accounts/usbwallet:go_default_library",
         "//common:go_default_library",
         "//common/hexutil:go_default_library",

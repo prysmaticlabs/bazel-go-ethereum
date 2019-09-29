@@ -32,14 +32,14 @@ import (
 // the timeout using a channel or semaphore.
 type Simulated struct {
 	now       AbsTime
-	scheduled []*SimulatedEvent
+	scheduled []*simTimer
 	mu        sync.RWMutex
 	cond      *sync.Cond
 	lastId    uint64
 }
 
-// SimulatedEvent implements Event for a virtual clock.
-type SimulatedEvent struct {
+// simTimer implements Timer on the virtual clock.
+type simTimer struct {
 	do func()
 	at AbsTime
 	id uint64

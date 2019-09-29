@@ -16,8 +16,41 @@
 
 package discover
 
-import ()
+import (
+	"errors"
+	"time"
+)
 
+// Errors
+var (
+	errPacketTooSmall   = errors.New("too small")
+	errBadHash          = errors.New("bad hash")
+	errExpired          = errors.New("expired")
+	errUnsolicitedReply = errors.New("unsolicited reply")
+	errUnknownNode      = errors.New("unknown node")
+	errTimeout          = errors.New("RPC timeout")
+	errClockWarp        = errors.New("reply deadline too far in the future")
+	errClosed           = errors.New("socket closed")
+	errLowPort          = errors.New("low port")
+)
+
+const (
+	respTimeout    = 500 * time.Millisecond
+	expiration     = 20 * time.Second
+	bondExpiration = 24 * time.Hour
+
+	maxFindnodeFailures = 5                // nodes exceeding this limit are dropped
+	ntpFailureThreshold = 32               // Continuous timeouts after which to check NTP
+	ntpWarningCooldown  = 10 * time.Minute // Minimum amount of time to pass before repeating NTP warning
+	driftThreshold      = 10 * time.Second // Allowed clock drift before warning user
+
+	// Discovery packets are defined to be no larger than 1280 bytes.
+	// Packets larger than this size will be cut at the end and treated
+	// as invalid because their hash won't match.
+	maxPacketSize = 1280
+)
+
+/*
 // RPC packet types
 const (
 	p_pingV4 = iota + 1 // zero is 'reserved'
@@ -28,7 +61,6 @@ const (
 	p_enrResponseV4
 )
 
-/*
 // RPC request structures
 type (
 	pingV4 struct {
@@ -84,6 +116,19 @@ type (
 		// Ignore additional fields (for forward compatibility).
 		Rest []rlp.RawValue `rlp:"tail"`
 	}
+
+	rpcNode struct {
+		IP  net.IP // len 4 for IPv4 or 16 for IPv6
+		UDP uint16 // for discovery protocol
+		TCP uint16 // for RLPx protocol
+		ID  encPubkey
+	}
+
+	rpcEndpoint struct {
+		IP  net.IP // len 4 for IPv4 or 16 for IPv6
+		UDP uint16 // for discovery protocol
+		TCP uint16 // for RLPx protocol
+	}
 )
 
 // packetV4 is implemented by all v4 protocol messages.
@@ -97,9 +142,20 @@ type packetV4 interface {
 	kind() byte
 }
 
-func (t *UDPv4) nodeFromRPC(sender *net.UDPAddr, rn rpcNode) (*node, error) {
+func makeEndpoint(addr *net.UDPAddr, tcpPort uint16) rpcEndpoint {
+	ip := net.IP{}
+	if ip4 := addr.IP.To4(); ip4 != nil {
+		ip = ip4
+	} else if ip6 := addr.IP.To16(); ip6 != nil {
+		ip = ip6
+	}
+	return rpcEndpoint{IP: ip, UDP: uint16(addr.Port), TCP: tcpPort}
+}
+
+/*
+func (t *udp) nodeFromRPC(sender *net.UDPAddr, rn rpcNode) (*node, error) {
 	if rn.UDP <= 1024 {
-		return nil, errLowPort
+		return nil, errors.New("low port")
 	}
 	if err := netutil.CheckRelayIP(sender.IP, rn.IP); err != nil {
 		return nil, err
@@ -116,6 +172,15 @@ func (t *UDPv4) nodeFromRPC(sender *net.UDPAddr, rn rpcNode) (*node, error) {
 	return n, err
 }
 
+func nodeToRPC(n *node) rpcNode {
+	var key ecdsa.PublicKey
+	var ekey encPubkey
+	if err := n.Load((*enode.Secp256k1)(&key)); err == nil {
+		ekey = encodePubkey(&key)
+	}
+	return rpcNode{ID: ekey, IP: n.IP(), UDP: uint16(n.UDP()), TCP: uint16(n.TCP())}
+}
+
 // UDPv4 implements the v4 wire protocol.
 type UDPv4 struct {
 	conn        UDPConn
@@ -128,12 +193,12 @@ type UDPv4 struct {
 	closeOnce   sync.Once
 	wg          sync.WaitGroup
 
-	addReplyMatcher chan *replyMatcherV4
+	addReplyMatcher chan *replyMatcher
 	gotreply        chan reply
 	closing         chan struct{}
 }
 
-// replyMatcherV4 represents a pending reply.
+// replyMatcher represents a pending reply.
 //
 // Some implementations of the protocol wish to send more than one
 // reply packet to findnode. In general, any neighbors packet cannot
@@ -142,7 +207,7 @@ type UDPv4 struct {
 // Our implementation handles this by storing a callback function for
 // each pending reply. Incoming packets from a node are dispatched
 // to all callback functions for that node.
-type replyMatcherV4 struct {
+type replyMatcher struct {
 	// these fields must match in the reply.
 	from  enode.ID
 	ip    net.IP
@@ -166,8 +231,47 @@ type replyMatcherV4 struct {
 	reply packetV4
 }
 
-func ListenV4(c UDPConn, ln *enode.LocalNode, cfg Config) (*UDPv4, error) {
-	t := &UDPv4{
+type replyMatchFunc func(interface{}) (matched bool, requestDone bool)
+
+// reply is a reply packet from a certain node.
+type reply struct {
+	from enode.ID
+	ip   net.IP
+	data packetV4
+	// loop indicates whether there was
+	// a matching request by sending on this channel.
+	matched chan<- bool
+}
+
+// ReadPacket is sent to the unhandled channel when it could not be processed
+type ReadPacket struct {
+	Data []byte
+	Addr *net.UDPAddr
+}
+
+// Config holds Table-related settings.
+type Config struct {
+	// These settings are required and configure the UDP listener:
+	PrivateKey *ecdsa.PrivateKey
+
+	// These settings are optional:
+	NetRestrict *netutil.Netlist  // network whitelist
+	Bootnodes   []*enode.Node     // list of bootstrap nodes
+	Unhandled   chan<- ReadPacket // unhandled packets are sent on this channel
+}
+
+// ListenUDP returns a new table that listens for UDP packets on laddr.
+func ListenUDP(c conn, ln *enode.LocalNode, cfg Config) (*Table, error) {
+	tab, _, err := newUDP(c, ln, cfg)
+	if err != nil {
+		return nil, err
+	}
+	return tab, nil
+}
+*/
+/*
+func newUDP(c conn, ln *enode.LocalNode, cfg Config) (*Table, *udp, error) {
+	udp := &udp{
 		conn:            c,
 		priv:            cfg.PrivateKey,
 		netrestrict:     cfg.NetRestrict,
@@ -175,7 +279,7 @@ func ListenV4(c UDPConn, ln *enode.LocalNode, cfg Config) (*UDPv4, error) {
 		db:              ln.Database(),
 		closing:         make(chan struct{}),
 		gotreply:        make(chan reply),
-		addReplyMatcher: make(chan *replyMatcherV4),
+		addReplyMatcher: make(chan *replyMatcher),
 		log:             cfg.Log,
 	}
 	if t.log == nil {
@@ -375,13 +479,13 @@ func (t *UDPv4) ping(n *enode.Node) (seq uint64, err error) {
 
 // sendPing sends a ping message to the given node and invokes the callback
 // when the reply arrives.
-func (t *UDPv4) sendPing(toid enode.ID, toaddr *net.UDPAddr, callback func()) *replyMatcherV4 {
+func (t *UDPv4) sendPing(toid enode.ID, toaddr *net.UDPAddr, callback func()) *replyMatcher {
 	req := t.makePing(toaddr)
 	packet, hash, err := t.encode(t.priv, req)
 	if err != nil {
 		errc := make(chan error, 1)
 		errc <- err
-		return &replyMatcherV4{errc: errc}
+		return &replyMatcher{errc: errc}
 	}
 	// Add a matcher for the reply to the pending reply queue. Pongs are matched if they
 	// reference the ping we're about to send.
@@ -480,9 +584,9 @@ func (t *UDPv4) RequestENR(n *enode.Node) (*enode.Node, error) {
 
 // pending adds a reply matcher to the pending reply queue.
 // see the documentation of type replyMatcher for a detailed explanation.
-func (t *UDPv4) pending(id enode.ID, ip net.IP, ptype byte, callback replyMatchFunc) *replyMatcherV4 {
+func (t *UDPv4) pending(id enode.ID, ip net.IP, ptype byte, callback replyMatchFunc) *replyMatcher {
 	ch := make(chan error, 1)
-	p := &replyMatcherV4{from: id, ip: ip, ptype: ptype, callback: callback, errc: ch}
+	p := &replyMatcher{from: id, ip: ip, ptype: ptype, callback: callback, errc: ch}
 	select {
 	case t.addReplyMatcher <- p:
 		// loop will handle it
@@ -513,8 +617,8 @@ func (t *UDPv4) loop() {
 	var (
 		plist        = list.New()
 		timeout      = time.NewTimer(0)
-		nextTimeout  *replyMatcherV4 // head of plist when timeout was last reset
-		contTimeouts = 0             // number of continuous timeouts to do NTP checks
+		nextTimeout  *replyMatcher // head of plist when timeout was last reset
+		contTimeouts = 0           // number of continuous timeouts to do NTP checks
 		ntpWarnTime  = time.Unix(0, 0)
 	)
 	<-timeout.C // ignore first timeout
@@ -527,7 +631,7 @@ func (t *UDPv4) loop() {
 		// Start the timer so it fires when the next pending reply has expired.
 		now := time.Now()
 		for el := plist.Front(); el != nil; el = el.Next() {
-			nextTimeout = el.Value.(*replyMatcherV4)
+			nextTimeout = el.Value.(*replyMatcher)
 			if dist := nextTimeout.deadline.Sub(now); dist < 2*respTimeout {
 				timeout.Reset(dist)
 				return
@@ -548,7 +652,7 @@ func (t *UDPv4) loop() {
 		select {
 		case <-t.closing:
 			for el := plist.Front(); el != nil; el = el.Next() {
-				el.Value.(*replyMatcherV4).errc <- errClosed
+				el.Value.(*replyMatcher).errc <- errClosed
 			}
 			return
 
@@ -559,7 +663,7 @@ func (t *UDPv4) loop() {
 		case r := <-t.gotreply:
 			var matched bool // whether any replyMatcher considered the reply acceptable.
 			for el := plist.Front(); el != nil; el = el.Next() {
-				p := el.Value.(*replyMatcherV4)
+				p := el.Value.(*replyMatcher)
 				if p.from == r.from && p.ptype == r.data.kind() && p.ip.Equal(r.ip) {
 					ok, requestDone := p.callback(r.data)
 					matched = matched || ok
@@ -580,7 +684,7 @@ func (t *UDPv4) loop() {
 
 			// Notify and remove callbacks whose deadline is in the past.
 			for el := plist.Front(); el != nil; el = el.Next() {
-				p := el.Value.(*replyMatcherV4)
+				p := el.Value.(*replyMatcher)
 				if now.After(p.deadline) || now.Equal(p.deadline) {
 					p.errc <- errTimeout
 					plist.Remove(el)
@@ -599,6 +703,21 @@ func (t *UDPv4) loop() {
 	}
 }
 
+const (
+	macSize  = 256 / 8
+	sigSize  = 520 / 8
+	headSize = macSize + sigSize // space of packet frame data
+)
+
+var (
+	headSpace = make([]byte, headSize)
+
+	// Neighbors replies are sent across multiple packets to
+	// stay below the packet size limit. We compute the maximum number
+	// of entries by stuffing a packet until it grows too large.
+	maxNeighbors int
+)
+
 func init() {
 	p := neighborsV4{Expiration: ^uint64(0)}
 	maxSizeNode := rpcNode{IP: make(net.IP, 16), UDP: ^uint16(0), TCP: ^uint16(0)}
@@ -616,8 +735,9 @@ func init() {
 	}
 }
 
-func (t *UDPv4) send(toaddr *net.UDPAddr, toid enode.ID, req packetV4) ([]byte, error) {
-	packet, hash, err := t.encode(t.priv, req)
+
+func (t *udp) send(toaddr *net.UDPAddr, toid enode.ID, ptype byte, req packet) ([]byte, error) {
+	packet, hash, err := encodePacket(t.priv, ptype, req)
 	if err != nil {
 		return hash, err
 	}
@@ -630,8 +750,8 @@ func (t *UDPv4) write(toaddr *net.UDPAddr, toid enode.ID, what string, packet []
 	return err
 }
 
-func (t *UDPv4) encode(priv *ecdsa.PrivateKey, req packetV4) (packet, hash []byte, err error) {
-	name := req.name()
+
+func encodePacket(priv *ecdsa.PrivateKey, ptype byte, req interface{}) (packet, hash []byte, err error) {
 	b := new(bytes.Buffer)
 	b.Write(headSpace)
 	b.WriteByte(req.kind())
@@ -653,6 +773,7 @@ func (t *UDPv4) encode(priv *ecdsa.PrivateKey, req packetV4) (packet, hash []byt
 	copy(packet, hash)
 	return packet, hash, nil
 }
+
 
 // readLoop runs in its own goroutine. it handles incoming UDP packets.
 func (t *UDPv4) readLoop(unhandled chan<- ReadPacket) {
@@ -754,6 +875,11 @@ func (t *UDPv4) ensureBond(toid enode.ID, toaddr *net.UDPAddr) {
 	}
 }
 
+// expired checks whether the given UNIX time stamp is in the past.
+func expired(ts uint64) bool {
+	return time.Unix(int64(ts), 0).Before(time.Now())
+}
+
 func seqFromTail(tail []rlp.RawValue) uint64 {
 	if len(tail) == 0 {
 		return 0
@@ -846,7 +972,8 @@ func (req *findnodeV4) preverify(t *UDPv4, from *net.UDPAddr, fromID enode.ID, f
 	return nil
 }
 
-func (req *findnodeV4) handle(t *UDPv4, from *net.UDPAddr, fromID enode.ID, mac []byte) {
+
+func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID enode.ID, mac []byte) {
 	// Determine closest nodes.
 	target := enode.ID(crypto.Keccak256Hash(req.Target[:]))
 	t.tab.mutex.Lock()
@@ -874,10 +1001,8 @@ func (req *findnodeV4) handle(t *UDPv4, from *net.UDPAddr, fromID enode.ID, mac 
 
 // NEIGHBORS/v4
 
-func (req *neighborsV4) name() string { return "NEIGHBORS/v4" }
-func (req *neighborsV4) kind() byte   { return p_neighborsV4 }
 
-func (req *neighborsV4) preverify(t *UDPv4, from *net.UDPAddr, fromID enode.ID, fromKey encPubkey) error {
+func (req *neighbors) preverify(t *udp, from *net.UDPAddr, fromID enode.ID, fromKey encPubkey) error {
 	if expired(req.Expiration) {
 		return errExpired
 	}

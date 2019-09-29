@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "chinese_simplified.go",
+        "chinese_traditional.go",
+        "english.go",
+        "french.go",
+        "italian.go",
+        "japanese.go",
+        "korean.go",
+        "spanish.go",
+    ],
+    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/tyler-smith/go-bip39/wordlists",
+    importpath = "github.com/tyler-smith/go-bip39/wordlists",
+    visibility = ["//visibility:public"],
+)

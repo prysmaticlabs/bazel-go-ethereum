@@ -38,7 +38,7 @@ go_library(
         "//core:go_default_library",
         "//log:go_default_library",
         "//params:go_default_library",
-        "@com_github_olekukonko_tablewriter//:go_default_library",
+        "//vendor/github.com/olekukonko/tablewriter:go_default_library",
         "@in_gopkg_urfave_cli_v1//:go_default_library",
         "@org_golang_x_crypto//ssh:go_default_library",
         "@org_golang_x_crypto//ssh/terminal:go_default_library",

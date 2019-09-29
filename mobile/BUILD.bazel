@@ -34,6 +34,7 @@ go_library(
         "//accounts/abi/bind:go_default_library",
         "//accounts/keystore:go_default_library",
         "//common:go_default_library",
+        "//common/hexutil:go_default_library",
         "//core:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",
@@ -57,7 +58,13 @@ go_library(
 
 go_test(
     name = "go_default_test",
-    srcs = ["android_test.go"],
+    srcs = [
+        "android_test.go",
+        "interface_test.go",
+    ],
     embed = [":go_default_library"],
-    deps = ["//internal/build:go_default_library"],
+    deps = [
+        "//common:go_default_library",
+        "//internal/build:go_default_library",
+    ],
 )

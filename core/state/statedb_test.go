@@ -86,15 +86,15 @@ func TestIntermediateLeaks(t *testing.T) {
 
 	// Modify the transient state.
 	for i := byte(0); i < 255; i++ {
-		modify(transState, common.Address{byte(i)}, i, 0)
+		modify(transState, common.Address{i}, i, 0)
 	}
 	// Write modifications to trie.
 	transState.IntermediateRoot(false)
 
 	// Overwrite all the data with new values in the transient database.
 	for i := byte(0); i < 255; i++ {
-		modify(transState, common.Address{byte(i)}, i, 99)
-		modify(finalState, common.Address{byte(i)}, i, 99)
+		modify(transState, common.Address{i}, i, 99)
+		modify(finalState, common.Address{i}, i, 99)
 	}
 
 	// Commit and cross check the databases.
@@ -296,7 +296,7 @@ func newTestAction(addr common.Address, r *rand.Rand) testAction {
 	if !action.noAddr {
 		nameargs = append(nameargs, addr.Hex())
 	}
-	for _, i := range action.args {
+	for i := range action.args {
 		action.args[i] = rand.Int63n(100)
 		nameargs = append(nameargs, fmt.Sprint(action.args[i]))
 	}
@@ -447,5 +447,40 @@ func TestCopyOfCopy(t *testing.T) {
 	}
 	if got := sdb.Copy().Copy().GetBalance(addr).Uint64(); got != 42 {
 		t.Fatalf("2nd copy fail, expected 42, got %v", got)
+	}
+}
+
+// TestDeleteCreateRevert tests a weird state transition corner case that we hit
+// while changing the internals of statedb. The workflow is that a contract is
+// self destructed, then in a followup transaction (but same block) it's created
+// again and the transaction reverted.
+//
+// The original statedb implementation flushed dirty objects to the tries after
+// each transaction, so this works ok. The rework accumulated writes in memory
+// first, but the journal wiped the entire state object on create-revert.
+func TestDeleteCreateRevert(t *testing.T) {
+	// Create an initial state with a single contract
+	state, _ := New(common.Hash{}, NewDatabase(rawdb.NewMemoryDatabase()))
+
+	addr := toAddr([]byte("so"))
+	state.SetBalance(addr, big.NewInt(1))
+
+	root, _ := state.Commit(false)
+	state.Reset(root)
+
+	// Simulate self-destructing in one transaction, then create-reverting in another
+	state.Suicide(addr)
+	state.Finalise(true)
+
+	id := state.Snapshot()
+	state.SetBalance(addr, big.NewInt(2))
+	state.RevertToSnapshot(id)
+
+	// Commit the entire state and make sure we don't crash and have the correct state
+	root, _ = state.Commit(true)
+	state.Reset(root)
+
+	if state.getStateObject(addr) != nil {
+		t.Fatalf("self-destructed contract came alive")
 	}
 }

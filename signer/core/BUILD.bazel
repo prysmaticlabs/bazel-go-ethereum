@@ -3,7 +3,6 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     srcs = [
-        "abihelper.go",
         "api.go",
         "auditlog.go",
         "cliui.go",
@@ -19,6 +18,7 @@ go_library(
         "//accounts:go_default_library",
         "//accounts/abi:go_default_library",
         "//accounts/keystore:go_default_library",
+        "//accounts/scwallet:go_default_library",
         "//accounts/usbwallet:go_default_library",
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
@@ -38,21 +38,24 @@ go_library(
 go_test(
     name = "go_default_test",
     srcs = [
-        "abihelper_test.go",
         "api_test.go",
+        "signed_data_internal_test.go",
         "signed_data_test.go",
         "validation_test.go",
     ],
+    data = glob(["testdata/**"]),
     embed = [":go_default_library"],
     deps = [
         "//accounts:go_default_library",
-        "//accounts/abi:go_default_library",
         "//accounts/keystore:go_default_library",
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
+        "//common/math:go_default_library",
         "//core/types:go_default_library",
+        "//crypto:go_default_library",
         "//internal/ethapi:go_default_library",
         "//rlp:go_default_library",
+        "//signer/fourbyte:go_default_library",
         "//signer/storage:go_default_library",
     ],
 )

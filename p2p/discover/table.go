@@ -347,7 +347,7 @@ func (tab *Table) doRevalidate(done chan<- struct{}) {
 		return
 	}
 
-	for _,nd := range tab.nursery {
+	for _, nd := range tab.nursery {
 		if unwrapNode(nd).ID() == last.ID() {
 			return
 		}

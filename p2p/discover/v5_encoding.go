@@ -331,17 +331,10 @@ func (c *wireCodec) encodeEncrypted(toID enode.ID, toAddr *net.UDPAddr, packet p
 // encodeAuthHeader creates the auth header on a call packet following WHOAREYOU.
 func (c *wireCodec) makeAuthHeader(nonce []byte, challenge *whoareyouV5) (*authHeaderList, *handshakeSecrets, error) {
 	resp := &authResponse{Version: 5}
-	idsig, err := c.signIDNonce(challenge.IDNonce[:])
-	if err != nil {
-		return nil, nil, fmt.Errorf("can't sign: %v", err)
-	}
-	resp.Signature = idsig
 	ln := c.localnode.Node()
 	if challenge.RecordSeq < ln.Seq() {
 		resp.Record = ln.Record()
 	}
-
-	// Encrypt the authentication response.
 	var remotePubkey = new(ecdsa.PublicKey)
 	if err := challenge.node.Load((*enode.Secp256k1)(remotePubkey)); err != nil {
 		return nil, nil, fmt.Errorf("can't find secp256k1 key for recipient")
@@ -350,6 +343,14 @@ func (c *wireCodec) makeAuthHeader(nonce []byte, challenge *whoareyouV5) (*authH
 	if err != nil {
 		return nil, nil, fmt.Errorf("can't generate ephemeral key")
 	}
+	ephkeyBytes := elliptic.Marshal(crypto.S256(), ephkey.X, ephkey.Y)
+	idsig, err := c.signIDNonce(challenge.IDNonce[:], ephkeyBytes)
+	if err != nil {
+		return nil, nil, fmt.Errorf("can't sign: %v", err)
+	}
+	resp.Signature = idsig
+
+	// Encrypt the authentication response.
 	sec := c.deriveKeys(c.localnode.ID(), challenge.node.ID(), ephkey, remotePubkey, challenge)
 	if sec == nil {
 		return nil, nil, fmt.Errorf("key derivation failed")
@@ -399,8 +400,8 @@ func (c *wireCodec) deriveKeys(n1, n2 enode.ID, priv *ecdsa.PrivateKey, pub *ecd
 }
 
 // signIDNonce creates the ID nonce signature.
-func (c *wireCodec) signIDNonce(nonce []byte) ([]byte, error) {
-	idsig, err := crypto.Sign(c.idNonceHash(nonce), c.privkey)
+func (c *wireCodec) signIDNonce(nonce, ephkey []byte) ([]byte, error) {
+	idsig, err := crypto.Sign(c.idNonceHash(nonce, ephkey), c.privkey)
 	if err != nil {
 		return nil, fmt.Errorf("can't sign: %v", err)
 	}
@@ -408,10 +409,11 @@ func (c *wireCodec) signIDNonce(nonce []byte) ([]byte, error) {
 }
 
 // idNonceHash computes the hash of id nonce with prefix.
-func (c *wireCodec) idNonceHash(nonce []byte) []byte {
+func (c *wireCodec) idNonceHash(nonce, ephkey []byte) []byte {
 	h := c.sha256reset()
 	h.Write([]byte(idNoncePrefix))
 	h.Write(nonce)
+	h.Write(ephkey)
 	return h.Sum(nil)
 }
 
@@ -539,7 +541,7 @@ func (c *wireCodec) decodeAuthResp(fromID enode.ID, fromAddr *net.UDPAddr, head 
 		return nil, nil, errNoRecord
 	}
 	// Verify ID nonce signature.
-	err = c.verifyIDSignature(challenge.IDNonce[:], resp.Signature, node)
+	err = c.verifyIDSignature(challenge.IDNonce[:], head.EphemeralKey, resp.Signature, node)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -547,12 +549,12 @@ func (c *wireCodec) decodeAuthResp(fromID enode.ID, fromAddr *net.UDPAddr, head 
 }
 
 // verifyIDSignature checks that signature over idnonce was made by the node with given record.
-func (c *wireCodec) verifyIDSignature(nonce, sig []byte, n *enode.Node) error {
+func (c *wireCodec) verifyIDSignature(nonce, ephkey, sig []byte, n *enode.Node) error {
 	switch idscheme := n.Record().IdentityScheme(); idscheme {
 	case "v4":
 		var pk ecdsa.PublicKey
 		n.Load((*enode.Secp256k1)(&pk)) // cannot fail because record is valid
-		if !crypto.VerifySignature(crypto.FromECDSAPub(&pk), c.idNonceHash(nonce), sig) {
+		if !crypto.VerifySignature(crypto.FromECDSAPub(&pk), c.idNonceHash(nonce, ephkey), sig) {
 			return errInvalidNonceSig
 		}
 		return nil

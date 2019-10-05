@@ -30,6 +30,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/p2p/enode"
@@ -373,23 +374,27 @@ func (c *wireCodec) makeAuthHeader(nonce []byte, challenge *whoareyouV5) (*authH
 
 // deriveKeys generates session keys using elliptic-curve Diffie-Hellman key agreement.
 func (c *wireCodec) deriveKeys(n1, n2 enode.ID, priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, challenge *whoareyouV5) *handshakeSecrets {
-	secX, _ := pub.ScalarMult(pub.X, pub.Y, priv.D.Bytes())
+	secX, secY := pub.ScalarMult(pub.X, pub.Y, priv.D.Bytes())
 	if secX == nil {
 		return nil
 	}
+	secbuf := make([]byte, 33)
+	math.ReadBits(secX, secbuf[:32])
+	secbuf[32] = 0x02 | byte(secY.Bit(0))
+
 	info := []byte("discovery v5 key agreement")
 	info = append(info, n1[:]...)
 	info = append(info, n2[:]...)
-	kdf := hkdf.New(c.sha256reset, secX.Bytes(), challenge.IDNonce[:], info)
+	kdf := hkdf.New(c.sha256reset, secbuf, challenge.IDNonce[:], info)
 	sec := handshakeSecrets{
 		writeKey:    make([]byte, 16),
 		readKey:     make([]byte, 16),
 		authRespKey: make([]byte, 16),
 	}
+
 	kdf.Read(sec.writeKey)
 	kdf.Read(sec.readKey)
 	kdf.Read(sec.authRespKey)
-	c.sha256.Reset()
 	return &sec
 }
 

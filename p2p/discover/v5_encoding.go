@@ -46,8 +46,6 @@ import (
 
 // Discovery v5 packet types.
 const (
-	p_unknownV5        = byte(255) // any non-decryptable packet
-	p_whoareyouV5      = byte(254) // the WHOAREYOU packet
 	p_pingV5      byte = iota + 1
 	p_pongV5
 	p_findnodeV5
@@ -57,6 +55,8 @@ const (
 	p_regtopicV5
 	p_regconfirmationV5
 	p_topicqueryV5
+	p_unknownV5        = byte(255) // any non-decryptable packet
+	p_whoareyouV5      = byte(254) // the WHOAREYOU packet
 )
 
 // Discovery v5 packet structures.

@@ -176,7 +176,7 @@ func (t *UDPv4) nodeFromRPC(sender *net.UDPAddr, rn rpcNode) (*node, error) {
 	if t.netrestrict != nil && !t.netrestrict.Contains(rn.IP) {
 		return nil, errors.New("not contained in netrestrict whitelist")
 	}
-	key, err := decodePubkey(rn.ID)
+	key, err := decodePubkey(crypto.S256(), rn.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -882,7 +882,7 @@ func (req *pingV4) preverify(t *UDPv4, from *net.UDPAddr, fromID enode.ID, fromK
 	if expired(req.Expiration) {
 		return errExpired
 	}
-	key, err := decodePubkey(fromKey)
+	key, err := decodePubkey(crypto.S256(), fromKey)
 	if err != nil {
 		return errors.New("invalid public key")
 	}

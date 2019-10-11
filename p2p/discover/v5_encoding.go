@@ -211,11 +211,10 @@ func (h *authHeader) DecodeRLP(r *rlp.Stream) error {
 
 // ephemeralKey decodes the ephemeral public key in the header.
 func (h *authHeaderList) ephemeralKey(curve elliptic.Curve) *ecdsa.PublicKey {
-	x, y := elliptic.Unmarshal(curve, h.EphemeralKey)
-	if x == nil {
-		return nil
-	}
-	return &ecdsa.PublicKey{Curve: curve, X: x, Y: y}
+	var key encPubkey
+	copy(key[:], h.EphemeralKey)
+	pubkey, _ := decodePubkey(curve, key)
+	return pubkey
 }
 
 // newWireCodec creates a wire codec.
@@ -324,7 +323,7 @@ func (c *wireCodec) encodeEncrypted(toID enode.ID, toAddr *net.UDPAddr, packet p
 	copy(headbuf[len(tag):], headEnc)
 
 	// Encrypt the body.
-	enc, err = encryptGCM(headbuf, writeKey, nonce, body.Bytes(), headbuf)
+	enc, err = encryptGCM(headbuf, writeKey, nonce, body.Bytes(), tag[:])
 	return enc, nonce, err
 }
 
@@ -343,8 +342,8 @@ func (c *wireCodec) makeAuthHeader(nonce []byte, challenge *whoareyouV5) (*authH
 	if err != nil {
 		return nil, nil, fmt.Errorf("can't generate ephemeral key")
 	}
-	ephkeyBytes := elliptic.Marshal(crypto.S256(), ephkey.X, ephkey.Y)
-	idsig, err := c.signIDNonce(challenge.IDNonce[:], ephkeyBytes)
+	ephpubkey := encodePubkey(&ephkey.PublicKey)
+	idsig, err := c.signIDNonce(challenge.IDNonce[:], ephpubkey[:])
 	if err != nil {
 		return nil, nil, fmt.Errorf("can't sign: %v", err)
 	}
@@ -367,7 +366,7 @@ func (c *wireCodec) makeAuthHeader(nonce []byte, challenge *whoareyouV5) (*authH
 		Auth:         nonce,
 		Scheme:       authSchemeName,
 		IDNonce:      challenge.IDNonce,
-		EphemeralKey: elliptic.Marshal(ephkey.Curve, ephkey.X, ephkey.Y),
+		EphemeralKey: ephpubkey[:],
 		Response:     respEnc,
 	}
 	return head, sec, err
@@ -446,13 +445,13 @@ func (c *wireCodec) decodeWhoareyou(input []byte) (packetV5, error) {
 func (c *wireCodec) decodeEncrypted(fromID enode.ID, fromAddr *net.UDPAddr, input []byte) (packetV5, *enode.Node, error) {
 	// Decode packet header.
 	var head authHeader
+	tag := input[:32]
 	r := bytes.NewReader(input[32:])
 	err := rlp.Decode(r, &head)
 	if err != nil {
 		return nil, nil, err
 	}
 	headsize := len(input) - r.Len()
-	headEnc := input[:headsize]
 	bodyEnc := input[headsize:]
 
 	// Decrypt and process auth response.
@@ -462,7 +461,7 @@ func (c *wireCodec) decodeEncrypted(fromID enode.ID, fromAddr *net.UDPAddr, inpu
 	}
 
 	// Decrypt and decode the packet body.
-	body, err := decryptGCM(readKey, head.Auth, bodyEnc, headEnc)
+	body, err := decryptGCM(readKey, head.Auth, bodyEnc, tag)
 	if err != nil {
 		if !head.isHandshake {
 			// Can't decrypt, start handshake.

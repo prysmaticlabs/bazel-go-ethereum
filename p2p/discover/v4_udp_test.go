@@ -419,7 +419,7 @@ func TestUDPv4_lookup(t *testing.T) {
 	test := newUDPV4Test(t)
 
 	// Lookup on empty table returns no nodes.
-	targetKey, _ := decodePubkey(lookupTestnet.target)
+	targetKey, _ := decodePubkey(crypto.S256(), lookupTestnet.target)
 	if results := test.udp.LookupPubkey(targetKey); len(results) > 0 {
 		t.Fatalf("lookup on empty table returned %d results: %#v", len(results), results)
 	}

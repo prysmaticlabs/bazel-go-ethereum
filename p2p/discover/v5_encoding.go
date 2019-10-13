@@ -46,7 +46,7 @@ import (
 
 // Discovery v5 packet types.
 const (
-	p_pingV5      byte = iota + 1
+	p_pingV5 byte = iota + 1
 	p_pongV5
 	p_findnodeV5
 	p_nodesV5
@@ -55,8 +55,8 @@ const (
 	p_regtopicV5
 	p_regconfirmationV5
 	p_topicqueryV5
-	p_unknownV5        = byte(255) // any non-decryptable packet
-	p_whoareyouV5      = byte(254) // the WHOAREYOU packet
+	p_unknownV5   = byte(255) // any non-decryptable packet
+	p_whoareyouV5 = byte(254) // the WHOAREYOU packet
 )
 
 // Discovery v5 packet structures.
@@ -374,27 +374,26 @@ func (c *wireCodec) makeAuthHeader(nonce []byte, challenge *whoareyouV5) (*authH
 
 // deriveKeys generates session keys using elliptic-curve Diffie-Hellman key agreement.
 func (c *wireCodec) deriveKeys(n1, n2 enode.ID, priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey, challenge *whoareyouV5) *handshakeSecrets {
-	secX, secY := pub.ScalarMult(pub.X, pub.Y, priv.D.Bytes())
-	if secX == nil {
+	eph := ecdh(priv, pub)
+	if eph == nil {
 		return nil
 	}
-	secbuf := make([]byte, 33)
-	math.ReadBits(secX, secbuf[:32])
-	secbuf[32] = 0x02 | byte(secY.Bit(0))
 
 	info := []byte("discovery v5 key agreement")
 	info = append(info, n1[:]...)
 	info = append(info, n2[:]...)
-	kdf := hkdf.New(c.sha256reset, secbuf, challenge.IDNonce[:], info)
+	kdf := hkdf.New(c.sha256reset, eph, challenge.IDNonce[:], info)
 	sec := handshakeSecrets{
 		writeKey:    make([]byte, 16),
 		readKey:     make([]byte, 16),
 		authRespKey: make([]byte, 16),
 	}
-
 	kdf.Read(sec.writeKey)
 	kdf.Read(sec.readKey)
 	kdf.Read(sec.authRespKey)
+	for i := range eph {
+		eph[i] = 0
+	}
 	return &sec
 }
 
@@ -650,6 +649,17 @@ func xorTag(a []byte, b enode.ID) enode.ID {
 		r[i] = a[i] ^ b[i]
 	}
 	return r
+}
+
+func ecdh(privkey *ecdsa.PrivateKey, pubkey *ecdsa.PublicKey) []byte {
+	secX, secY := pubkey.ScalarMult(pubkey.X, pubkey.Y, privkey.D.Bytes())
+	if secX == nil {
+		return nil
+	}
+	sec := make([]byte, 33)
+	sec[0] = 0x02 | byte(secY.Bit(0))
+	math.ReadBits(secX, sec[1:])
+	return sec
 }
 
 // encryptGCM encrypts pt using AES-GCM with the given key and nonce.

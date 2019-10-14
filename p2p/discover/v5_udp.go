@@ -529,6 +529,7 @@ func (t *UDPv5) dispatch() {
 			t.readNextCh <- struct{}{}
 
 		case <-t.closing:
+			close(t.readNextCh)
 			for id, queue := range t.callQueue {
 				for _, c := range queue {
 					c.err <- errClosed

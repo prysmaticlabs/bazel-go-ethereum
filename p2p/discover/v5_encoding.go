@@ -425,7 +425,7 @@ func (c *wireCodec) decode(input []byte, addr *net.UDPAddr) (enode.ID, *enode.No
 		return enode.ID{}, nil, nil, errTooShort
 	}
 	if bytes.HasPrefix(input, c.myWhoareyouMagic) {
-		p, err := c.decodeWhoareyou(input[32:])
+		p, err := c.decodeWhoareyou(input)
 		return enode.ID{}, nil, p, err
 	}
 	sender := xorTag(input[:32], c.myChtagHash)
@@ -436,7 +436,7 @@ func (c *wireCodec) decode(input []byte, addr *net.UDPAddr) (enode.ID, *enode.No
 // decodeWhoareyou decode a WHOAREYOU packet.
 func (c *wireCodec) decodeWhoareyou(input []byte) (packetV5, error) {
 	packet := new(whoareyouV5)
-	err := rlp.DecodeBytes(input, packet)
+	err := rlp.DecodeBytes(input[32:], packet)
 	return packet, err
 }
 
@@ -444,14 +444,11 @@ func (c *wireCodec) decodeWhoareyou(input []byte) (packetV5, error) {
 func (c *wireCodec) decodeEncrypted(fromID enode.ID, fromAddr *net.UDPAddr, input []byte) (packetV5, *enode.Node, error) {
 	// Decode packet header.
 	var head authHeader
-	tag := input[:32]
 	r := bytes.NewReader(input[32:])
 	err := rlp.Decode(r, &head)
 	if err != nil {
 		return nil, nil, err
 	}
-	headsize := len(input) - r.Len()
-	bodyEnc := input[headsize:]
 
 	// Decrypt and process auth response.
 	readKey, node, err := c.decodeAuth(fromID, fromAddr, &head)
@@ -460,13 +457,15 @@ func (c *wireCodec) decodeEncrypted(fromID enode.ID, fromAddr *net.UDPAddr, inpu
 	}
 
 	// Decrypt and decode the packet body.
-	body, err := decryptGCM(readKey, head.Auth, bodyEnc, tag)
+	headsize := len(input) - r.Len()
+	bodyEnc := input[headsize:]
+	body, err := decryptGCM(readKey, head.Auth, bodyEnc, input[:32])
 	if err != nil {
 		if !head.isHandshake {
 			// Can't decrypt, start handshake.
 			return &unknownV5{AuthTag: head.Auth}, nil, nil
 		}
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("handshake failed: %v", err)
 	}
 	if len(body) == 0 {
 		return nil, nil, errTooShort
@@ -538,6 +537,7 @@ func (c *wireCodec) decodeAuthResp(fromID enode.ID, fromAddr *net.UDPAddr, head 
 	if node == nil {
 		return nil, nil, errNoRecord
 	}
+
 	// Verify ID nonce signature.
 	err = c.verifyIDSignature(challenge.IDNonce[:], head.EphemeralKey, resp.Signature, node)
 	if err != nil {
@@ -651,6 +651,7 @@ func xorTag(a []byte, b enode.ID) enode.ID {
 	return r
 }
 
+// ecdh creates a shared secret.
 func ecdh(privkey *ecdsa.PrivateKey, pubkey *ecdsa.PublicKey) []byte {
 	secX, secY := pubkey.ScalarMult(pubkey.X, pubkey.Y, privkey.D.Bytes())
 	if secX == nil {

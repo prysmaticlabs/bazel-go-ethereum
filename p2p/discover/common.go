@@ -61,19 +61,6 @@ func (cfg Config) withDefaults() Config {
 	return cfg
 }
 
-func (cfg Config) withDefaults() Config {
-	if cfg.Log == nil {
-		cfg.Log = log.Root()
-	}
-	if cfg.ValidSchemes == nil {
-		cfg.ValidSchemes = enode.ValidSchemes
-	}
-	if cfg.Clock == nil {
-		cfg.Clock = mclock.System{}
-	}
-	return cfg
-}
-
 /*
 // ListenUDP starts listening for discovery packets on the given UDP socket.
 func ListenUDP(c UDPConn, ln *enode.LocalNode, cfg Config) (*UDPv4, error) {

@@ -158,10 +158,7 @@ func makeDecoder(typ reflect.Type, tags tags) (dec decoder, err error) {
 	case typ.AssignableTo(bigInt):
 		return decodeBigIntNoPtr, nil
 	case kind == reflect.Ptr:
-		if tags.nilOK {
-			return makeOptionalPtrDecoder(typ)
-		}
-		return makePtrDecoder(typ)
+		return makePtrDecoder(typ,tags)
 	case reflect.PtrTo(typ).Implements(decoderInterface):
 		return decodeDecoder, nil
 	case isUint(kind):

@@ -18,15 +18,13 @@ package main
 
 import (
 	"fmt"
-	"net"
-	"strings"
-	"time"
-
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/p2p/discover"
 	"github.com/ethereum/go-ethereum/p2p/enode"
 	"github.com/ethereum/go-ethereum/params"
 	"gopkg.in/urfave/cli.v1"
+	"net"
+	"strings"
 )
 
 var (
@@ -63,6 +61,7 @@ var bootnodesFlag = cli.StringFlag{
 }
 
 func discv4Ping(ctx *cli.Context) error {
+	/*
 	n := getNodeArg(ctx)
 	disc := startV4(ctx)
 	defer disc.Close()
@@ -72,10 +71,12 @@ func discv4Ping(ctx *cli.Context) error {
 		return fmt.Errorf("node didn't respond: %v", err)
 	}
 	fmt.Printf("node responded to ping (RTT %v).\n", time.Since(start))
+	*/
 	return nil
 }
 
 func discv4RequestRecord(ctx *cli.Context) error {
+	/*
 	n := getNodeArg(ctx)
 	disc := startV4(ctx)
 	defer disc.Close()
@@ -85,15 +86,18 @@ func discv4RequestRecord(ctx *cli.Context) error {
 		return fmt.Errorf("can't retrieve record: %v", err)
 	}
 	fmt.Println(respN.String())
+	*/
 	return nil
 }
 
 func discv4Resolve(ctx *cli.Context) error {
+	/*
 	n := getNodeArg(ctx)
 	disc := startV4(ctx)
 	defer disc.Close()
 
 	fmt.Println(disc.Resolve(n).String())
+	*/
 	return nil
 }
 
@@ -112,7 +116,7 @@ func parseBootnodes(ctx *cli.Context) ([]*enode.Node, error) {
 	}
 	return nodes, nil
 }
-
+/*
 // startV4 starts an ephemeral discovery V4 node.
 func startV4(ctx *cli.Context) *discover.UDPv4 {
 	socket, ln, cfg, err := listen()
@@ -132,7 +136,7 @@ func startV4(ctx *cli.Context) *discover.UDPv4 {
 	}
 	return disc
 }
-
+*/
 func listen() (*net.UDPConn, *enode.LocalNode, discover.Config, error) {
 	var cfg discover.Config
 	cfg.PrivateKey, _ = crypto.GenerateKey()

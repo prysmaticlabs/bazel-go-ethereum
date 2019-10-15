@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "discv4cmd.go",
+        "discv5cmd.go",
         "enrcmd.go",
         "main.go",
     ],

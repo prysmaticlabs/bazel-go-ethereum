@@ -194,15 +194,6 @@ func v5Key(id ID, field string) []byte {
 	return key
 }
 
-func v5Key(id ID, field string) []byte {
-	key := append([]byte(dbNodePrefix), id[:]...)
-	key = append(key, ':')
-	key = append(key, dbDiscv5Root...)
-	key = append(key, ':')
-	key = append(key, field...)
-	return key
-}
-
 // localItemKey returns the key of a local node item.
 func localItemKey(id ID, field string) []byte {
 	key := append([]byte(dbLocalPrefix), id[:]...)

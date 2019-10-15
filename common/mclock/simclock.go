@@ -32,14 +32,14 @@ import (
 // the timeout using a channel or semaphore.
 type Simulated struct {
 	now       AbsTime
-	scheduled []*SimTimer
+	scheduled []*SimulatedEvent
 	mu        sync.RWMutex
 	cond      *sync.Cond
 	lastId    uint64
 }
 
-// SimTimer implements Timer on the virtual clock.
-type SimTimer struct {
+// SimulatedEvent implements Event for a virtual clock.
+type SimulatedEvent struct {
 	do func()
 	at AbsTime
 	id uint64
@@ -132,7 +132,7 @@ func (s *Simulated) AfterFunc(d time.Duration, fn func()) Event {
 			l = m + 1
 		}
 	}
-	ev := &SimTimer{do: fn, at: at, s: s}
+	ev := &SimulatedEvent{do: fn, at: at, s: s}
 	s.scheduled = append(s.scheduled, nil)
 	copy(s.scheduled[l+1:], s.scheduled[l:ll])
 	s.scheduled[l] = ev
@@ -140,7 +140,7 @@ func (s *Simulated) AfterFunc(d time.Duration, fn func()) Event {
 	return ev
 }
 
-func (ev *SimTimer) Cancel() bool {
+func (ev *SimulatedEvent) Cancel() bool {
 	s := ev.s
 	s.mu.Lock()
 	defer s.mu.Unlock()

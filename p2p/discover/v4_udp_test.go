@@ -118,7 +118,7 @@ func (test *udpTest) waitPacketOut(validate interface{}) (closed bool) {
 }
 
 func TestUDPv4_packetErrors(t *testing.T) {
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	defer test.close()
 
 	test.packetIn(errExpired, &pingV4{From: testRemote, To: testLocalAnnounced, Version: 4})
@@ -129,7 +129,7 @@ func TestUDPv4_packetErrors(t *testing.T) {
 
 func TestUDPv4_pingTimeout(t *testing.T) {
 	t.Parallel()
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	defer test.close()
 
 	key := newkey()
@@ -152,7 +152,7 @@ func (req testPacket) handle(*UDPv4, *net.UDPAddr, enode.ID, []byte) {
 
 func TestUDPv4_responseTimeouts(t *testing.T) {
 	t.Parallel()
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	defer test.close()
 
 	rand.Seed(time.Now().UnixNano())
@@ -224,7 +224,7 @@ func TestUDPv4_responseTimeouts(t *testing.T) {
 
 func TestUDPv4_findnodeTimeout(t *testing.T) {
 	t.Parallel()
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	defer test.close()
 
 	toaddr := &net.UDPAddr{IP: net.ParseIP("1.2.3.4"), Port: 2222}
@@ -240,7 +240,7 @@ func TestUDPv4_findnodeTimeout(t *testing.T) {
 }
 
 func TestUDPv4_findnode(t *testing.T) {
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	defer test.close()
 
 	// put a few nodes into the table. their exact
@@ -295,7 +295,7 @@ func TestUDPv4_findnode(t *testing.T) {
 }
 
 func TestUDPv4_findnodeMultiReply(t *testing.T) {
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	defer test.close()
 
 	rid := enode.PubkeyToIDV4(&test.remotekey.PublicKey)
@@ -351,7 +351,7 @@ func TestUDPv4_findnodeMultiReply(t *testing.T) {
 
 // This test checks that reply matching of pong verifies the ping hash.
 func TestUDPv4_pingMatch(t *testing.T) {
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	defer test.close()
 
 	randToken := make([]byte, 32)
@@ -365,7 +365,7 @@ func TestUDPv4_pingMatch(t *testing.T) {
 
 // This test checks that reply matching of pong verifies the sender IP address.
 func TestUDPv4_pingMatchIP(t *testing.T) {
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	defer test.close()
 
 	test.packetIn(nil, &pingV4{From: testRemote, To: testLocalAnnounced, Version: 4, Expiration: futureExp})
@@ -382,7 +382,7 @@ func TestUDPv4_pingMatchIP(t *testing.T) {
 }
 
 func TestUDPv4_successfulPing(t *testing.T) {
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	added := make(chan *node, 1)
 	test.table.nodeAddedHook = func(n *node) { added <- n }
 	defer test.close()
@@ -448,7 +448,7 @@ func TestUDPv4_successfulPing(t *testing.T) {
 
 // This test checks that EIP-868 requests work.
 func TestUDPv4_EIP868(t *testing.T) {
-	test := newUDPTest(t)
+	test := newUDPV4Test(t)
 	defer test.close()
 
 	test.udp.localNode.Set(enr.WithEntry("foo", "bar"))
@@ -482,6 +482,49 @@ func TestUDPv4_EIP868(t *testing.T) {
 			t.Fatalf("wrong node in enrResponse: %v", n)
 		}
 	})
+}
+
+func TestUDPv4_lookup(t *testing.T) {
+	t.Parallel()
+	test := newUDPV4Test(t)
+
+	// Lookup on empty table returns no nodes.
+	targetKey, _ := decodePubkey(crypto.S256(), lookupTestnet.target)
+	if results := test.udp.LookupPubkey(targetKey); len(results) > 0 {
+		t.Fatalf("lookup on empty table returned %d results: %#v", len(results), results)
+	}
+
+	// Seed table with initial node.
+	fillTable(test.table, []*node{wrapNode(lookupTestnet.node(256, 0))})
+
+	// Start the lookup.
+	resultC := make(chan []*enode.Node, 1)
+	go func() {
+		resultC <- test.udp.LookupPubkey(targetKey)
+		test.close()
+	}()
+
+	// Answer lookup packets.
+	for done := false; !done; {
+		done = test.waitPacketOut(func(p packetV4, to *net.UDPAddr, hash []byte) {
+			n, key := lookupTestnet.nodeByAddr(to)
+			switch p.(type) {
+			case *pingV4:
+				test.packetInFrom(nil, key, to, &pongV4{Expiration: futureExp, ReplyTok: hash})
+			case *findnodeV4:
+				dist := enode.LogDist(n.ID(), lookupTestnet.target.id())
+				nodes := lookupTestnet.nodesAtDistance(dist - 1)
+				test.packetInFrom(nil, key, to, &neighborsV4{Expiration: futureExp, Nodes: nodes})
+			}
+		})
+	}
+
+	// Verify result nodes.
+	results := <-resultC
+	if len(results) != bucketSize {
+		t.Errorf("wrong number of results: got %d, want %d", len(results), bucketSize)
+	}
+	checkLookupResults(t, lookupTestnet, results)
 }
 
 // EIP-8 test vectors.
@@ -594,76 +637,91 @@ func TestUDPv4_forwardCompatibility(t *testing.T) {
 	}
 }
 
-// dgramPipe is a fake UDP socket. It queues all sent datagrams.
-type dgramPipe struct {
-	mu      *sync.Mutex
-	cond    *sync.Cond
-	closing chan struct{}
-	closed  bool
-	queue   []dgram
+// udpV4Test is the test framework used by most tests above.
+// It runs the UDPv4 transport on a virtual socket and allows testing outgoing packets.
+type udpV4Test struct {
+	t                   *testing.T
+	pipe                *dgramPipe
+	table               *Table
+	db                  *enode.DB
+	udp                 *UDPv4
+	sent                [][]byte
+	localkey, remotekey *ecdsa.PrivateKey
+	remoteaddr          *net.UDPAddr
 }
 
-type dgram struct {
-	to   net.UDPAddr
-	data []byte
+func newUDPV4Test(t *testing.T) *udpV4Test {
+	test := &udpV4Test{
+		t:          t,
+		pipe:       newpipe(),
+		localkey:   newkey(),
+		remotekey:  newkey(),
+		remoteaddr: &net.UDPAddr{IP: net.IP{10, 0, 1, 99}, Port: 30303},
+	}
+
+	test.db, _ = enode.OpenDB("")
+	ln := enode.NewLocalNode(test.db, test.localkey)
+	test.udp, _ = ListenV4(test.pipe, ln, Config{
+		PrivateKey: test.localkey,
+		Log:        testlog.Logger(t, log.LvlTrace),
+	})
+	test.table = test.udp.tab
+	// Wait for initial refresh so the table doesn't send unexpected findnode.
+	<-test.table.initDone
+	return test
 }
 
-func newpipe() *dgramPipe {
-	mu := new(sync.Mutex)
-	return &dgramPipe{
-		closing: make(chan struct{}),
-		cond:    &sync.Cond{L: mu},
-		mu:      mu,
+func (test *udpV4Test) close() {
+	test.udp.Close()
+	test.db.Close()
+}
+
+// handles a packet as if it had been sent to the transport.
+func (test *udpV4Test) packetIn(wantError error, data packetV4) {
+	test.t.Helper()
+
+	test.packetInFrom(wantError, test.remotekey, test.remoteaddr, data)
+}
+
+// handles a packet as if it had been sent to the transport by the key/endpoint.
+func (test *udpV4Test) packetInFrom(wantError error, key *ecdsa.PrivateKey, addr *net.UDPAddr, data packetV4) {
+	test.t.Helper()
+
+	enc, _, err := test.udp.encode(key, data)
+	if err != nil {
+		test.t.Errorf("%s encode error: %v", data.name(), err)
+	}
+	test.sent = append(test.sent, enc)
+	if err = test.udp.handlePacket(addr, enc); err != wantError {
+		test.t.Errorf("error mismatch: got %q, want %q", err, wantError)
 	}
 }
 
-// WriteToUDP queues a datagram.
-func (c *dgramPipe) WriteToUDP(b []byte, to *net.UDPAddr) (n int, err error) {
-	msg := make([]byte, len(b))
-	copy(msg, b)
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.closed {
-		return 0, errors.New("closed")
-	}
-	c.queue = append(c.queue, dgram{*to, b})
-	c.cond.Signal()
-	return len(b), nil
-}
+// waits for a packet to be sent by the transport.
+// validate should have type func(X, *net.UDPAddr, []byte), where X is a packet type.
+func (test *udpV4Test) waitPacketOut(validate interface{}) (closed bool) {
+	test.t.Helper()
+	fn := reflect.ValueOf(validate)
+	exptype := fn.Type().In(0)
 
-// ReadFromUDP just hangs until the pipe is closed.
-func (c *dgramPipe) ReadFromUDP(b []byte) (n int, addr *net.UDPAddr, err error) {
-	<-c.closing
-	return 0, nil, io.EOF
-}
-
-func (c *dgramPipe) Close() error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if !c.closed {
-		close(c.closing)
-		c.closed = true
+	dgram, err := test.pipe.receive()
+	if err == errClosed {
+		return true
 	}
-	c.cond.Broadcast()
-	return nil
-}
-
-func (c *dgramPipe) LocalAddr() net.Addr {
-	return &net.UDPAddr{IP: testLocal.IP, Port: int(testLocal.UDP)}
-}
-
-func (c *dgramPipe) receive() (dgram, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	for len(c.queue) == 0 && !c.closed {
-		c.cond.Wait()
+	if err == errTimeout {
+		test.t.Fatalf("timed out waiting for %v", exptype)
+		return false
 	}
-	if c.closed {
-		return dgram{}, false
+	p, _, hash, err := decodeV4(dgram.data)
+	if err != nil {
+		test.t.Errorf("sent packet decode error: %v", err)
+		return false
 	}
-	p := c.queue[0]
-	copy(c.queue, c.queue[1:])
-	c.queue = c.queue[:len(c.queue)-1]
-	return p, true
+	if !reflect.TypeOf(p).AssignableTo(exptype) {
+		test.t.Errorf("sent packet type mismatch, got: %v, want: %v", reflect.TypeOf(p), exptype)
+		return false
+	}
+	fn.Call([]reflect.Value{reflect.ValueOf(p), reflect.ValueOf(&dgram.to), reflect.ValueOf(hash)})
+	return false
 }
 */

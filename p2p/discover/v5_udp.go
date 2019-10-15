@@ -82,6 +82,7 @@ type UDPv5 struct {
 
 	// channels into dispatch
 	packetInCh    chan ReadPacket
+	readNextCh    chan struct{}
 	callCh        chan *callV5
 	callDoneCh    chan *callV5
 	respTimeoutCh chan *callTimeout
@@ -149,6 +150,7 @@ func newUDPv5(conn UDPConn, ln *enode.LocalNode, cfg Config) (*UDPv5, error) {
 		clock:        cfg.Clock,
 		// channels into dispatch
 		packetInCh:    make(chan ReadPacket, 1),
+		readNextCh:    make(chan struct{}, 1),
 		callCh:        make(chan *callV5),
 		callDoneCh:    make(chan *callV5),
 		respTimeoutCh: make(chan *callTimeout),
@@ -197,13 +199,13 @@ func (t *UDPv5) Ping(n *enode.Node) error {
 func (t *UDPv5) AllNodes() []*enode.Node {
 	t.tab.mutex.Lock()
 	defer t.tab.mutex.Unlock()
-	nodes := make([]*enode.Node,0)
+	nodes := make([]*enode.Node, 0)
 
 	for _, b := range &t.tab.buckets {
-		for _,n := range b.entries {
-			nodes = append(nodes,unwrapNode(n))
+		for _, n := range b.entries {
+			nodes = append(nodes, unwrapNode(n))
 		}
- 	}
+	}
 	return nodes
 }
 
@@ -513,6 +515,9 @@ func (t *UDPv5) callDone(c *callV5) {
 func (t *UDPv5) dispatch() {
 	defer t.wg.Done()
 
+	// Arm first read.
+	t.readNextCh <- struct{}{}
+
 	for {
 		select {
 		case c := <-t.callCh:
@@ -539,8 +544,11 @@ func (t *UDPv5) dispatch() {
 
 		case p := <-t.packetInCh:
 			t.handlePacket(p.Data, p.Addr)
+			// Arm next read.
+			t.readNextCh <- struct{}{}
 
 		case <-t.closing:
+			close(t.readNextCh)
 			for id, queue := range t.callQueue {
 				for _, c := range queue {
 					c.err <- errClosed
@@ -630,7 +638,7 @@ func (t *UDPv5) readLoop() {
 	defer t.wg.Done()
 
 	buf := make([]byte, maxPacketSize)
-	for {
+	for range t.readNextCh {
 		nbytes, from, err := t.conn.ReadFromUDP(buf)
 		if netutil.IsTemporaryError(err) {
 			// Ignore temporary read errors.
@@ -659,10 +667,13 @@ func (t *UDPv5) handlePacket(rawpacket []byte, fromAddr *net.UDPAddr) error {
 		return err
 	}
 	if fromNode != nil {
+		// Handshake suceeded, add to table.
 		t.tab.addSeenNode(wrapNode(fromNode))
 	}
-	// Call the packet handler.
-	t.log.Trace("<< "+packet.name(), "id", fromID, "addr", fromAddr)
+	if packet.kind() != p_whoareyouV5 {
+		// WHOAREYOU logged separately to report the sender ID.
+		t.log.Trace("<< "+packet.name(), "id", fromID, "addr", fromAddr)
+	}
 	packet.handle(t, fromID, fromAddr)
 	return nil
 }
@@ -722,10 +733,11 @@ func (p *whoareyouV5) setreqid(id []byte) {}
 func (p *whoareyouV5) handle(t *UDPv5, fromID enode.ID, fromAddr *net.UDPAddr) {
 	c, err := p.matchWithCall(t, p.AuthTag)
 	if err != nil {
-		t.log.Debug("Invalid WHOAREYOU/v5", "id", fromID, "addr", fromAddr, "err", err)
+		t.log.Debug("Invalid WHOAREYOU/v5", "addr", fromAddr, "err", err)
 		return
 	}
 	// Resend the call that was answered by WHOAREYOU.
+	t.log.Trace("<< "+p.name(), "id", c.node.ID(), "addr", fromAddr)
 	c.handshakeCount++
 	c.challenge = p
 	p.node = c.node

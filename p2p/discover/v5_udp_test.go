@@ -21,6 +21,7 @@ import (
 	"crypto/ecdsa"
 	"encoding/binary"
 	"fmt"
+	"math/rand"
 	"net"
 	"reflect"
 	"testing"
@@ -35,18 +36,24 @@ import (
 
 // Real sockets, real crypto: this test checks end-to-end connectivity for UDPv5.
 func TestEndToEndV5(t *testing.T) {
-	t.Skip("MAKE IT WORK")
-
 	t.Parallel()
-	node1 := startLocalhostV5(t, Config{})
-	node2 := startLocalhostV5(t, Config{Bootnodes: []*enode.Node{node1.Self()}})
-	node3 := startLocalhostV5(t, Config{Bootnodes: []*enode.Node{node2.Self()}})
-	defer node1.Close()
-	defer node2.Close()
-	defer node3.Close()
 
-	results := node3.Lookup(node1.Self().ID())
-	if len(results) == 0 || results[0].ID() != node1.Self().ID() {
+	var nodes []*UDPv5
+	for i := 0; i < 5; i++ {
+		var cfg Config
+		if len(nodes) > 0 {
+			bn := nodes[0].Self()
+			cfg.Bootnodes = []*enode.Node{bn}
+		}
+		node := startLocalhostV5(t, cfg)
+		nodes = append(nodes, node)
+		defer node.Close()
+	}
+
+	last := nodes[len(nodes)-1]
+	target := nodes[rand.Intn(len(nodes))].Self()
+	results := last.Lookup(target.ID())
+	if len(results) == 0 || results[0].ID() != target.ID() {
 		t.Fatalf("lookup returned wrong results: %v", results)
 	}
 }

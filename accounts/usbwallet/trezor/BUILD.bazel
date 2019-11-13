@@ -1,5 +1,12 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
+#load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+# TODO build pb.go here?
+
+# gazelle:proto disable
+# NOTE this is "disable" instead of "disable-global" to avoid proto
+# clashes for well known types
+
 go_library(
     name = "go_default_library",
     srcs = [
@@ -13,6 +20,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "@com_github_golang_protobuf//proto:go_default_library",
-        "@com_github_golang_protobuf//protoc-gen-go/descriptor:go_default_library",
+        "@io_bazel_rules_go//proto/wkt:descriptor_go_proto",
     ],
 )

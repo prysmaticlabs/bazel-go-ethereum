@@ -209,6 +209,11 @@ func (t *UDPv5) AllNodes() []*enode.Node {
 	return nodes
 }
 
+// LocalNode returns the current local node running discoveryV5.
+func (t *UDPv5) LocalNode() *enode.LocalNode {
+	return t.localNode
+}
+
 // Resolve searches for a specific node with the given ID and tries to get the most recent
 // version of the node record for it. It returns n if the node could not be resolved.
 func (t *UDPv5) Resolve(n *enode.Node) *enode.Node {

@@ -68,6 +68,7 @@ const (
 
 var zeroIP = make(net.IP, 16)
 var bootNodes = make(map[ID]bool)
+var bootlock = new(sync.RWMutex)
 
 // DB is the node database, storing previously seen nodes and any collected metadata about
 // them for QoS purposes.
@@ -275,12 +276,16 @@ func (db *DB) UpdateNode(node *Node) error {
 
 // AddBootNode adds a bootnode to the map.
 func (db *DB) AddBootNode(node *Node) {
+	bootlock.Lock()
+	defer bootlock.Unlock()
 	bootNodes[node.ID()] = true
 }
 
-// BootNodes returns all the bootnodes in the db.
-func (db *DB) BootNodes() map[ID]bool {
-	return bootNodes
+// BootNodeExists returns all the bootnodes in the db.
+func (db *DB) BootNodeExists(id ID) bool {
+	bootlock.RLock()
+	defer bootlock.RUnlock()
+	return bootNodes[id]
 }
 
 // NodeSeq returns the stored record sequence number of the given node.
@@ -354,7 +359,9 @@ func (db *DB) expireNodes() {
 	)
 	for !atEnd {
 		id, ip, field, err := splitNodeItemKey(it.Key())
+		bootlock.RLock()
 		isBootNode := bootNodes[id]
+		bootlock.RUnlock()
 		if err == nil && field == dbNodePong && !isBootNode {
 			time, _ := binary.Varint(it.Value())
 			if time > youngestPong {

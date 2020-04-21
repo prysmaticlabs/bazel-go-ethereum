@@ -327,8 +327,8 @@ func (t *UDPv5) lookupWorker(destNode *node, target enode.ID, response chan<- []
 			t.log.Trace("FINDNODE/v5 call found no useful nodes", "id", destNode.ID(), "d", dists[i], "failcount", fails, "err", err)
 			if fails >= maxFindnodeFailures {
 				t.log.Trace("Too many findnode failures, dropping", "id", destNode.ID(), "failcount", fails)
-				bootNodes := t.db.BootNodes()
-				if bootNodes[destNode.ID()] {
+
+				if t.db.BootNodeExists(destNode.ID()) {
 					t.log.Trace("Not removing bootnode", "id", destNode.ID(), "failcount", fails)
 					break
 				}

@@ -1,0 +1,39 @@
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "secp256k1",
+    srcs = [":srcs"],
+    # TODO also asm files?
+    hdrs = [":hdrs"],
+    visibility = ["//crypto/secp256k1:__pkg__"],
+    # TODO strip include prefix? supposed to be relative to workspace
+    # TODO actually doesn't matter much if we have c opts
+    local_defines = [
+        "USE_NUM_NONE",
+        "USE_FIELD_10X26",
+        "USE_FIELD_INV_BUILTIN",
+        "USE_SCALAR_8X32",
+        "USE_SCALAR_INV_BUILTIN",
+        "NDEBUG",
+    ]
+)
+
+filegroup(
+    name = "headers",
+    srcs = glob(["include/**/*.h"]) + [
+        "src/secp256k1.h",
+        "src/modules/recovery/main_impl.h",
+    ],
+    visibility = ["//crypto/secp256k1:__pkg__"],
+)
+
+filegroup(
+    name = "srcs",
+    # NOTE: secp256k1.c is copied into secp256k1.h in this fork, so don't need to touch src/secp256k1.c
+    # Can also use version before fork, with include prefixes
+    srcs = glob(
+        ["src/*.h"], exclude=["src/test*.h", "src/bench*.h", "src/secp256k1.h"]
+    ),
+    visibility = ["//crypto/secp256k1:__pkg__"],
+)

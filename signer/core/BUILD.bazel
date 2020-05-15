@@ -16,7 +16,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//accounts:go_default_library",
-        "//accounts/abi:go_default_library",
         "//accounts/keystore:go_default_library",
         "//accounts/scwallet:go_default_library",
         "//accounts/usbwallet:go_default_library",

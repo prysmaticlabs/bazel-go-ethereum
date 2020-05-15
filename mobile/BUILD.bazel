@@ -14,6 +14,7 @@ go_library(
         "ethereum.go",
         "geth.go",
         "geth_android.go",
+        "geth_ios.go",
         "geth_other.go",
         "init.go",
         "interface.go",
@@ -65,6 +66,6 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//common:go_default_library",
-        "//internal/build:go_default_library",
+        "@com_github_cespare_cp//:go_default_library",
     ],
 )

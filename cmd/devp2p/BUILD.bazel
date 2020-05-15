@@ -1,22 +1,40 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
     srcs = [
+        "crawl.go",
         "discv4cmd.go",
+        "discv5cmd.go",
+        "dns_cloudflare.go",
+        "dns_route53.go",
+        "dnscmd.go",
         "enrcmd.go",
         "main.go",
+        "nodeset.go",
+        "nodesetcmd.go",
     ],
     importpath = "github.com/ethereum/go-ethereum/cmd/devp2p",
     visibility = ["//visibility:private"],
     deps = [
+        "//accounts/keystore:go_default_library",
+        "//common:go_default_library",
+        "//console:go_default_library",
+        "//core/forkid:go_default_library",
         "//crypto:go_default_library",
         "//internal/debug:go_default_library",
+        "//log:go_default_library",
         "//p2p/discover:go_default_library",
+        "//p2p/dnsdisc:go_default_library",
         "//p2p/enode:go_default_library",
         "//p2p/enr:go_default_library",
         "//params:go_default_library",
         "//rlp:go_default_library",
+        "@com_github_aws_aws_sdk_go//aws:go_default_library",
+        "@com_github_aws_aws_sdk_go//aws/credentials:go_default_library",
+        "@com_github_aws_aws_sdk_go//aws/session:go_default_library",
+        "@com_github_aws_aws_sdk_go//service/route53:go_default_library",
+        "@com_github_cloudflare_cloudflare_go//:go_default_library",
         "@in_gopkg_urfave_cli_v1//:go_default_library",
     ],
 )
@@ -25,4 +43,11 @@ go_binary(
     name = "devp2p",
     embed = [":go_default_library"],
     visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["dns_route53_test.go"],
+    embed = [":go_default_library"],
+    deps = ["@com_github_aws_aws_sdk_go//service/route53:go_default_library"],
 )

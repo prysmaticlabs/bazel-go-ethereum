@@ -32,7 +32,6 @@ go_library(
         "//core/types:go_default_library",
         "//core/vm:go_default_library",
         "//crypto:go_default_library",
-        "//dashboard:go_default_library",
         "//eth:go_default_library",
         "//eth/downloader:go_default_library",
         "//ethclient:go_default_library",

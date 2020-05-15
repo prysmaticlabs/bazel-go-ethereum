@@ -33,6 +33,7 @@ go_test(
     ],
     embed = [":go_default_library"],
     deps = [
+        "//accounts:go_default_library",
         "//common:go_default_library",
         "//consensus:go_default_library",
         "//consensus/clique:go_default_library",

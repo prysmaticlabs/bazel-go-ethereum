@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "idscheme.go",
+        "iter.go",
         "localnode.go",
         "node.go",
         "nodedb.go",
@@ -32,6 +33,7 @@ go_test(
     name = "go_default_test",
     srcs = [
         "idscheme_test.go",
+        "iter_test.go",
         "localnode_test.go",
         "node_test.go",
         "nodedb_test.go",

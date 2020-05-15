@@ -19,6 +19,7 @@ go_test(
     name = "go_default_test",
     srcs = [
         "asm_test.go",
+        "compiler_test.go",
         "lex_test.go",
     ],
     embed = [":go_default_library"],

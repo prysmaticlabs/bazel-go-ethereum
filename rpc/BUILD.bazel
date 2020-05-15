@@ -9,7 +9,6 @@ go_library(
         "doc.go",
         "endpoints.go",
         "errors.go",
-        "gzip.go",
         "handler.go",
         "http.go",
         "inproc.go",
@@ -17,6 +16,7 @@ go_library(
         "ipc_unix.go",
         "ipc_windows.go",
         "json.go",
+        "metrics.go",
         "server.go",
         "service.go",
         "stdio.go",
@@ -28,12 +28,13 @@ go_library(
     importpath = "github.com/ethereum/go-ethereum/rpc",
     visibility = ["//visibility:public"],
     deps = [
+        "//common:go_default_library",
         "//common/hexutil:go_default_library",
         "//log:go_default_library",
+        "//metrics:go_default_library",
         "//p2p/netutil:go_default_library",
-        "//vendor/github.com/gorilla/websocket:go_default_library",
         "@com_github_deckarep_golang_set//:go_default_library",
-        "@com_github_rs_cors//:go_default_library",
+        "@com_github_gorilla_websocket//:go_default_library",
     ] + select({
         "@io_bazel_rules_go//go/platform:windows": [
             "@in_gopkg_natefinch_npipe_v2//:go_default_library",
@@ -57,9 +58,11 @@ go_test(
     data = glob(["testdata/**"]),
     embed = [":go_default_library"],
     deps = [
+        "//common:go_default_library",
+        "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
         "//log:go_default_library",
-        "//vendor/github.com/gorilla/websocket:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
+        "@com_github_gorilla_websocket//:go_default_library",
     ],
 )

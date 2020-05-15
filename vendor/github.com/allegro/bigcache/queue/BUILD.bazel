@@ -1,9 +1,0 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
-
-go_library(
-    name = "go_default_library",
-    srcs = ["bytes_queue.go"],
-    importmap = "github.com/ethereum/go-ethereum/vendor/github.com/allegro/bigcache/queue",
-    importpath = "github.com/allegro/bigcache/queue",
-    visibility = ["//visibility:public"],
-)

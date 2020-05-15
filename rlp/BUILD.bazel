@@ -6,6 +6,7 @@ go_library(
         "decode.go",
         "doc.go",
         "encode.go",
+        "iterator.go",
         "raw.go",
         "typecache.go",
     ],
@@ -20,7 +21,9 @@ go_test(
         "decode_test.go",
         "encode_test.go",
         "encoder_example_test.go",
+        "iterator_test.go",
         "raw_test.go",
     ],
     embed = [":go_default_library"],
+    deps = ["//common/hexutil:go_default_library"],
 )

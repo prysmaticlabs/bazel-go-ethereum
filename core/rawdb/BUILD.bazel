@@ -6,9 +6,10 @@ go_library(
         "accessors_chain.go",
         "accessors_indexes.go",
         "accessors_metadata.go",
+        "accessors_snapshot.go",
+        "chain_iterator.go",
         "database.go",
         "freezer.go",
-        "freezer_reinit.go",
         "freezer_table.go",
         "schema.go",
         "table.go",
@@ -19,6 +20,7 @@ go_library(
         "//common:go_default_library",
         "//common/prque:go_default_library",
         "//core/types:go_default_library",
+        "//crypto:go_default_library",
         "//ethdb:go_default_library",
         "//ethdb/leveldb:go_default_library",
         "//ethdb/memorydb:go_default_library",
@@ -26,9 +28,10 @@ go_library(
         "//metrics:go_default_library",
         "//params:go_default_library",
         "//rlp:go_default_library",
-        "//vendor/github.com/olekukonko/tablewriter:go_default_library",
-        "//vendor/github.com/prometheus/tsdb/fileutil:go_default_library",
         "@com_github_golang_snappy//:go_default_library",
+        "@com_github_olekukonko_tablewriter//:go_default_library",
+        "@com_github_prometheus_tsdb//fileutil:go_default_library",
+        "@org_golang_x_crypto//sha3:go_default_library",
     ],
 )
 
@@ -37,7 +40,9 @@ go_test(
     srcs = [
         "accessors_chain_test.go",
         "accessors_indexes_test.go",
+        "chain_iterator_test.go",
         "freezer_table_test.go",
+        "table_test.go",
     ],
     embed = [":go_default_library"],
     deps = [

@@ -21,6 +21,7 @@ go_library(
         "//eth/filters:go_default_library",
         "//internal/ethapi:go_default_library",
         "//log:go_default_library",
+        "//node:go_default_library",
         "//p2p:go_default_library",
         "//rlp:go_default_library",
         "//rpc:go_default_library",

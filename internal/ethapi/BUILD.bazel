@@ -11,6 +11,7 @@ go_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "//accounts:go_default_library",
+        "//accounts/abi:go_default_library",
         "//accounts/keystore:go_default_library",
         "//accounts/scwallet:go_default_library",
         "//common:go_default_library",
@@ -33,7 +34,7 @@ go_library(
         "//params:go_default_library",
         "//rlp:go_default_library",
         "//rpc:go_default_library",
-        "//vendor/github.com/tyler-smith/go-bip39:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
+        "@com_github_tyler_smith_go_bip39//:go_default_library",
     ],
 )

@@ -24,10 +24,8 @@ go_test(
     name = "go_default_test",
     srcs = [
         "bytes_test.go",
-        "main_test.go",
         "size_test.go",
         "types_test.go",
     ],
     embed = [":go_default_library"],
-    deps = ["@in_gopkg_check_v1//:go_default_library"],
 )

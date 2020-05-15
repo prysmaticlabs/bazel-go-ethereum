@@ -7,6 +7,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:go_default_library",
+        "//accounts/abi:go_default_library",
         "//accounts/abi/bind:go_default_library",
         "//common:go_default_library",
         "//common/math:go_default_library",
@@ -20,6 +21,7 @@ go_library(
         "//eth/filters:go_default_library",
         "//ethdb:go_default_library",
         "//event:go_default_library",
+        "//log:go_default_library",
         "//params:go_default_library",
         "//rpc:go_default_library",
     ],
@@ -31,10 +33,12 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//:go_default_library",
+        "//accounts/abi:go_default_library",
         "//accounts/abi/bind:go_default_library",
         "//common:go_default_library",
         "//core:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",
+        "//params:go_default_library",
     ],
 )

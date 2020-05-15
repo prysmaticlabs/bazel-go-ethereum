@@ -47,6 +47,8 @@ go_test(
         "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
         "//core/types:go_default_library",
+        "//internal/testlog:go_default_library",
+        "//log:go_default_library",
         "//params:go_default_library",
     ],
 )

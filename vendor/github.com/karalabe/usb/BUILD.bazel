@@ -5,9 +5,7 @@ go_library(
     srcs = [
         #"usb_enabled.go",
         "stub_usb_enabled.go",
-        #"raw_enabled.go",
-        #"raw_errors.go",
-        "usb.go",
+        "usb.go"
     ],
     #clinkopts = select({
     #    "@io_bazel_rules_go//go/platform:darwin": [

@@ -12,13 +12,14 @@ go_library(
     deps = [
         "//accounts/scwallet:go_default_library",
         "//accounts/usbwallet:go_default_library",
+        "//common/hexutil:go_default_library",
         "//internal/jsre:go_default_library",
+        "//internal/jsre/deps:go_default_library",
         "//internal/web3ext:go_default_library",
-        "//log:go_default_library",
         "//rpc:go_default_library",
+        "@com_github_dop251_goja//:go_default_library",
         "@com_github_mattn_go_colorable//:go_default_library",
         "@com_github_peterh_liner//:go_default_library",
-        "@com_github_robertkrimen_otto//:go_default_library",
     ],
 )
 

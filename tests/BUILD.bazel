@@ -27,6 +27,7 @@ go_library(
         "//core:go_default_library",
         "//core/rawdb:go_default_library",
         "//core/state:go_default_library",
+        "//core/state/snapshot:go_default_library",
         "//core/types:go_default_library",
         "//core/vm:go_default_library",
         "//crypto:go_default_library",

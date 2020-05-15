@@ -11,7 +11,7 @@ go_library(
         "//signer/core:go_default_library",
         "//signer/rules/deps:go_default_library",
         "//signer/storage:go_default_library",
-        "@com_github_robertkrimen_otto//:go_default_library",
+        "@com_github_dop251_goja//:go_default_library",
     ],
 )
 

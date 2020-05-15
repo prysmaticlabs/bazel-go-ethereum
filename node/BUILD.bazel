@@ -7,8 +7,10 @@ go_library(
         "config.go",
         "defaults.go",
         "doc.go",
+        "endpoints.go",
         "errors.go",
         "node.go",
+        "rpcstack.go",
         "service.go",
     ],
     importpath = "github.com/ethereum/go-ethereum/node",
@@ -31,7 +33,8 @@ go_library(
         "//p2p/enode:go_default_library",
         "//p2p/nat:go_default_library",
         "//rpc:go_default_library",
-        "//vendor/github.com/prometheus/tsdb/fileutil:go_default_library",
+        "@com_github_prometheus_tsdb//fileutil:go_default_library",
+        "@com_github_rs_cors//:go_default_library",
     ],
 )
 
@@ -41,6 +44,7 @@ go_test(
         "config_test.go",
         "node_example_test.go",
         "node_test.go",
+        "rpcstack_test.go",
         "service_test.go",
         "utils_test.go",
     ],
@@ -49,5 +53,6 @@ go_test(
         "//crypto:go_default_library",
         "//p2p:go_default_library",
         "//rpc:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
     ],
 )

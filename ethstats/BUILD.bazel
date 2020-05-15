@@ -17,6 +17,6 @@ go_library(
         "//log:go_default_library",
         "//p2p:go_default_library",
         "//rpc:go_default_library",
-        "//vendor/github.com/gorilla/websocket:go_default_library",
+        "@com_github_gorilla_websocket//:go_default_library",
     ],
 )

@@ -133,3 +133,15 @@ def geth_dependencies():
         sum = "h1:OS12ieG61fsCg5+qLJ+SsW9NicxNkg3b25OyT2yCeUc=",
         version = "v0.3.0",
     )
+
+    go_repository(
+        name = "com_github_syndtr_goleveldb",
+        commit = "758128399b1df3a87e92df6c26c1d2063da8fabe",
+        importpath = "github.com/syndtr/goleveldb",
+    )
+
+    go_repository(
+        name = "com_github_olekukonko_tablewriter",
+        commit = "e6d60cf7ba1f42d86d54cdf5508611c4aafb3970",
+        importpath = "github.com/olekukonko/tablewriter",
+    )

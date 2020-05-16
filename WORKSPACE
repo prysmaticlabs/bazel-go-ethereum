@@ -100,18 +100,6 @@ go_repository(
 )
 
 go_repository(
-    name = "com_github_syndtr_goleveldb",
-    commit = "758128399b1df3a87e92df6c26c1d2063da8fabe",
-    importpath = "github.com/syndtr/goleveldb",
-)
-
-go_repository(
-    name = "com_github_olekukonko_tablewriter",
-    commit = "e6d60cf7ba1f42d86d54cdf5508611c4aafb3970",
-    importpath = "github.com/olekukonko/tablewriter",
-)
-
-go_repository(
     name = "org_golang_x_sys",
     commit = "8ff4e546d48be377a38a3ab13ef2dd4dd8dce06a",
     importpath = "golang.org/x/sys",

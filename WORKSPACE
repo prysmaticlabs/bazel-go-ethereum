@@ -28,7 +28,7 @@ load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
 gazelle_dependencies()
 
-load("//:deps.bzl","geth_dependencies")
+load("//:deps.bzl", "geth_dependencies")
 
 # gazelle:repository_macro deps.bzl%geth_dependencies
 geth_dependencies()
@@ -55,12 +55,6 @@ go_repository(
     name = "com_github_pborman_uuid",
     commit = "8b1b92947f46224e3b97bb1a3a5b0382be00d31e",
     importpath = "github.com/pborman/uuid",
-)
-
-go_repository(
-    name = "com_github_rjeczalik_notify",
-    commit = "629144ba06a1c6af28c1e42c228e3d42594ce081",
-    importpath = "github.com/rjeczalik/notify",
 )
 
 go_repository(
@@ -374,5 +368,3 @@ go_repository(
     commit = "c1b8fa8bdccecb0b8db834ee0b92fdbcfa606dd6",
     importpath = "gopkg.in/natefinch/npipe.v2",
 )
-
-

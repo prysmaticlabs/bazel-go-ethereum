@@ -145,3 +145,10 @@ def geth_dependencies():
         commit = "e6d60cf7ba1f42d86d54cdf5508611c4aafb3970",
         importpath = "github.com/olekukonko/tablewriter",
     )
+
+    go_repository(
+        name = "com_github_rjeczalik_notify",
+        importpath = "github.com/rjeczalik/notify",
+        sum = "h1:MiTWrPj55mNDHEiIX5YUSKefw/+lCQVoAFmD6oQm5w8=",
+        version = "v0.9.2",
+    )

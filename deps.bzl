@@ -1,4 +1,8 @@
-load("@bazel_gazelle//:deps.bzl", _go_repository = "go_repository")
+load(
+    "@bazel_gazelle//:deps.bzl",
+    "go_repository",
+    _go_repository = "go_repository",
+)
 
 def _maybe(repo_rule, name, **kwargs):
     if name not in native.existing_rules():
@@ -8,7 +12,6 @@ def go_repository(name, **kwargs):
     _maybe(_go_repository, name, **kwargs)
 
 def geth_dependencies():
-
     go_repository(
         name = "com_github_tyler_smith_go_bip39",
         commit = "c55f737395bc849274c1d1a35ca6f29a4e568092",
@@ -17,8 +20,9 @@ def geth_dependencies():
 
     go_repository(
         name = "com_github_dop251_goja",
-        commit = "77e84ffb8c65af72e4a3bc53c31328265eac7c81",
         importpath = "github.com/dop251/goja",
+        sum = "h1:Nud597JuGCF/MScrb6NNVDRgmuk8X7w3pFc5GvSsm5E=",
+        version = "v0.0.0-20200414142002-77e84ffb8c65",
     )
 
     go_repository(

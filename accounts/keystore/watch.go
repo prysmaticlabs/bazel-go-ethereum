@@ -22,21 +22,23 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/rjeczalik/notify"
 )
 
+// The file watcher has been mocked out due to issues with importing
+// 	"github.com/rjeczalik/notify" into prysm. Since prysm does not need
+// a file watcher for geth accounts we can remove it.
 type watcher struct {
 	ac       *accountCache
 	starting bool
 	running  bool
-	ev       chan notify.EventInfo
+	ev       chan bool
 	quit     chan struct{}
 }
 
 func newWatcher(ac *accountCache) *watcher {
 	return &watcher{
 		ac:   ac,
-		ev:   make(chan notify.EventInfo, 10),
+		ev:   make(chan bool, 10),
 		quit: make(chan struct{}),
 	}
 }
@@ -65,11 +67,6 @@ func (w *watcher) loop() {
 	}()
 	logger := log.New("path", w.ac.keydir)
 
-	if err := notify.Watch(w.ac.keydir, w.ev, notify.All); err != nil {
-		logger.Trace("Failed to watch keystore folder", "err", err)
-		return
-	}
-	defer notify.Stop(w.ev)
 	logger.Trace("Started watching keystore folder")
 	defer logger.Trace("Stopped watching keystore folder")
 

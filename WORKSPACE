@@ -33,10 +33,3 @@ load("//:deps.bzl", "geth_dependencies")
 # gazelle:repository_macro deps.bzl%geth_dependencies
 geth_dependencies()
 
-go_repository(
-    name = "com_github_ethereum_go_ethereum",
-    commit = "e1edfe0689966d5b5fcee530a96c31dd28aea95c",
-    importpath = "github.com/ethereum/go-ethereum",
-)
-
-

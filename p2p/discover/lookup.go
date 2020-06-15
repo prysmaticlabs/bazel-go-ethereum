@@ -141,6 +141,9 @@ func (it *lookup) slowdown() {
 }
 
 func (it *lookup) query(n *node, reply chan<- []*node) {
+	if len(n.ID()) == 0 || n.IP().To16() == nil {
+		return
+	}
 	fails := it.tab.db.FindFails(n.ID(), n.IP())
 	r, err := it.queryfunc(n)
 	if err == errClosed {

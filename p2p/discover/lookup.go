@@ -211,9 +211,12 @@ func (it *lookupIterator) Next() bool {
 		}
 		if it.lookup == nil {
 			it.lookup = it.nextLookup(it.ctx)
+			// slowdown before performing next lookup
+			it.lookup.slowdown()
 			continue
 		}
 		if !it.lookup.advance() {
+			it.lookup.shutdown()
 			it.lookup = nil
 			continue
 		}

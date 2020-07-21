@@ -13,6 +13,7 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//cmd/evm/internal/compiler:go_default_library",
+        "//cmd/evm/internal/t8ntool:go_default_library",
         "//cmd/utils:go_default_library",
         "//common:go_default_library",
         "//core:go_default_library",
@@ -21,6 +22,7 @@ go_library(
         "//core/state:go_default_library",
         "//core/vm:go_default_library",
         "//core/vm/runtime:go_default_library",
+        "//internal/flags:go_default_library",
         "//log:go_default_library",
         "//params:go_default_library",
         "//tests:go_default_library",

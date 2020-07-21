@@ -3,8 +3,8 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     srcs = [
+        "fdlimit_bsd.go",
         "fdlimit_darwin.go",
-        "fdlimit_freebsd.go",
         "fdlimit_unix.go",
         "fdlimit_windows.go",
     ],

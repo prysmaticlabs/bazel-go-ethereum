@@ -25,5 +25,8 @@ go_test(
         "raw_test.go",
     ],
     embed = [":go_default_library"],
-    deps = ["//common/hexutil:go_default_library"],
+    deps = [
+        "//common/hexutil:go_default_library",
+        "//common/math:go_default_library",
+    ],
 )

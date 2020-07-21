@@ -1,4 +1,4 @@
-load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
@@ -8,7 +8,23 @@ go_library(
     deps = [
         "//common:go_default_library",
         "//core/types:go_default_library",
-        "//internal/ethapi:go_default_library",
+        "//params:go_default_library",
+        "//rpc:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["gasprice_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//common:go_default_library",
+        "//consensus/ethash:go_default_library",
+        "//core:go_default_library",
+        "//core/rawdb:go_default_library",
+        "//core/types:go_default_library",
+        "//core/vm:go_default_library",
+        "//crypto:go_default_library",
         "//params:go_default_library",
         "//rpc:go_default_library",
     ],

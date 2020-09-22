@@ -17,9 +17,12 @@
 package discover
 
 import (
+	"crypto/ecdsa"
 	crand "crypto/rand"
+	"encoding/binary"
 
 	"github.com/ethereum/go-ethereum/common/mclock"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/p2p/enode"
 	"github.com/hashicorp/golang-lru/simplelru"
 )
@@ -30,6 +33,10 @@ type sessionCache struct {
 	sessions   *simplelru.LRU
 	handshakes map[sessionID]*whoareyouV5
 	clock      mclock.Clock
+	// hooks for overriding randomness.
+	nonceGen        func(uint32) (packetNonce, error)
+	maskingIVGen    func([]byte) error
+	ephemeralKeyGen func() (*ecdsa.PrivateKey, error)
 }
 
 // sessionID identifies a session or handshake.
@@ -45,23 +52,41 @@ type session struct {
 	nonceCounter uint32
 }
 
+// keysFlipped returns a copy of s with the read and write keys flipped.
+func (s *session) keysFlipped() *session {
+	return &session{s.readKey, s.writeKey, s.nonceCounter}
+}
+
 func newSessionCache(maxItems int, clock mclock.Clock) *sessionCache {
 	cache, err := simplelru.NewLRU(maxItems, nil)
 	if err != nil {
 		panic("can't create session cache")
 	}
 	return &sessionCache{
-		sessions:   cache,
-		handshakes: make(map[sessionID]*whoareyouV5),
-		clock:      clock,
+		sessions:        cache,
+		handshakes:      make(map[sessionID]*whoareyouV5),
+		clock:           clock,
+		nonceGen:        generateNonce,
+		maskingIVGen:    generateMaskingIV,
+		ephemeralKeyGen: crypto.GenerateKey,
 	}
 }
 
+func generateNonce(counter uint32) (n packetNonce, err error) {
+	binary.BigEndian.PutUint32(n[:4], counter)
+	_, err = crand.Read(n[4:])
+	return n, err
+}
+
+func generateMaskingIV(buf []byte) error {
+	_, err := crand.Read(buf)
+	return err
+}
+
 // nextNonce creates a nonce for encrypting a message to the given session.
-func (sc *sessionCache) nextNonce(id enode.ID, addr string) []byte {
-	n := make([]byte, gcmNonceSize)
-	crand.Read(n)
-	return n
+func (sc *sessionCache) nextNonce(s *session) (packetNonce, error) {
+	s.nonceCounter++
+	return sc.nonceGen(s.nonceCounter)
 }
 
 // session returns the current session for the given node, if any.
@@ -81,19 +106,9 @@ func (sc *sessionCache) readKey(id enode.ID, addr string) []byte {
 	return nil
 }
 
-// writeKey returns the current read key for the given node.
-func (sc *sessionCache) writeKey(id enode.ID, addr string) []byte {
-	if s := sc.session(id, addr); s != nil {
-		return s.writeKey
-	}
-	return nil
-}
-
 // storeNewSession stores new encryption keys in the cache.
-func (sc *sessionCache) storeNewSession(id enode.ID, addr string, r, w []byte) {
-	sc.sessions.Add(sessionID{id, addr}, &session{
-		readKey: r, writeKey: w,
-	})
+func (sc *sessionCache) storeNewSession(id enode.ID, addr string, s *session) {
+	sc.sessions.Add(sessionID{id, addr}, s)
 }
 
 // getHandshake gets the handshake challenge we previously sent to the given remote node.

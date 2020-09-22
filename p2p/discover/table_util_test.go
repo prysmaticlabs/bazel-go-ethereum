@@ -22,9 +22,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
+	"os"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -227,6 +230,7 @@ func sortedByDistanceTo(distbase enode.ID, slice []*node) bool {
 	})
 }
 
+// hexEncPrivkey decodes h as a private key.
 func hexEncPrivkey(h string) *ecdsa.PrivateKey {
 	b, err := hex.DecodeString(h)
 	if err != nil {
@@ -239,6 +243,7 @@ func hexEncPrivkey(h string) *ecdsa.PrivateKey {
 	return key
 }
 
+// hexEncPubkey decodes h as a public key.
 func hexEncPubkey(h string) (ret encPubkey) {
 	b, err := hex.DecodeString(h)
 	if err != nil {
@@ -249,4 +254,59 @@ func hexEncPubkey(h string) (ret encPubkey) {
 	}
 	copy(ret[:], b)
 	return ret
+}
+
+// hexFile reads the given file and decodes the hex data contained in it.
+// Whitespace and any lines beginning with the # character are ignored.
+func hexFile(file string) []byte {
+	fileContent, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic(err)
+	}
+
+	// Gather hex data, ignore comments.
+	var text []byte
+	for _, line := range bytes.Split(fileContent, []byte("\n")) {
+		line = bytes.TrimSpace(line)
+		if len(line) > 0 && line[0] == '#' {
+			continue
+		}
+		text = append(text, line...)
+	}
+
+	// Parse the hex.
+	if bytes.HasPrefix(text, []byte("0x")) {
+		text = text[2:]
+	}
+	data := make([]byte, hex.DecodedLen(len(text)))
+	if _, err := hex.Decode(data, text); err != nil {
+		panic("invalid hex in " + file)
+	}
+	return data
+}
+
+// writeTestVector writes a test vector file with the given commentary and binary data.
+func writeTestVector(file, comment string, data []byte) {
+	fd, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer fd.Close()
+
+	if len(comment) > 0 {
+		for _, line := range strings.Split(strings.TrimSpace(comment), "\n") {
+			fmt.Fprintf(fd, "# %s\n", line)
+		}
+		fmt.Fprintln(fd)
+	}
+	for len(data) > 0 {
+		var chunk []byte
+		if len(data) < 32 {
+			chunk = data
+		} else {
+			chunk = data[:32]
+		}
+		data = data[len(chunk):]
+		fmt.Fprintf(fd, "%x\n", chunk)
+	}
 }

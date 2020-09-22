@@ -94,7 +94,7 @@ func TestUDPv5_pingHandling(t *testing.T) {
 	defer test.close()
 
 	test.packetIn(&pingV5{ReqID: []byte("foo")})
-	test.waitPacketOut(func(p *pongV5, addr *net.UDPAddr, authTag []byte) {
+	test.waitPacketOut(func(p *pongV5, addr *net.UDPAddr, _ packetNonce) {
 		if !bytes.Equal(p.ReqID, []byte("foo")) {
 			t.Error("wrong request ID in response:", p.ReqID)
 		}
@@ -110,11 +110,11 @@ func TestUDPv5_unknownPacket(t *testing.T) {
 	test := newUDPV5Test(t)
 	defer test.close()
 
-	authTag := [12]byte{1, 2, 3}
+	authTag := packetNonce{1, 2, 3}
 	check := func(p *whoareyouV5, wantSeq uint64) {
 		t.Helper()
-		if !bytes.Equal(p.AuthTag, authTag[:]) {
-			t.Error("wrong token in WHOAREYOU:", p.AuthTag, authTag[:])
+		if p.AuthTag != authTag {
+			t.Error("wrong token in WHOAREYOU:", p.AuthTag, authTag)
 		}
 		if p.IDNonce == ([32]byte{}) {
 			t.Error("all zero ID nonce")
@@ -125,8 +125,8 @@ func TestUDPv5_unknownPacket(t *testing.T) {
 	}
 
 	// Unknown packet from unknown node.
-	test.packetIn(&unknownV5{AuthTag: authTag[:]})
-	test.waitPacketOut(func(p *whoareyouV5, addr *net.UDPAddr, _ []byte) {
+	test.packetIn(&unknownV5{AuthTag: authTag})
+	test.waitPacketOut(func(p *whoareyouV5, addr *net.UDPAddr, _ packetNonce) {
 		check(p, 0)
 	})
 
@@ -134,8 +134,8 @@ func TestUDPv5_unknownPacket(t *testing.T) {
 	n := test.getNode(test.remotekey, test.remoteaddr).Node()
 	test.table.addSeenNode(wrapNode(n))
 
-	test.packetIn(&unknownV5{AuthTag: authTag[:]})
-	test.waitPacketOut(func(p *whoareyouV5, addr *net.UDPAddr, _ []byte) {
+	test.packetIn(&unknownV5{AuthTag: authTag})
+	test.waitPacketOut(func(p *whoareyouV5, addr *net.UDPAddr, _ packetNonce) {
 		check(p, n.Seq())
 	})
 }
@@ -147,24 +147,40 @@ func TestUDPv5_findnodeHandling(t *testing.T) {
 	defer test.close()
 
 	// Create test nodes and insert them into the table.
-	nodes := nodesAtDistance(test.table.self().ID(), 253, 10)
-	fillTable(test.table, wrapNodes(nodes))
+	nodes253 := nodesAtDistance(test.table.self().ID(), 253, 10)
+	nodes249 := nodesAtDistance(test.table.self().ID(), 249, 4)
+	nodes248 := nodesAtDistance(test.table.self().ID(), 248, 10)
+	fillTable(test.table, wrapNodes(nodes253))
+	fillTable(test.table, wrapNodes(nodes249))
+	fillTable(test.table, wrapNodes(nodes248))
 
 	// Requesting with distance zero should return the node's own record.
-	test.packetIn(&findnodeV5{ReqID: []byte{0}, Distance: 0})
+	test.packetIn(&findnodeV5{ReqID: []byte{0}, Distances: []uint{0}})
 	test.expectNodes([]byte{0}, 1, []*enode.Node{test.udp.Self()})
 
-	// Requesting with distance > 256 caps it at 256.
-	test.packetIn(&findnodeV5{ReqID: []byte{1}, Distance: 4234098})
+	// Requesting with distance > 256 shouldn't crash.
+	test.packetIn(&findnodeV5{ReqID: []byte{1}, Distances: []uint{4234098}})
 	test.expectNodes([]byte{1}, 1, nil)
 
-	// This request gets no nodes because the corresponding bucket is empty.
-	test.packetIn(&findnodeV5{ReqID: []byte{2}, Distance: 254})
+	// Requesting with empty distance list shouldn't crash either.
+	test.packetIn(&findnodeV5{ReqID: []byte{2}, Distances: []uint{}})
 	test.expectNodes([]byte{2}, 1, nil)
 
-	// This request gets all test nodes.
-	test.packetIn(&findnodeV5{ReqID: []byte{3}, Distance: 253})
-	test.expectNodes([]byte{3}, 4, nodes)
+	// This request gets no nodes because the corresponding bucket is empty.
+	test.packetIn(&findnodeV5{ReqID: []byte{3}, Distances: []uint{254}})
+	test.expectNodes([]byte{3}, 1, nil)
+
+	// This request gets all the distance-253 nodes.
+	test.packetIn(&findnodeV5{ReqID: []byte{4}, Distances: []uint{253}})
+	test.expectNodes([]byte{4}, 4, nodes253)
+
+	// This request gets all the distance-249 nodes and some more at 248 because
+	// the bucket at 249 is not full.
+	test.packetIn(&findnodeV5{ReqID: []byte{5}, Distances: []uint{249, 248}})
+	var nodes []*enode.Node
+	nodes = append(nodes, nodes249...)
+	nodes = append(nodes, nodes248[:10]...)
+	test.expectNodes([]byte{5}, 5, nodes)
 }
 
 func (test *udpV5Test) expectNodes(wantReqID []byte, wantTotal uint8, wantNodes []*enode.Node) {
@@ -172,16 +188,17 @@ func (test *udpV5Test) expectNodes(wantReqID []byte, wantTotal uint8, wantNodes 
 	for _, n := range wantNodes {
 		nodeSet[n.ID()] = n.Record()
 	}
+
 	for {
-		test.waitPacketOut(func(p *nodesV5, addr *net.UDPAddr, authTag []byte) {
+		test.waitPacketOut(func(p *nodesV5, addr *net.UDPAddr, _ packetNonce) {
+			if !bytes.Equal(p.ReqID, wantReqID) {
+				test.t.Fatalf("wrong request ID %v in response, want %v", p.ReqID, wantReqID)
+			}
 			if len(p.Nodes) > 3 {
 				test.t.Fatalf("too many nodes in response")
 			}
 			if p.Total != wantTotal {
-				test.t.Fatalf("wrong total response count %d", p.Total)
-			}
-			if !bytes.Equal(p.ReqID, wantReqID) {
-				test.t.Fatalf("wrong request ID in response: %v", p.ReqID)
+				test.t.Fatalf("wrong total response count %d, want %d", p.Total, wantTotal)
 			}
 			for _, record := range p.Nodes {
 				n, _ := enode.New(enode.ValidSchemesForTesting, record)
@@ -215,7 +232,7 @@ func TestUDPv5_pingCall(t *testing.T) {
 		_, err := test.udp.ping(remote)
 		done <- err
 	}()
-	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag []byte) {})
+	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, _ packetNonce) {})
 	if err := <-done; err != errTimeout {
 		t.Fatalf("want errTimeout, got %q", err)
 	}
@@ -225,7 +242,7 @@ func TestUDPv5_pingCall(t *testing.T) {
 		_, err := test.udp.ping(remote)
 		done <- err
 	}()
-	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag []byte) {
+	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, _ packetNonce) {
 		test.packetInFrom(test.remotekey, test.remoteaddr, &pongV5{ReqID: p.ReqID})
 	})
 	if err := <-done; err != nil {
@@ -237,7 +254,7 @@ func TestUDPv5_pingCall(t *testing.T) {
 		_, err := test.udp.ping(remote)
 		done <- err
 	}()
-	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag []byte) {
+	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, _ packetNonce) {
 		wrongAddr := &net.UDPAddr{IP: net.IP{33, 44, 55, 22}, Port: 10101}
 		test.packetInFrom(test.remotekey, wrongAddr, &pongV5{ReqID: p.ReqID})
 	})
@@ -255,22 +272,22 @@ func TestUDPv5_findnodeCall(t *testing.T) {
 
 	// Launch the request:
 	var (
-		distance = 230
-		remote   = test.getNode(test.remotekey, test.remoteaddr).Node()
-		nodes    = nodesAtDistance(remote.ID(), distance, 8)
-		done     = make(chan error, 1)
-		response []*enode.Node
+		distances = []uint{230}
+		remote    = test.getNode(test.remotekey, test.remoteaddr).Node()
+		nodes     = nodesAtDistance(remote.ID(), int(distances[0]), 8)
+		done      = make(chan error, 1)
+		response  []*enode.Node
 	)
 	go func() {
 		var err error
-		response, err = test.udp.findnode(remote, distance)
+		response, err = test.udp.findnode(remote, distances)
 		done <- err
 	}()
 
 	// Serve the responses:
-	test.waitPacketOut(func(p *findnodeV5, addr *net.UDPAddr, authTag []byte) {
-		if p.Distance != uint(distance) {
-			t.Fatalf("wrong bucket: %d", p.Distance)
+	test.waitPacketOut(func(p *findnodeV5, addr *net.UDPAddr, _ packetNonce) {
+		if !reflect.DeepEqual(p.Distances, distances) {
+			t.Fatalf("wrong distances in request: %v", p.Distances)
 		}
 		test.packetIn(&nodesV5{
 			ReqID: p.ReqID,
@@ -314,15 +331,15 @@ func TestUDPv5_callResend(t *testing.T) {
 	}()
 
 	// Ping answered by WHOAREYOU.
-	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag []byte) {
+	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag packetNonce) {
 		test.packetIn(&whoareyouV5{AuthTag: authTag})
 	})
 	// Ping should be re-sent.
-	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag []byte) {
+	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, _ packetNonce) {
 		test.packetIn(&pongV5{ReqID: p.ReqID})
 	})
 	// Answer the other ping.
-	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag []byte) {
+	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, _ packetNonce) {
 		test.packetIn(&pongV5{ReqID: p.ReqID})
 	})
 	if err := <-done; err != nil {
@@ -347,11 +364,11 @@ func TestUDPv5_multipleHandshakeRounds(t *testing.T) {
 	}()
 
 	// Ping answered by WHOAREYOU.
-	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag []byte) {
+	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag packetNonce) {
 		test.packetIn(&whoareyouV5{AuthTag: authTag})
 	})
 	// Ping answered by WHOAREYOU again.
-	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag []byte) {
+	test.waitPacketOut(func(p *pingV5, addr *net.UDPAddr, authTag packetNonce) {
 		test.packetIn(&whoareyouV5{AuthTag: authTag})
 	})
 	if err := <-done; err != errTimeout {
@@ -367,18 +384,18 @@ func TestUDPv5_callTimeoutReset(t *testing.T) {
 
 	// Launch the request:
 	var (
-		distance = 230
+		distance = uint(230)
 		remote   = test.getNode(test.remotekey, test.remoteaddr).Node()
-		nodes    = nodesAtDistance(remote.ID(), distance, 8)
+		nodes    = nodesAtDistance(remote.ID(), int(distance), 8)
 		done     = make(chan error, 1)
 	)
 	go func() {
-		_, err := test.udp.findnode(remote, distance)
+		_, err := test.udp.findnode(remote, []uint{distance})
 		done <- err
 	}()
 
 	// Serve two responses, slowly.
-	test.waitPacketOut(func(p *findnodeV5, addr *net.UDPAddr, authTag []byte) {
+	test.waitPacketOut(func(p *findnodeV5, addr *net.UDPAddr, _ packetNonce) {
 		time.Sleep(respTimeout - 50*time.Millisecond)
 		test.packetIn(&nodesV5{
 			ReqID: p.ReqID,
@@ -395,6 +412,97 @@ func TestUDPv5_callTimeoutReset(t *testing.T) {
 	})
 	if err := <-done; err != nil {
 		t.Fatalf("unexpected error: %q", err)
+	}
+}
+
+// This test checks that TALKREQ calls the registered handler function.
+func TestUDPv5_talkHandling(t *testing.T) {
+	t.Parallel()
+	test := newUDPV5Test(t)
+	defer test.close()
+
+	var recvMessage []byte
+	test.udp.RegisterTalkHandler("test", func(message []byte) []byte {
+		recvMessage = message
+		return []byte("test response")
+	})
+
+	// Successful case:
+	test.packetIn(&talkreqV5{
+		ReqID:    []byte("foo"),
+		Protocol: "test",
+		Message:  []byte("test request"),
+	})
+	test.waitPacketOut(func(p *talkrespV5, addr *net.UDPAddr, _ packetNonce) {
+		if !bytes.Equal(p.ReqID, []byte("foo")) {
+			t.Error("wrong request ID in response:", p.ReqID)
+		}
+		if string(p.Message) != "test response" {
+			t.Errorf("wrong talk response message: %q", p.Message)
+		}
+		if string(recvMessage) != "test request" {
+			t.Errorf("wrong message received in handler: %q", recvMessage)
+		}
+	})
+
+	// Check that empty response is returned for unregistered protocols.
+	recvMessage = nil
+	test.packetIn(&talkreqV5{
+		ReqID:    []byte("2"),
+		Protocol: "wrong",
+		Message:  []byte("test request"),
+	})
+	test.waitPacketOut(func(p *talkrespV5, addr *net.UDPAddr, _ packetNonce) {
+		if !bytes.Equal(p.ReqID, []byte("2")) {
+			t.Error("wrong request ID in response:", p.ReqID)
+		}
+		if string(p.Message) != "" {
+			t.Errorf("wrong talk response message: %q", p.Message)
+		}
+		if recvMessage != nil {
+			t.Errorf("handler was called for wrong protocol: %q", recvMessage)
+		}
+	})
+}
+
+// This test checks that outgoing TALKREQ calls work.
+func TestUDPv5_talkRequest(t *testing.T) {
+	t.Parallel()
+	test := newUDPV5Test(t)
+	defer test.close()
+
+	remote := test.getNode(test.remotekey, test.remoteaddr).Node()
+	done := make(chan error, 1)
+
+	// This request times out.
+	go func() {
+		_, err := test.udp.TalkRequest(remote, "test", []byte("test request"))
+		done <- err
+	}()
+	test.waitPacketOut(func(p *talkreqV5, addr *net.UDPAddr, _ packetNonce) {})
+	if err := <-done; err != errTimeout {
+		t.Fatalf("want errTimeout, got %q", err)
+	}
+
+	// This request works.
+	go func() {
+		_, err := test.udp.TalkRequest(remote, "test", []byte("test request"))
+		done <- err
+	}()
+	test.waitPacketOut(func(p *talkreqV5, addr *net.UDPAddr, _ packetNonce) {
+		if p.Protocol != "test" {
+			t.Errorf("wrong protocol ID in talk request: %q", p.Protocol)
+		}
+		if string(p.Message) != "test request" {
+			t.Errorf("wrong message talk request: %q", p.Message)
+		}
+		test.packetInFrom(test.remotekey, test.remoteaddr, &talkrespV5{
+			ReqID:   p.ReqID,
+			Message: []byte("test response"),
+		})
+	})
+	if err := <-done; err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -428,13 +536,13 @@ func TestUDPv5_lookup(t *testing.T) {
 
 	// Answer lookup packets.
 	for done := false; !done; {
-		done = test.waitPacketOut(func(p packetV5, to *net.UDPAddr, authTag []byte) {
+		done = test.waitPacketOut(func(p packetV5, to *net.UDPAddr, _ packetNonce) {
 			recipient, key := lookupTestnet.nodeByAddr(to)
 			switch p := p.(type) {
 			case *pingV5:
 				test.packetInFrom(key, to, &pongV5{ReqID: p.ReqID})
 			case *findnodeV5:
-				nodes := lookupTestnet.neighborsAtDistance(recipient, p.Distance, 3)
+				nodes := lookupTestnet.neighborsAtDistance(recipient, p.Distances[0], 3)
 				response := &nodesV5{ReqID: p.ReqID, Total: 1, Nodes: nodesToRecords(nodes)}
 				test.packetInFrom(key, to, response)
 			}
@@ -481,6 +589,7 @@ type udpV5Test struct {
 	nodesByIP           map[string]*enode.LocalNode
 }
 
+// testCodec is the packet encoding used by protocol tests. This codec does not perform encryption.
 type testCodec struct {
 	test *udpV5Test
 	id   enode.ID
@@ -489,15 +598,15 @@ type testCodec struct {
 
 type testCodecFrame struct {
 	NodeID  enode.ID
-	AuthTag []byte
+	AuthTag packetNonce
 	Ptype   byte
 	Packet  rlp.RawValue
 }
 
-func (c *testCodec) encode(toID enode.ID, addr string, p packetV5, _ *whoareyouV5) ([]byte, []byte, error) {
+func (c *testCodec) encode(toID enode.ID, addr string, p packetV5, _ *whoareyouV5) ([]byte, packetNonce, error) {
 	c.ctr++
-	authTag := make([]byte, 8)
-	binary.BigEndian.PutUint64(authTag, c.ctr)
+	var authTag packetNonce
+	binary.BigEndian.PutUint64(authTag[:], c.ctr)
 	penc, _ := rlp.EncodeToBytes(p)
 	frame, err := rlp.EncodeToBytes(testCodecFrame{c.id, authTag, p.kind(), penc})
 	return frame, authTag, err
@@ -596,8 +705,12 @@ func (test *udpV5Test) getNode(key *ecdsa.PrivateKey, addr *net.UDPAddr) *enode.
 	return ln
 }
 
+// waitPacketOut waits for the next output packet and handles it using the given 'validate'
+// function. The function must be of type func (X, *net.UDPAddr, packetNonce) where X is
+// assignable to packetV5.
 func (test *udpV5Test) waitPacketOut(validate interface{}) (closed bool) {
 	test.t.Helper()
+
 	fn := reflect.ValueOf(validate)
 	exptype := fn.Type().In(0)
 

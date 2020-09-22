@@ -38,7 +38,7 @@ import (
 
 const (
 	lookupRequestLimit      = 3  // max requests against a single node during lookup
-	findnodeResultLimit     = 15 // applies in FINDNODE handler
+	findnodeResultLimit     = 16 // applies in FINDNODE handler
 	totalNodesResponseLimit = 5  // applies in waitForNodes
 	nodesResponseItemLimit  = 3  // applies in sendNodes
 
@@ -52,7 +52,7 @@ const (
 type codecV5 interface {
 	// encode encodes a packet. The 'challenge' parameter is non-nil for calls which got a
 	// WHOAREYOU response.
-	encode(fromID enode.ID, fromAddr string, p packetV5, challenge *whoareyouV5) (enc []byte, authTag []byte, err error)
+	encode(fromID enode.ID, fromAddr string, p packetV5, challenge *whoareyouV5) ([]byte, packetNonce, error)
 
 	// decode decodes a packet. It returns an *unknownV5 packet if decryption fails.
 	// The fromNode return value is non-nil when the input contains a handshake response.
@@ -82,6 +82,10 @@ type UDPv5 struct {
 	log          log.Logger
 	clock        mclock.Clock
 	validSchemes enr.IdentityScheme
+
+	// talkreq handler registry
+	trlock     sync.Mutex
+	trhandlers map[string]func([]byte) []byte
 
 	// channels into dispatch
 	packetInCh    chan ReadPacket
@@ -113,7 +117,7 @@ type callV5 struct {
 	err          chan error    // errors sent here
 
 	// Valid for active calls only:
-	authTag        []byte       // authTag of request packet
+	authTag        packetNonce  // nonce of request packet
 	handshakeCount int          // # times we attempted handshake for this call
 	challenge      *whoareyouV5 // last sent handshake challenge
 	timeout        mclock.Timer
@@ -152,6 +156,7 @@ func newUDPv5(conn UDPConn, ln *enode.LocalNode, cfg Config) (*UDPv5, error) {
 		log:          cfg.Log,
 		validSchemes: cfg.ValidSchemes,
 		clock:        cfg.Clock,
+		trhandlers:   make(map[string]func([]byte) []byte),
 		// channels into dispatch
 		packetInCh:    make(chan ReadPacket, 1),
 		readNextCh:    make(chan struct{}, 1),
@@ -236,6 +241,28 @@ func (t *UDPv5) LocalNode() *enode.LocalNode {
 	return t.localNode
 }
 
+// RegisterTalkHandler adds a handler for 'talk requests'. The handler function is called
+// whenever a request for the given protocol is received and should return the response
+// data or nil.
+func (t *UDPv5) RegisterTalkHandler(protocol string, handler func([]byte) []byte) {
+	t.trlock.Lock()
+	defer t.trlock.Unlock()
+	t.trhandlers[protocol] = handler
+}
+
+// TalkRequest sends a talk request to n and waits for a response.
+func (t *UDPv5) TalkRequest(n *enode.Node, protocol string, request []byte) ([]byte, error) {
+	resp := t.call(n, p_talkrespV5, &talkreqV5{Protocol: protocol, Message: request})
+	defer t.callDone(resp)
+	select {
+	case respMsg := <-resp.ch:
+		return respMsg.(*talkrespV5).Message, nil
+	case err := <-resp.err:
+		return nil, err
+	}
+}
+
+// RandomNodes returns an iterator that finds random nodes in the DHT.
 func (t *UDPv5) RandomNodes() enode.Iterator {
 	if t.tab.len() == 0 {
 		// All nodes were dropped, refresh. The very first query will hit this
@@ -283,16 +310,14 @@ func (t *UDPv5) lookupWorker(destNode *node, target enode.ID) ([]*node, error) {
 		nodes = nodesByDistance{target: target}
 		err   error
 	)
-	for i := 0; i < lookupRequestLimit && len(nodes.entries) < findnodeResultLimit; i++ {
-		var r []*enode.Node
-		r, err = t.findnode(unwrapNode(destNode), dists[i])
-		if err == errClosed {
-			return nil, err
-		}
-		for _, n := range r {
-			if n.ID() != t.Self().ID() {
-				nodes.push(wrapNode(n), findnodeResultLimit)
-			}
+	var r []*enode.Node
+	r, err = t.findnode(unwrapNode(destNode), dists)
+	if err == errClosed {
+		return nil, err
+	}
+	for _, n := range r {
+		if n.ID() != t.Self().ID() {
+			nodes.push(wrapNode(n), findnodeResultLimit)
 		}
 	}
 	return nodes.entries, err
@@ -301,15 +326,15 @@ func (t *UDPv5) lookupWorker(destNode *node, target enode.ID) ([]*node, error) {
 // lookupDistances computes the distance parameter for FINDNODE calls to dest.
 // It chooses distances adjacent to logdist(target, dest), e.g. for a target
 // with logdist(target, dest) = 255 the result is [255, 256, 254].
-func lookupDistances(target, dest enode.ID) (dists []int) {
+func lookupDistances(target, dest enode.ID) (dists []uint) {
 	td := enode.LogDist(target, dest)
-	dists = append(dists, td)
+	dists = append(dists, uint(td))
 	for i := 1; len(dists) < lookupRequestLimit; i++ {
 		if td+i < 256 {
-			dists = append(dists, td+i)
+			dists = append(dists, uint(td+i))
 		}
 		if td-i > 0 {
-			dists = append(dists, td-i)
+			dists = append(dists, uint(td-i))
 		}
 	}
 	return dists
@@ -329,7 +354,7 @@ func (t *UDPv5) ping(n *enode.Node) (uint64, error) {
 
 // requestENR requests n's record.
 func (t *UDPv5) RequestENR(n *enode.Node) (*enode.Node, error) {
-	nodes, err := t.findnode(n, 0)
+	nodes, err := t.findnode(n, []uint{0})
 	if err != nil {
 		return nil, err
 	}
@@ -352,13 +377,13 @@ func (t *UDPv5) requestTicket(n *enode.Node) ([]byte, error) {
 }
 
 // findnode calls FINDNODE on a node and waits for responses.
-func (t *UDPv5) findnode(n *enode.Node, distance int) ([]*enode.Node, error) {
-	resp := t.call(n, p_nodesV5, &findnodeV5{Distance: uint(distance)})
-	return t.waitForNodes(resp, distance)
+func (t *UDPv5) findnode(n *enode.Node, distances []uint) ([]*enode.Node, error) {
+	resp := t.call(n, p_nodesV5, &findnodeV5{Distances: distances})
+	return t.waitForNodes(resp, distances)
 }
 
 // waitForNodes waits for NODES responses to the given call.
-func (t *UDPv5) waitForNodes(c *callV5, distance int) ([]*enode.Node, error) {
+func (t *UDPv5) waitForNodes(c *callV5, distances []uint) ([]*enode.Node, error) {
 	defer t.callDone(c)
 
 	var (
@@ -371,7 +396,7 @@ func (t *UDPv5) waitForNodes(c *callV5, distance int) ([]*enode.Node, error) {
 		case responseP := <-c.ch:
 			response := responseP.(*nodesV5)
 			for _, record := range response.Nodes {
-				node, err := t.verifyResponseNode(c, record, distance, seen)
+				node, err := t.verifyResponseNode(c, record, distances, seen)
 				if err != nil {
 					t.log.Debug("Invalid record in "+response.name(), "id", c.node.ID(), "err", err)
 					continue
@@ -391,7 +416,7 @@ func (t *UDPv5) waitForNodes(c *callV5, distance int) ([]*enode.Node, error) {
 }
 
 // verifyResponseNode checks validity of a record in a NODES response.
-func (t *UDPv5) verifyResponseNode(c *callV5, r *enr.Record, distance int, seen map[enode.ID]struct{}) (*enode.Node, error) {
+func (t *UDPv5) verifyResponseNode(c *callV5, r *enr.Record, distances []uint, seen map[enode.ID]struct{}) (*enode.Node, error) {
 	node, err := enode.New(t.validSchemes, r)
 	if err != nil {
 		return nil, err
@@ -402,9 +427,10 @@ func (t *UDPv5) verifyResponseNode(c *callV5, r *enr.Record, distance int, seen 
 	if c.node.UDP() <= 1024 {
 		return nil, errLowPort
 	}
-	if distance != -1 {
-		if d := enode.LogDist(c.node.ID(), node.ID()); d != distance {
-			return nil, fmt.Errorf("wrong distance %d", d)
+	if distances != nil {
+		nd := enode.LogDist(c.node.ID(), node.ID())
+		if !containsUint(uint(nd), distances) {
+			return nil, errors.New("does not match any requested distance")
 		}
 	}
 	if _, ok := seen[node.ID()]; ok {
@@ -412,6 +438,15 @@ func (t *UDPv5) verifyResponseNode(c *callV5, r *enr.Record, distance int, seen 
 	}
 	seen[node.ID()] = struct{}{}
 	return node, nil
+}
+
+func containsUint(x uint, xs []uint) bool {
+	for _, v := range xs {
+		if x == v {
+			return true
+		}
+	}
+	return false
 }
 
 // call sends the given call and sets up a handler for response packets (of type c.responseType).
@@ -482,7 +517,7 @@ func (t *UDPv5) dispatch() {
 				panic("BUG: callDone for inactive call")
 			}
 			c.timeout.Stop()
-			delete(t.activeCallByAuth, string(c.authTag))
+			delete(t.activeCallByAuth, string(c.authTag[:]))
 			delete(t.activeCallByNode, id)
 			t.sendNextCall(id)
 
@@ -502,7 +537,7 @@ func (t *UDPv5) dispatch() {
 			for id, c := range t.activeCallByNode {
 				c.err <- errClosed
 				delete(t.activeCallByNode, id)
-				delete(t.activeCallByAuth, string(c.authTag))
+				delete(t.activeCallByAuth, string(c.authTag[:]))
 			}
 			return
 		}
@@ -552,13 +587,13 @@ func (t *UDPv5) sendCall(c *callV5) {
 		// The call already has an authTag from a previous handshake attempt. Remove the
 		// entry for the authTag because we're about to generate a new authTag for this
 		// call.
-		delete(t.activeCallByAuth, string(c.authTag))
+		delete(t.activeCallByAuth, string(c.authTag[:]))
 	}
 
 	addr := &net.UDPAddr{IP: c.node.IP(), Port: c.node.UDP()}
 	newTag, _ := t.send(c.node.ID(), addr, c.packet, c.challenge)
 	c.authTag = newTag
-	t.activeCallByAuth[string(c.authTag)] = c
+	t.activeCallByAuth[string(c.authTag[:])] = c
 	t.startResponseTimeout(c)
 }
 
@@ -570,7 +605,7 @@ func (t *UDPv5) sendResponse(toID enode.ID, toAddr *net.UDPAddr, packet packetV5
 }
 
 // send sends a packet to the given node.
-func (t *UDPv5) send(toID enode.ID, toAddr *net.UDPAddr, packet packetV5, c *whoareyouV5) ([]byte, error) {
+func (t *UDPv5) send(toID enode.ID, toAddr *net.UDPAddr, packet packetV5, c *whoareyouV5) (packetNonce, error) {
 	addr := toAddr.String()
 	enc, authTag, err := t.codec.encode(toID, addr, packet, c)
 	if err != nil {
@@ -706,8 +741,8 @@ var (
 )
 
 // matchWithCall checks whether the handshake attempt matches the active call.
-func (p *whoareyouV5) matchWithCall(t *UDPv5, authTag []byte) (*callV5, error) {
-	c := t.activeCallByAuth[string(authTag)]
+func (p *whoareyouV5) matchWithCall(t *UDPv5, authTag packetNonce) (*callV5, error) {
+	c := t.activeCallByAuth[string(authTag[:])]
 	if c == nil {
 		return nil, errChallengeNoCall
 	}
@@ -750,27 +785,49 @@ func (p *findnodeV5) kind() byte         { return p_findnodeV5 }
 func (p *findnodeV5) setreqid(id []byte) { p.ReqID = id }
 
 func (p *findnodeV5) handle(t *UDPv5, fromID enode.ID, fromAddr *net.UDPAddr) {
-	if p.Distance == 0 {
-		t.sendNodes(fromID, fromAddr, p.ReqID, []*enode.Node{t.Self()})
-		return
-	}
-	if p.Distance > 256 {
-		p.Distance = 256
-	}
-	// Get bucket entries.
-	t.tab.mutex.Lock()
-	nodes := unwrapNodes(t.tab.bucketAtDistance(int(p.Distance)).entries)
-	t.tab.mutex.Unlock()
-	if len(nodes) > findnodeResultLimit {
-		nodes = nodes[:findnodeResultLimit]
-	}
+	nodes := t.collectTableNodes(fromAddr.IP, p.Distances, findnodeResultLimit)
 	t.sendNodes(fromID, fromAddr, p.ReqID, nodes)
+}
+
+// collectTableNodes creates a FINDNODE result set for the given distances.
+func (t *UDPv5) collectTableNodes(rip net.IP, distances []uint, limit int) []*enode.Node {
+	var nodes []*enode.Node
+	var processed = make(map[uint]struct{})
+	for _, dist := range distances {
+		// Reject duplicate / invalid distances.
+		_, seen := processed[dist]
+		if seen || dist > 256 {
+			continue
+		}
+
+		// Get the nodes.
+		var bn []*enode.Node
+		if dist == 0 {
+			bn = []*enode.Node{t.Self()}
+		} else if dist <= 256 {
+			t.tab.mutex.Lock()
+			bn = unwrapNodes(t.tab.bucketAtDistance(int(dist)).entries)
+			t.tab.mutex.Unlock()
+		}
+		processed[dist] = struct{}{}
+
+		// Apply some pre-checks to avoid sending invalid nodes.
+		for _, n := range bn {
+			// TODO livenessChecks > 1
+			if netutil.CheckRelayIP(rip, n.IP()) != nil {
+				continue
+			}
+			nodes = append(nodes, n)
+			if len(nodes) >= limit {
+				return nodes
+			}
+		}
+	}
+	return nodes
 }
 
 // sendNodes sends the given records in one or more NODES packets.
 func (t *UDPv5) sendNodes(toID enode.ID, toAddr *net.UDPAddr, reqid []byte, nodes []*enode.Node) {
-	// TODO livenessChecks > 1
-	// TODO CheckRelayIP
 	total := uint8(math.Ceil(float64(len(nodes)) / 3))
 	resp := &nodesV5{ReqID: reqid, Total: total, Nodes: make([]*enr.Record, 3)}
 	sent := false
@@ -799,6 +856,36 @@ func (p *nodesV5) kind() byte         { return p_nodesV5 }
 func (p *nodesV5) setreqid(id []byte) { p.ReqID = id }
 
 func (p *nodesV5) handle(t *UDPv5, fromID enode.ID, fromAddr *net.UDPAddr) {
+	t.handleCallResponse(fromID, fromAddr, p.ReqID, p)
+}
+
+// TALKREQ
+
+func (p *talkreqV5) name() string       { return "TALKREQ/v5" }
+func (p *talkreqV5) kind() byte         { return p_talkreqV5 }
+func (p *talkreqV5) setreqid(id []byte) { p.ReqID = id }
+
+func (p *talkreqV5) handle(t *UDPv5, fromID enode.ID, fromAddr *net.UDPAddr) {
+	t.trlock.Lock()
+	handler := t.trhandlers[p.Protocol]
+	t.trlock.Unlock()
+
+	var response []byte
+	if handler != nil {
+		response = handler(p.Message)
+	}
+	if len(p.ReqID) > 0 {
+		t.sendResponse(fromID, fromAddr, &talkrespV5{ReqID: p.ReqID, Message: response})
+	}
+}
+
+// TALKRESP
+
+func (p *talkrespV5) name() string       { return "TALKRESP/v5" }
+func (p *talkrespV5) kind() byte         { return p_talkrespV5 }
+func (p *talkrespV5) setreqid(id []byte) { p.ReqID = id }
+
+func (p *talkrespV5) handle(t *UDPv5, fromID enode.ID, fromAddr *net.UDPAddr) {
 	t.handleCallResponse(fromID, fromAddr, p.ReqID, p)
 }
 

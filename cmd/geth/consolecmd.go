@@ -78,12 +78,12 @@ JavaScript API. See https://github.com/ethereum/go-ethereum/wiki/JavaScript-Cons
 func localConsole(ctx *cli.Context) error {
 	// Create and start the node based on the CLI flags
 	prepare(ctx)
-	node := makeFullNode(ctx)
-	startNode(ctx, node)
-	defer node.Close()
+	stack, backend := makeFullNode(ctx)
+	startNode(ctx, stack, backend)
+	defer stack.Close()
 
 	// Attach to the newly started node and start the JavaScript console
-	client, err := node.Attach()
+	client, err := stack.Attach()
 	if err != nil {
 		utils.Fatalf("Failed to attach to the inproc geth: %v", err)
 	}
@@ -136,6 +136,8 @@ func remoteConsole(ctx *cli.Context) error {
 				path = filepath.Join(path, "rinkeby")
 			} else if ctx.GlobalBool(utils.GoerliFlag.Name) {
 				path = filepath.Join(path, "goerli")
+			} else if ctx.GlobalBool(utils.YoloV1Flag.Name) {
+				path = filepath.Join(path, "yolo-v1")
 			}
 		}
 		endpoint = fmt.Sprintf("%s/geth.ipc", path)
@@ -188,12 +190,12 @@ func dialRPC(endpoint string) (*rpc.Client, error) {
 // everything down.
 func ephemeralConsole(ctx *cli.Context) error {
 	// Create and start the node based on the CLI flags
-	node := makeFullNode(ctx)
-	startNode(ctx, node)
-	defer node.Close()
+	stack, backend := makeFullNode(ctx)
+	startNode(ctx, stack, backend)
+	defer stack.Close()
 
 	// Attach to the newly started node and start the JavaScript console
-	client, err := node.Attach()
+	client, err := stack.Attach()
 	if err != nil {
 		utils.Fatalf("Failed to attach to the inproc geth: %v", err)
 	}

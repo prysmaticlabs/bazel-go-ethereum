@@ -21,6 +21,7 @@ go_library(
         "//event:go_default_library",
         "//log:go_default_library",
         "//params:go_default_library",
+        "//trie:go_default_library",
         "@com_github_deckarep_golang_set//:go_default_library",
     ],
 )
@@ -28,6 +29,7 @@ go_library(
 go_test(
     name = "go_default_test",
     srcs = [
+        "miner_test.go",
         "unconfirmed_test.go",
         "worker_test.go",
     ],
@@ -40,11 +42,15 @@ go_test(
         "//consensus/ethash:go_default_library",
         "//core:go_default_library",
         "//core/rawdb:go_default_library",
+        "//core/state:go_default_library",
         "//core/types:go_default_library",
         "//core/vm:go_default_library",
         "//crypto:go_default_library",
+        "//eth/downloader:go_default_library",
         "//ethdb:go_default_library",
+        "//ethdb/memorydb:go_default_library",
         "//event:go_default_library",
         "//params:go_default_library",
+        "//trie:go_default_library",
     ],
 )

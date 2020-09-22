@@ -20,7 +20,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//accounts:go_default_library",
-        "//accounts/abi/bind:go_default_library",
         "//common:go_default_library",
         "//common/bitutil:go_default_library",
         "//common/hexutil:go_default_library",

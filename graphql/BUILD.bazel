@@ -20,9 +20,7 @@ go_library(
         "//core/vm:go_default_library",
         "//eth/filters:go_default_library",
         "//internal/ethapi:go_default_library",
-        "//log:go_default_library",
         "//node:go_default_library",
-        "//p2p:go_default_library",
         "//rlp:go_default_library",
         "//rpc:go_default_library",
         "@com_github_graph_gophers_graphql_go//:go_default_library",
@@ -34,4 +32,9 @@ go_test(
     name = "go_default_test",
     srcs = ["graphql_test.go"],
     embed = [":go_default_library"],
+    deps = [
+        "//eth:go_default_library",
+        "//node:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
 )

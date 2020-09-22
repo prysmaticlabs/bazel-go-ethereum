@@ -60,6 +60,8 @@ go_test(
     srcs = [
         "bench_test.go",
         "block_validator_test.go",
+        "blockchain_repair_test.go",
+        "blockchain_sethead_test.go",
         "blockchain_test.go",
         "chain_indexer_test.go",
         "chain_makers_test.go",
@@ -84,6 +86,7 @@ go_test(
         "//event:go_default_library",
         "//params:go_default_library",
         "//rlp:go_default_library",
+        "//trie:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
         "@org_golang_x_crypto//sha3:go_default_library",
     ],

@@ -8,6 +8,7 @@ go_library(
     deps = [
         "//common:go_default_library",
         "//core/types:go_default_library",
+        "//log:go_default_library",
         "//params:go_default_library",
         "//rpc:go_default_library",
     ],

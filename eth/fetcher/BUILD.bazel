@@ -17,6 +17,7 @@ go_library(
         "//core/types:go_default_library",
         "//log:go_default_library",
         "//metrics:go_default_library",
+        "//trie:go_default_library",
         "@com_github_deckarep_golang_set//:go_default_library",
     ],
 )
@@ -37,5 +38,6 @@ go_test(
         "//core/types:go_default_library",
         "//crypto:go_default_library",
         "//params:go_default_library",
+        "//trie:go_default_library",
     ],
 )

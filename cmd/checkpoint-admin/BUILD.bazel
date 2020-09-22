@@ -22,6 +22,7 @@ go_library(
         "//contracts/checkpointoracle/contract:go_default_library",
         "//crypto:go_default_library",
         "//ethclient:go_default_library",
+        "//internal/flags:go_default_library",
         "//log:go_default_library",
         "//params:go_default_library",
         "//rpc:go_default_library",

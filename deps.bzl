@@ -1,4 +1,7 @@
-load("@bazel_gazelle//:deps.bzl", _go_repository = "go_repository",)
+load(
+    "@bazel_gazelle//:deps.bzl",
+    _go_repository = "go_repository",
+)
 
 def _maybe(repo_rule, name, **kwargs):
     if name not in native.existing_rules():
@@ -32,8 +35,8 @@ def geth_dependencies():
     go_repository(
         name = "org_golang_x_crypto",
         importpath = "golang.org/x/crypto",
-        sum = "h1:QmwruyY+bKbDDL0BaglrbZABEali68eoMFhTZpCjYVA=",
-        version = "v0.0.0-20200311171314-f7b00557c8c4",
+        sum = "h1:psW17arqaxU48Z5kZ0CQnkZWQJsqcURM6tKiBApRjXI=",
+        version = "v0.0.0-20200622213623-75b288015ac9",
     )
 
     go_repository(
@@ -53,8 +56,8 @@ def geth_dependencies():
     go_repository(
         name = "org_golang_x_net",
         importpath = "golang.org/x/net",
-        sum = "h1:Jcxah/M+oLZ/R4/z5RzfPzGbPXnVDPkEDtf2JnuxN+U=",
-        version = "v0.0.0-20200425230154-ff2c4b7c35a0",
+        sum = "h1:vGXIOMxbNfDTk/aXCmfdLgkrSV+Z2tcbze+pEc3v5W4=",
+        version = "v0.0.0-20200625001655-4c5254603344",
     )
 
     go_repository(
@@ -135,15 +138,15 @@ def geth_dependencies():
     go_repository(
         name = "in_gopkg_olebedev_go_duktape_v3",
         importpath = "gopkg.in/olebedev/go-duktape.v3",
-        sum = "h1:ITeyKbRetrVzqR3U1eY+ywgp7IBspGd1U/bkwd1gWu4=",
-        version = "v3.0.0-20200316214253-d7b0ff38cac9",
+        sum = "h1:a6cXbcDDUkSBlpnkWV1bJ+vv3mOgQEltEJ2rPxroVu0=",
+        version = "v3.0.0-20200619000410-60c24ae608a6",
     )
 
     go_repository(
         name = "com_github_golang_snappy",
         importpath = "github.com/golang/snappy",
-        sum = "h1:Qgr9rKW7uDUkrbSmQeiDsGa8SjGyCOGtuasMWwvp2P4=",
-        version = "v0.0.1",
+        sum = "h1:lMm2hD9Fy0ynom5+85/pbdkiYcBqM1JWmhpAXLmy0fw=",
+        version = "v0.0.2-0.20200707131729-196ae77b8a26",
     )
 
     go_repository(
@@ -876,4 +879,16 @@ def geth_dependencies():
         importpath = "github.com/olekukonko/tablewriter",
         sum = "h1:1RHs3tNxjXGHeul8z2t6H2N2TlAqpKe5yryJztRx4Jk=",
         version = "v0.0.2-0.20190409134802-7e037d187b0c",
+    )
+    go_repository(
+        name = "com_github_holiman_uint256",
+        importpath = "github.com/holiman/uint256",
+        sum = "h1:Iye6ze0DW9s+7EMn8y6Q4ebegDzpu28JQHEVM1Bq+Wg=",
+        version = "v1.1.0",
+    )
+    go_repository(
+        name = "com_github_shirou_gopsutil",
+        importpath = "github.com/shirou/gopsutil",
+        sum = "h1:tYH07UPoQt0OCQdgWWMgYHy3/a9bcxNpBIysykNIP7I=",
+        version = "v2.20.5+incompatible",
     )

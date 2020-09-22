@@ -23,6 +23,7 @@ go_library(
         "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
         "//consensus/clique:go_default_library",
+        "//console/prompt:go_default_library",
         "//core/types:go_default_library",
         "//crypto:go_default_library",
         "//internal/ethapi:go_default_library",
@@ -30,7 +31,6 @@ go_library(
         "//rlp:go_default_library",
         "//rpc:go_default_library",
         "//signer/storage:go_default_library",
-        "@org_golang_x_crypto//ssh/terminal:go_default_library",
     ],
 )
 

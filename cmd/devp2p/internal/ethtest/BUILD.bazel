@@ -1,0 +1,37 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "chain.go",
+        "suite.go",
+        "types.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/cmd/devp2p/internal/ethtest",
+    visibility = ["//cmd/devp2p:__subpackages__"],
+    deps = [
+        "//common:go_default_library",
+        "//core:go_default_library",
+        "//core/forkid:go_default_library",
+        "//core/types:go_default_library",
+        "//crypto:go_default_library",
+        "//internal/utesting:go_default_library",
+        "//p2p:go_default_library",
+        "//p2p/enode:go_default_library",
+        "//p2p/rlpx:go_default_library",
+        "//params:go_default_library",
+        "//rlp:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["chain_test.go"],
+    data = glob(["testdata/**"]),
+    embed = [":go_default_library"],
+    deps = [
+        "//p2p:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
+)

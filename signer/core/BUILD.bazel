@@ -6,6 +6,7 @@ go_library(
         "api.go",
         "auditlog.go",
         "cliui.go",
+        "gnosis_safe.go",
         "signed_data.go",
         "stdioui.go",
         "types.go",

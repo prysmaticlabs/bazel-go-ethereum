@@ -39,6 +39,7 @@ go_test(
     srcs = [
         "difflayer_test.go",
         "disklayer_test.go",
+        "generate_test.go",
         "iterator_test.go",
         "snapshot_test.go",
         "wipe_test.go",
@@ -52,6 +53,7 @@ go_test(
         "//ethdb/leveldb:go_default_library",
         "//ethdb/memorydb:go_default_library",
         "//rlp:go_default_library",
+        "//trie:go_default_library",
         "@com_github_victoriametrics_fastcache//:go_default_library",
     ],
 )

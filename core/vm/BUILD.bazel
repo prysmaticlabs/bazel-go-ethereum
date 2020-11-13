@@ -23,6 +23,7 @@ go_library(
         "memory.go",
         "memory_table.go",
         "opcodes.go",
+        "operations_acl.go",
         "stack.go",
         "stack_table.go",
     ],

@@ -62,6 +62,7 @@ go_test(
         "block_validator_test.go",
         "blockchain_repair_test.go",
         "blockchain_sethead_test.go",
+        "blockchain_snapshot_test.go",
         "blockchain_test.go",
         "chain_indexer_test.go",
         "chain_makers_test.go",

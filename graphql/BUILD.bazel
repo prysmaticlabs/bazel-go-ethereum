@@ -24,7 +24,6 @@ go_library(
         "//rlp:go_default_library",
         "//rpc:go_default_library",
         "@com_github_graph_gophers_graphql_go//:go_default_library",
-        "@com_github_graph_gophers_graphql_go//relay:go_default_library",
     ],
 )
 
@@ -33,7 +32,11 @@ go_test(
     srcs = ["graphql_test.go"],
     embed = [":go_default_library"],
     deps = [
+        "//common:go_default_library",
+        "//consensus/ethash:go_default_library",
+        "//core:go_default_library",
         "//eth:go_default_library",
+        "//miner:go_default_library",
         "//node:go_default_library",
         "@com_github_stretchr_testify//assert:go_default_library",
     ],

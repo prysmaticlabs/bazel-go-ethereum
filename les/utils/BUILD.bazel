@@ -10,7 +10,10 @@ go_library(
     ],
     importpath = "github.com/ethereum/go-ethereum/les/utils",
     visibility = ["//visibility:public"],
-    deps = ["//common/mclock:go_default_library"],
+    deps = [
+        "//common/mclock:go_default_library",
+        "//log:go_default_library",
+    ],
 )
 
 go_test(

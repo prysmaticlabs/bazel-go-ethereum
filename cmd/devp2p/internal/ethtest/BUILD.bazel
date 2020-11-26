@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "chain.go",
+        "large.go",
         "suite.go",
         "types.go",
     ],
@@ -11,6 +12,7 @@ go_library(
     visibility = ["//cmd/devp2p:__subpackages__"],
     deps = [
         "//common:go_default_library",
+        "//common/hexutil:go_default_library",
         "//core:go_default_library",
         "//core/forkid:go_default_library",
         "//core/types:go_default_library",

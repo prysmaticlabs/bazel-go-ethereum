@@ -42,7 +42,13 @@ go_library(
         "@io_bazel_rules_go//go/platform:ppc64le": [
             "//crypto/bn256/google:go_default_library",
         ],
+        "@io_bazel_rules_go//go/platform:riscv64": [
+            "//crypto/bn256/google:go_default_library",
+        ],
         "@io_bazel_rules_go//go/platform:s390x": [
+            "//crypto/bn256/google:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:wasm": [
             "//crypto/bn256/google:go_default_library",
         ],
         "//conditions:default": [],

@@ -13,6 +13,7 @@ go_library(
         "http.go",
         "inproc.go",
         "ipc.go",
+        "ipc_js.go",
         "ipc_unix.go",
         "ipc_windows.go",
         "json.go",

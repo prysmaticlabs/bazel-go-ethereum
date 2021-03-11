@@ -15,9 +15,6 @@ go_library(
         "@io_bazel_rules_go//go/platform:amd64": [
             "//crypto/bn256/cloudflare:go_default_library",
         ],
-        "@io_bazel_rules_go//go/platform:amd64p32": [
-            "//crypto/bn256/google:go_default_library",
-        ],
         "@io_bazel_rules_go//go/platform:arm": [
             "//crypto/bn256/google:go_default_library",
         ],

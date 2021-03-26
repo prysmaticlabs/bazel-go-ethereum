@@ -97,8 +97,8 @@ func (ec *Client) BlockNumber(ctx context.Context) (uint64, error) {
 }
 
 // ProduceBlock --
-func (ec *Client) ProduceBlock(ctx context.Context, params eth.ProduceBlockParams) (*eth.ExecutableData, error) {
-	var data *eth.ExecutableData
+func (ec *Client) ProduceBlock(ctx context.Context, params eth.ProduceBlockParams) (*eth.ApplicationPayload, error) {
+	var data *eth.ApplicationPayload
 	err := ec.c.CallContext(ctx, &data, "eth2_produceBlock", params)
 	if err == nil && data == nil {
 		err = ethereum.NotFound

@@ -7,7 +7,7 @@ ZERO_HASH="\"0x0000000000000000000000000000000000000000000000000000000000000000\
 # Note: you might have to get the root of the genesis block via
 # `./rpc_get_genesis_block.sh`. Presently there's a bug in Catalyst where the
 # handler will crash if you send the wrong root.
-PARENT_HASH='"0xddce9c6ed083fc7daf708d0c4ed4fc73320a4c0b752929d677f70461266acc4d"'
+PARENT_HASH='"0x3a3fdfc9ab6e17ff530b57bc21494da3848ebbeaf9343545fded7a18d221ffec"'
 RANDAO_MIX=$ZERO_HASH
 # Note: the slot is *not* encoded as hex.
 SLOT=1

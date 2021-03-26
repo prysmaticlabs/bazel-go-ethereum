@@ -90,7 +90,7 @@ type ProduceBlockParams struct {
 }
 
 // Structure described at https://ethresear.ch/t/executable-beacon-chain/8271
-type ExecutableData struct {
+type ApplicationPayload struct {
 	Coinbase     common.Address       `json:"coinbase"`
 	StateRoot    common.Hash          `json:"state_root"`
 	GasLimit     uint64               `json:"gas_limit"`
@@ -105,7 +105,7 @@ type ExecutableData struct {
 
 // ProduceBlock creates a new block, inserts it into the chain, and returns the "execution
 // data" required for eth2 clients to process the new block.
-func (api *Eth2API) ProduceBlock(params ProduceBlockParams) (*ExecutableData, error) {
+func (api *Eth2API) ProduceBlock(params ProduceBlockParams) (*ApplicationPayload, error) {
 	log.Info("Produce block", "parentHash", params.ParentHash)
 
 	bc := api.eth.BlockChain()
@@ -227,7 +227,7 @@ func (api *Eth2API) ProduceBlock(params ProduceBlockParams) (*ExecutableData, er
 
 	block.Header().ReceiptHash = types.DeriveSha(receipts, new(trie.Trie))
 
-	return &ExecutableData{
+	return &ApplicationPayload{
 		Coinbase:     block.Coinbase(),
 		StateRoot:    block.Root(),
 		GasLimit:     block.GasLimit(),
@@ -243,34 +243,34 @@ func (api *Eth2API) ProduceBlock(params ProduceBlockParams) (*ExecutableData, er
 
 // Structure described at https://hackmd.io/T9x2mMA4S7us8tJwEB3FDQ
 type InsertBlockParams struct {
-	RandaoMix              common.Hash    `json:"randao_mix"`
-	Slot                   uint64         `json:"slot"`
-	Timestamp              uint64         `json:"timestamp"`
-	RecentBeaconBlockRoots []common.Hash  `json:"recent_beacon_block_roots"`
-	ExecutableData         ExecutableData `json:"executable_data"`
+	RandaoMix              common.Hash        `json:"randao_mix"`
+	Slot                   uint64             `json:"slot"`
+	Timestamp              uint64             `json:"timestamp"`
+	RecentBeaconBlockRoots []common.Hash      `json:"recent_beacon_block_roots"`
+	ApplicationPayload     ApplicationPayload `json:"executable_data"`
 }
 
 var zeroNonce [8]byte
 
 func insertBlockParamsToBlock(params InsertBlockParams, number *big.Int) *types.Block {
 	header := &types.Header{
-		ParentHash:  params.ExecutableData.ParentHash,
+		ParentHash:  params.ApplicationPayload.ParentHash,
 		UncleHash:   types.EmptyUncleHash,
-		Coinbase:    params.ExecutableData.Coinbase,
-		Root:        params.ExecutableData.StateRoot,
-		TxHash:      types.DeriveSha(types.Transactions(params.ExecutableData.Transactions), trie.NewStackTrie(nil)),
-		ReceiptHash: params.ExecutableData.ReceiptRoot,
-		Bloom:       types.BytesToBloom(params.ExecutableData.LogsBloom),
-		Difficulty:  params.ExecutableData.Difficulty,
+		Coinbase:    params.ApplicationPayload.Coinbase,
+		Root:        params.ApplicationPayload.StateRoot,
+		TxHash:      types.DeriveSha(types.Transactions(params.ApplicationPayload.Transactions), trie.NewStackTrie(nil)),
+		ReceiptHash: params.ApplicationPayload.ReceiptRoot,
+		Bloom:       types.BytesToBloom(params.ApplicationPayload.LogsBloom),
+		Difficulty:  params.ApplicationPayload.Difficulty,
 		Number:      number,
-		GasLimit:    params.ExecutableData.GasLimit,
-		GasUsed:     params.ExecutableData.GasUsed,
+		GasLimit:    params.ApplicationPayload.GasLimit,
+		GasUsed:     params.ApplicationPayload.GasUsed,
 		Time:        params.Timestamp,
 		Extra:       nil,
 		MixDigest:   common.Hash{},
 		Nonce:       zeroNonce,
 	}
-	block := types.NewBlockWithHeader(header).WithBody(params.ExecutableData.Transactions, nil /* uncles */)
+	block := types.NewBlockWithHeader(header).WithBody(params.ApplicationPayload.Transactions, nil /* uncles */)
 
 	return block
 }
@@ -280,9 +280,9 @@ func insertBlockParamsToBlock(params InsertBlockParams, number *big.Int) *types.
 // eth2 side.
 func (api *Eth2API) InsertBlock(params InsertBlockParams) (bool, error) {
 	// compute block number as parent.number + 1
-	parent := api.eth.BlockChain().GetBlockByHash(params.ExecutableData.ParentHash)
+	parent := api.eth.BlockChain().GetBlockByHash(params.ApplicationPayload.ParentHash)
 	if parent == nil {
-		return false, fmt.Errorf("could not find parent %x", params.ExecutableData.ParentHash)
+		return false, fmt.Errorf("could not find parent %x", params.ApplicationPayload.ParentHash)
 	}
 	number := big.NewInt(0)
 	number.Add(parent.Number(), big.NewInt(1))

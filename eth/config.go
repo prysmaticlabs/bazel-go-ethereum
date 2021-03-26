@@ -187,4 +187,7 @@ type Config struct {
 
 	// CheckpointOracle is the configuration for checkpoint oracle.
 	CheckpointOracle *params.CheckpointOracleConfig `toml:",omitempty"`
+
+	// Catalyst mode enable.
+	Catalyst bool `toml:",omitempty"`
 }

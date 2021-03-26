@@ -86,6 +86,7 @@ type ProtocolManager struct {
 	minedBlockSub *event.TypeMuxSubscription
 
 	whitelist map[uint64]common.Hash
+	catalyst  bool // True iff this is catalyst
 
 	// channels for fetcher, syncer, txsyncLoop
 	txsyncCh chan *txsync
@@ -101,7 +102,7 @@ type ProtocolManager struct {
 
 // NewProtocolManager returns a new Ethereum sub protocol manager. The Ethereum sub protocol manages peers capable
 // with the Ethereum network.
-func NewProtocolManager(config *params.ChainConfig, checkpoint *params.TrustedCheckpoint, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, cacheLimit int, whitelist map[uint64]common.Hash) (*ProtocolManager, error) {
+func NewProtocolManager(config *params.ChainConfig, checkpoint *params.TrustedCheckpoint, mode downloader.SyncMode, networkID uint64, mux *event.TypeMux, txpool txPool, engine consensus.Engine, blockchain *core.BlockChain, chaindb ethdb.Database, cacheLimit int, whitelist map[uint64]common.Hash, catalyst bool) (*ProtocolManager, error) {
 	// Create the protocol manager with the base fields
 	manager := &ProtocolManager{
 		networkID:  networkID,
@@ -114,6 +115,7 @@ func NewProtocolManager(config *params.ChainConfig, checkpoint *params.TrustedCh
 		whitelist:  whitelist,
 		txsyncCh:   make(chan *txsync),
 		quitSync:   make(chan struct{}),
+		catalyst:   catalyst,
 	}
 
 	if mode == downloader.FullSync {
@@ -686,61 +688,63 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		}
 
 	case msg.Code == NewBlockHashesMsg:
-		var announces newBlockHashesData
-		if err := msg.Decode(&announces); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
-		}
-		// Mark the hashes as present at the remote node
-		for _, block := range announces {
-			p.MarkBlock(block.Hash)
-		}
-		// Schedule all the unknown hashes for retrieval
-		unknown := make(newBlockHashesData, 0, len(announces))
-		for _, block := range announces {
-			if !pm.blockchain.HasBlock(block.Hash, block.Number) {
-				unknown = append(unknown, block)
+		if !p.catalyst {
+			var announces newBlockHashesData
+			if err := msg.Decode(&announces); err != nil {
+				return errResp(ErrDecode, "%v: %v", msg, err)
+			}
+			// Mark the hashes as present at the remote node
+			for _, block := range announces {
+				p.MarkBlock(block.Hash)
+			}
+			// Schedule all the unknown hashes for retrieval
+			unknown := make(newBlockHashesData, 0, len(announces))
+			for _, block := range announces {
+				if !pm.blockchain.HasBlock(block.Hash, block.Number) {
+					unknown = append(unknown, block)
+				}
+			}
+			for _, block := range unknown {
+				pm.blockFetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
 			}
 		}
-		for _, block := range unknown {
-			pm.blockFetcher.Notify(p.id, block.Hash, block.Number, time.Now(), p.RequestOneHeader, p.RequestBodies)
-		}
-
 	case msg.Code == NewBlockMsg:
-		// Retrieve and decode the propagated block
-		var request newBlockData
-		if err := msg.Decode(&request); err != nil {
-			return errResp(ErrDecode, "%v: %v", msg, err)
-		}
-		if hash := types.CalcUncleHash(request.Block.Uncles()); hash != request.Block.UncleHash() {
-			log.Warn("Propagated block has invalid uncles", "have", hash, "exp", request.Block.UncleHash())
-			break // TODO(karalabe): return error eventually, but wait a few releases
-		}
-		if hash := types.DeriveSha(request.Block.Transactions(), trie.NewStackTrie(nil)); hash != request.Block.TxHash() {
-			log.Warn("Propagated block has invalid body", "have", hash, "exp", request.Block.TxHash())
-			break // TODO(karalabe): return error eventually, but wait a few releases
-		}
-		if err := request.sanityCheck(); err != nil {
-			return err
-		}
-		request.Block.ReceivedAt = msg.ReceivedAt
-		request.Block.ReceivedFrom = p
+		if !pm.catalyst {
+			// Retrieve and decode the propagated block
+			var request newBlockData
+			if err := msg.Decode(&request); err != nil {
+				return errResp(ErrDecode, "%v: %v", msg, err)
+			}
+			if hash := types.CalcUncleHash(request.Block.Uncles()); hash != request.Block.UncleHash() {
+				log.Warn("Propagated block has invalid uncles", "have", hash, "exp", request.Block.UncleHash())
+				break // TODO(karalabe): return error eventually, but wait a few releases
+			}
+			if hash := types.DeriveSha(request.Block.Transactions(), trie.NewStackTrie(nil)); hash != request.Block.TxHash() {
+				log.Warn("Propagated block has invalid body", "have", hash, "exp", request.Block.TxHash())
+				break // TODO(karalabe): return error eventually, but wait a few releases
+			}
+			if err := request.sanityCheck(); err != nil {
+				return err
+			}
+			request.Block.ReceivedAt = msg.ReceivedAt
+			request.Block.ReceivedFrom = p
 
-		// Mark the peer as owning the block and schedule it for import
-		p.MarkBlock(request.Block.Hash())
-		pm.blockFetcher.Enqueue(p.id, request.Block)
+			// Mark the peer as owning the block and schedule it for import
+			p.MarkBlock(request.Block.Hash())
+			pm.blockFetcher.Enqueue(p.id, request.Block)
 
-		// Assuming the block is importable by the peer, but possibly not yet done so,
-		// calculate the head hash and TD that the peer truly must have.
-		var (
-			trueHead = request.Block.ParentHash()
-			trueTD   = new(big.Int).Sub(request.TD, request.Block.Difficulty())
-		)
-		// Update the peer's total difficulty if better than the previous
-		if _, td := p.Head(); trueTD.Cmp(td) > 0 {
-			p.SetHead(trueHead, trueTD)
-			pm.chainSync.handlePeerEvent(p)
+			// Assuming the block is importable by the peer, but possibly not yet done so,
+			// calculate the head hash and TD that the peer truly must have.
+			var (
+				trueHead = request.Block.ParentHash()
+				trueTD   = new(big.Int).Sub(request.TD, request.Block.Difficulty())
+			)
+			// Update the peer's total difficulty if better than the previous
+			if _, td := p.Head(); trueTD.Cmp(td) > 0 {
+				p.SetHead(trueHead, trueTD)
+				pm.chainSync.handlePeerEvent(p)
+			}
 		}
-
 	case msg.Code == NewPooledTransactionHashesMsg && p.version >= eth65:
 		// New transaction announcement arrived, make sure we have
 		// a valid and fresh chain to handle them

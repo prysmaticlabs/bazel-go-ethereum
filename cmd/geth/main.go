@@ -159,6 +159,7 @@ var (
 		utils.EWASMInterpreterFlag,
 		utils.EVMInterpreterFlag,
 		configFileFlag,
+		utils.CatalystFlag,
 	}
 
 	rpcFlags = []cli.Flag{

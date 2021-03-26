@@ -688,7 +688,7 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		}
 
 	case msg.Code == NewBlockHashesMsg:
-		if !p.catalyst {
+		if !pm.catalyst {
 			var announces newBlockHashesData
 			if err := msg.Decode(&announces); err != nil {
 				return errResp(ErrDecode, "%v: %v", msg, err)

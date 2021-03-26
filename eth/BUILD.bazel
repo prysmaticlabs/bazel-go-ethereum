@@ -10,6 +10,7 @@ go_library(
         "bloombits.go",
         "config.go",
         "discovery.go",
+        "eth2.go",
         "gen_config.go",
         "handler.go",
         "peer.go",
@@ -60,6 +61,7 @@ go_test(
     name = "go_default_test",
     srcs = [
         "api_test.go",
+        "eth_test.go",
         "handler_test.go",
         "helper_test.go",
         "protocol_test.go",
@@ -79,6 +81,7 @@ go_test(
         "//eth/downloader:go_default_library",
         "//ethdb:go_default_library",
         "//event:go_default_library",
+        "//node:go_default_library",
         "//p2p:go_default_library",
         "//p2p/enode:go_default_library",
         "//params:go_default_library",

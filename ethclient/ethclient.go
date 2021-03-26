@@ -28,6 +28,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/eth"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -93,6 +94,22 @@ func (ec *Client) BlockNumber(ctx context.Context) (uint64, error) {
 	var result hexutil.Uint64
 	err := ec.c.CallContext(ctx, &result, "eth_blockNumber")
 	return uint64(result), err
+}
+
+// ProduceBlock --
+func (ec *Client) ProduceBlock(ctx context.Context, params eth.ProduceBlockParams) (*eth.ExecutableData, error) {
+	var data *eth.ExecutableData
+	err := ec.c.CallContext(ctx, &data, "eth2_produceBlock", params)
+	if err == nil && data == nil {
+		err = ethereum.NotFound
+	}
+	return data, err
+}
+
+// InsertBlock --
+func (ec *Client) InsertBlock(ctx context.Context, params eth.InsertBlockParams) (bool, error) {
+	var ok bool
+	return ok, ec.c.CallContext(ctx, &ok, "eth2_insertBlock", params)
 }
 
 type rpcBlock struct {

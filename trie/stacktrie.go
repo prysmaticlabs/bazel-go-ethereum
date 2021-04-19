@@ -35,7 +35,7 @@ var stPool = sync.Pool{
 	},
 }
 
-func stackTrieFromPool(db ethdb.KeyValueStore) *StackTrie {
+func stackTrieFromPool(db ethdb.KeyValueWriter) *StackTrie {
 	st := stPool.Get().(*StackTrie)
 	st.db = db
 	return st
@@ -50,24 +50,23 @@ func returnToPool(st *StackTrie) {
 // in order. Once it determines that a subtree will no longer be inserted
 // into, it will hash it and free up the memory it uses.
 type StackTrie struct {
-	nodeType  uint8          // node type (as in branch, ext, leaf)
-	val       []byte         // value contained by this node if it's a leaf
-	key       []byte         // key chunk covered by this (full|ext) node
-	keyOffset int            // offset of the key chunk inside a full key
-	children  [16]*StackTrie // list of children (for fullnodes and exts)
-
-	db ethdb.KeyValueStore // Pointer to the commit db, can be nil
+	nodeType  uint8                // node type (as in branch, ext, leaf)
+	val       []byte               // value contained by this node if it's a leaf
+	key       []byte               // key chunk covered by this (full|ext) node
+	keyOffset int                  // offset of the key chunk inside a full key
+	children  [16]*StackTrie       // list of children (for fullnodes and exts)
+	db        ethdb.KeyValueWriter // Pointer to the commit db, can be nil
 }
 
 // NewStackTrie allocates and initializes an empty trie.
-func NewStackTrie(db ethdb.KeyValueStore) *StackTrie {
+func NewStackTrie(db ethdb.KeyValueWriter) *StackTrie {
 	return &StackTrie{
 		nodeType: emptyNode,
 		db:       db,
 	}
 }
 
-func newLeaf(ko int, key, val []byte, db ethdb.KeyValueStore) *StackTrie {
+func newLeaf(ko int, key, val []byte, db ethdb.KeyValueWriter) *StackTrie {
 	st := stackTrieFromPool(db)
 	st.nodeType = leafNode
 	st.keyOffset = ko
@@ -76,7 +75,7 @@ func newLeaf(ko int, key, val []byte, db ethdb.KeyValueStore) *StackTrie {
 	return st
 }
 
-func newExt(ko int, key []byte, child *StackTrie, db ethdb.KeyValueStore) *StackTrie {
+func newExt(ko int, key []byte, child *StackTrie, db ethdb.KeyValueWriter) *StackTrie {
 	st := stackTrieFromPool(db)
 	st.nodeType = extNode
 	st.keyOffset = ko
@@ -347,8 +346,7 @@ func (st *StackTrie) hash() {
 			panic(err)
 		}
 	case emptyNode:
-		st.val = st.val[:0]
-		st.val = append(st.val, emptyRoot[:]...)
+		st.val = emptyRoot.Bytes()
 		st.key = st.key[:0]
 		st.nodeType = hashedNode
 		return
@@ -358,17 +356,12 @@ func (st *StackTrie) hash() {
 	st.key = st.key[:0]
 	st.nodeType = hashedNode
 	if len(h.tmp) < 32 {
-		st.val = st.val[:0]
-		st.val = append(st.val, h.tmp...)
+		st.val = common.CopyBytes(h.tmp)
 		return
 	}
-	// Going to write the hash to the 'val'. Need to ensure it's properly sized first
-	// Typically, 'branchNode's will have no 'val', and require this allocation
-	if required := 32 - len(st.val); required > 0 {
-		buf := make([]byte, required)
-		st.val = append(st.val, buf...)
-	}
-	st.val = st.val[:32]
+	// Write the hash to the 'val'. We allocate a new val here to not mutate
+	// input values
+	st.val = make([]byte, 32)
 	h.sha.Reset()
 	h.sha.Write(h.tmp)
 	h.sha.Read(st.val)

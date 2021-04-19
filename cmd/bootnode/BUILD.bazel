@@ -10,7 +10,6 @@ go_library(
         "//crypto:go_default_library",
         "//log:go_default_library",
         "//p2p/discover:go_default_library",
-        "//p2p/discv5:go_default_library",
         "//p2p/enode:go_default_library",
         "//p2p/nat:go_default_library",
         "//p2p/netutil:go_default_library",

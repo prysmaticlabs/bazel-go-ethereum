@@ -3,6 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "go_default_library",
     srcs = [
+        "api.go",
         "tracer.go",
         "tracers.go",
     ],
@@ -11,10 +12,20 @@ go_library(
     deps = [
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
+        "//consensus:go_default_library",
+        "//core:go_default_library",
+        "//core/rawdb:go_default_library",
+        "//core/state:go_default_library",
+        "//core/types:go_default_library",
         "//core/vm:go_default_library",
         "//crypto:go_default_library",
         "//eth/tracers/internal/tracers:go_default_library",
+        "//ethdb:go_default_library",
+        "//internal/ethapi:go_default_library",
         "//log:go_default_library",
+        "//params:go_default_library",
+        "//rlp:go_default_library",
+        "//rpc:go_default_library",
         "@in_gopkg_olebedev_go_duktape_v3//:go_default_library",
     ],
 )
@@ -22,6 +33,7 @@ go_library(
 go_test(
     name = "go_default_test",
     srcs = [
+        "api_test.go",
         "tracer_test.go",
         "tracers_test.go",
     ],
@@ -31,14 +43,19 @@ go_test(
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
+        "//consensus:go_default_library",
+        "//consensus/ethash:go_default_library",
         "//core:go_default_library",
         "//core/rawdb:go_default_library",
         "//core/state:go_default_library",
         "//core/types:go_default_library",
         "//core/vm:go_default_library",
         "//crypto:go_default_library",
+        "//ethdb:go_default_library",
+        "//internal/ethapi:go_default_library",
         "//params:go_default_library",
         "//rlp:go_default_library",
+        "//rpc:go_default_library",
         "//tests:go_default_library",
     ],
 )

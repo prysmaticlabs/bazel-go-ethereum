@@ -1,0 +1,51 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "api.go",
+        "fillset.go",
+        "queueiterator.go",
+        "requestbasket.go",
+        "serverpool.go",
+        "timestats.go",
+        "valuetracker.go",
+        "wrsiterator.go",
+    ],
+    importpath = "github.com/ethereum/go-ethereum/les/vflux/client",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//common/mclock:go_default_library",
+        "//ethdb:go_default_library",
+        "//les/utils:go_default_library",
+        "//log:go_default_library",
+        "//metrics:go_default_library",
+        "//p2p/enode:go_default_library",
+        "//p2p/enr:go_default_library",
+        "//p2p/nodestate:go_default_library",
+        "//rlp:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = [
+        "fillset_test.go",
+        "queueiterator_test.go",
+        "requestbasket_test.go",
+        "serverpool_test.go",
+        "timestats_test.go",
+        "valuetracker_test.go",
+        "wrsiterator_test.go",
+    ],
+    embed = [":go_default_library"],
+    deps = [
+        "//common/mclock:go_default_library",
+        "//ethdb:go_default_library",
+        "//ethdb/memorydb:go_default_library",
+        "//les/utils:go_default_library",
+        "//p2p/enode:go_default_library",
+        "//p2p/enr:go_default_library",
+        "//p2p/nodestate:go_default_library",
+    ],
+)

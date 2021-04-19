@@ -37,6 +37,7 @@ go_test(
         "//console/prompt:go_default_library",
         "//core:go_default_library",
         "//eth:go_default_library",
+        "//eth/ethconfig:go_default_library",
         "//internal/jsre:go_default_library",
         "//miner:go_default_library",
         "//node:go_default_library",

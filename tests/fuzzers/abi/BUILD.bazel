@@ -7,7 +7,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//accounts/abi:go_default_library",
-        "//crypto:go_default_library",
         "@com_github_google_gofuzz//:go_default_library",
     ],
 )

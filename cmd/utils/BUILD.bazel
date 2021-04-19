@@ -5,6 +5,9 @@ go_library(
     srcs = [
         "cmd.go",
         "customflags.go",
+        "diskusage.go",
+        "diskusage_openbsd.go",
+        "diskusage_windows.go",
         "flags.go",
         "flags_legacy.go",
         "prompt.go",
@@ -28,7 +31,9 @@ go_library(
         "//crypto:go_default_library",
         "//eth:go_default_library",
         "//eth/downloader:go_default_library",
+        "//eth/ethconfig:go_default_library",
         "//eth/gasprice:go_default_library",
+        "//eth/tracers:go_default_library",
         "//ethdb:go_default_library",
         "//ethstats:go_default_library",
         "//graphql:go_default_library",
@@ -43,15 +48,59 @@ go_library(
         "//miner:go_default_library",
         "//node:go_default_library",
         "//p2p:go_default_library",
-        "//p2p/discv5:go_default_library",
         "//p2p/enode:go_default_library",
         "//p2p/nat:go_default_library",
         "//p2p/netutil:go_default_library",
         "//params:go_default_library",
         "//rlp:go_default_library",
         "@com_github_gballet_go_libpcsclite//:go_default_library",
+        "@com_github_shirou_gopsutil//mem:go_default_library",
         "@in_gopkg_urfave_cli_v1//:go_default_library",
-    ],
+    ] + select({
+        "@io_bazel_rules_go//go/platform:aix": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:android": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:darwin": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:dragonfly": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:freebsd": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:illumos": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:ios": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:js": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:linux": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:netbsd": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:openbsd": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:plan9": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:solaris": [
+            "@org_golang_x_sys//unix:go_default_library",
+        ],
+        "@io_bazel_rules_go//go/platform:windows": [
+            "@org_golang_x_sys//windows:go_default_library",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 go_test(

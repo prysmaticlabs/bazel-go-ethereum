@@ -20,7 +20,6 @@ go_library(
         "//log:go_default_library",
         "@com_github_gballet_go_libpcsclite//:go_default_library",
         "@com_github_status_im_keycard_go//derivationpath:go_default_library",
-        "@com_github_wsddn_go_ecdh//:go_default_library",
         "@org_golang_x_crypto//pbkdf2:go_default_library",
         "@org_golang_x_text//unicode/norm:go_default_library",
     ],

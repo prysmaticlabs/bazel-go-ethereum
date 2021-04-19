@@ -5,6 +5,7 @@ go_library(
     srcs = [
         "exec_queue.go",
         "expiredvalue.go",
+        "limiter.go",
         "timeutils.go",
         "weighted_select.go",
     ],
@@ -13,6 +14,7 @@ go_library(
     deps = [
         "//common/mclock:go_default_library",
         "//log:go_default_library",
+        "//p2p/enode:go_default_library",
     ],
 )
 
@@ -21,9 +23,13 @@ go_test(
     srcs = [
         "exec_queue_test.go",
         "expiredvalue_test.go",
+        "limiter_test.go",
         "timeutils_test.go",
         "weighted_select_test.go",
     ],
     embed = [":go_default_library"],
-    deps = ["//common/mclock:go_default_library"],
+    deps = [
+        "//common/mclock:go_default_library",
+        "//p2p/enode:go_default_library",
+    ],
 )

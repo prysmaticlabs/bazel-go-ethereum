@@ -6,6 +6,7 @@ go_library(
         "algorithm.go",
         "api.go",
         "consensus.go",
+        "difficulty.go",
         "ethash.go",
         "sealer.go",
     ],
@@ -30,6 +31,7 @@ go_library(
         "@com_github_deckarep_golang_set//:go_default_library",
         "@com_github_edsrzf_mmap_go//:go_default_library",
         "@com_github_hashicorp_golang_lru//simplelru:go_default_library",
+        "@com_github_holiman_uint256//:go_default_library",
         "@org_golang_x_crypto//sha3:go_default_library",
     ],
 )

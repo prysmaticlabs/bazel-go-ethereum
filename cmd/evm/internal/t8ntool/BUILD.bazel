@@ -12,6 +12,7 @@ go_library(
     visibility = ["//cmd/evm:__subpackages__"],
     deps = [
         "//common:go_default_library",
+        "//common/hexutil:go_default_library",
         "//common/math:go_default_library",
         "//consensus/misc:go_default_library",
         "//core:go_default_library",

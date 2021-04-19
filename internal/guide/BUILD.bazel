@@ -13,6 +13,7 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//accounts/keystore:go_default_library",
+        "//common:go_default_library",
         "//core/types:go_default_library",
     ],
 )

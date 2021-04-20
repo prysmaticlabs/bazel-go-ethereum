@@ -268,10 +268,10 @@ func insertBlockParamsToBlock(params ExecutableData) (*types.Block, error) {
 // NewBlock creates an Eth1 block, inserts it in the chain, and either returns true,
 // or false + an error. This is a bit redundant for go, but simplifies things on the
 // eth2 side.
-func (api *consensusAPI) NewBlock(params ExecutableData) (*newBlockResponse, error) {
+func (api *consensusAPI) NewBlock(params ExecutableData) (*NewBlockResponse, error) {
 	parent := api.eth.BlockChain().GetBlockByHash(params.ParentHash)
 	if parent == nil {
-		return &newBlockResponse{false}, fmt.Errorf("could not find parent %x", params.ParentHash)
+		return &NewBlockResponse{false}, fmt.Errorf("could not find parent %x", params.ParentHash)
 	}
 	block, err := insertBlockParamsToBlock(params)
 	if err != nil {
@@ -279,7 +279,7 @@ func (api *consensusAPI) NewBlock(params ExecutableData) (*newBlockResponse, err
 	}
 
 	_, err = api.eth.BlockChain().InsertChainWithoutSealVerification(block)
-	return &newBlockResponse{err == nil}, err
+	return &NewBlockResponse{err == nil}, err
 }
 
 // Used in tests to add a the list of transactions from a block to the tx pool.

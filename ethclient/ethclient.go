@@ -198,9 +198,9 @@ func (ec *Client) AssembleBlock(ctx context.Context, params catalyst.AssembleBlo
 }
 
 // NewBlock for catalyst consensus.
-func (ec *Client) NewBlock(ctx context.Context, params catalyst.ExecutableData) (bool, error) {
-	var ok bool
-	return ok, ec.c.CallContext(ctx, &ok, "consensus_newBlock", params)
+func (ec *Client) NewBlock(ctx context.Context, params catalyst.ExecutableData) (*catalyst.NewBlockResponse, error) {
+	var data *catalyst.NewBlockResponse
+	return data, ec.c.CallContext(ctx, &data, "consensus_newBlock", params)
 }
 
 type rpcTransaction struct {

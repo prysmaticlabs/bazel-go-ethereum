@@ -61,7 +61,7 @@ type executableDataMarshaling struct {
 	Transactions []hexutil.Bytes
 }
 
-type newBlockResponse struct {
+type NewBlockResponse struct {
 	Valid bool `json:"valid"`
 }
 

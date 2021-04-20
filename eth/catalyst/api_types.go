@@ -21,23 +21,23 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
-//go:generate go run github.com/fjl/gencodec -type assembleBlockParams -field-override assembleBlockParamsMarshaling -out gen_blockparams.go
+//go:generate go run github.com/fjl/gencodec -type AssembleBlockParams -field-override assembleBlockParamsMarshaling -out gen_blockparams.go
 
-// Structure described at https://hackmd.io/T9x2mMA4S7us8tJwEB3FDQ
-type assembleBlockParams struct {
+// AssembleBlockParams structure described at https://hackmd.io/T9x2mMA4S7us8tJwEB3FDQ
+type AssembleBlockParams struct {
 	ParentHash common.Hash `json:"parentHash"    gencodec:"required"`
 	Timestamp  uint64      `json:"timestamp"     gencodec:"required"`
 }
 
-// JSON type overrides for assembleBlockParams.
+// JSON type overrides for AssembleBlockParams.
 type assembleBlockParamsMarshaling struct {
 	Timestamp hexutil.Uint64
 }
 
-//go:generate go run github.com/fjl/gencodec -type executableData -field-override executableDataMarshaling -out gen_ed.go
+//go:generate go run github.com/fjl/gencodec -type ExecutableData -field-override executableDataMarshaling -out gen_ed.go
 
-// Structure described at https://notes.ethereum.org/@n0ble/rayonism-the-merge-spec#Parameters1
-type executableData struct {
+// ExecutableData Structure described at https://notes.ethereum.org/@n0ble/rayonism-the-merge-spec#Parameters1.
+type ExecutableData struct {
 	BlockHash    common.Hash    `json:"blockHash"     gencodec:"required"`
 	ParentHash   common.Hash    `json:"parentHash"    gencodec:"required"`
 	Miner        common.Address `json:"miner"         gencodec:"required"`
@@ -51,7 +51,7 @@ type executableData struct {
 	Transactions [][]byte       `json:"transactions"  gencodec:"required"`
 }
 
-// JSON type overrides for executableData.
+// JSON type overrides for ExecutableData.
 type executableDataMarshaling struct {
 	Number       hexutil.Uint64
 	GasLimit     hexutil.Uint64

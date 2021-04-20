@@ -104,7 +104,7 @@ func (api *consensusAPI) makeEnv(parent *types.Block, header *types.Header) (*bl
 
 // AssembleBlock creates a new block, inserts it into the chain, and returns the "execution
 // data" required for eth2 clients to process the new block.
-func (api *consensusAPI) AssembleBlock(params assembleBlockParams) (*executableData, error) {
+func (api *consensusAPI) AssembleBlock(params AssembleBlockParams) (*ExecutableData, error) {
 	log.Info("Producing block", "parentHash", params.ParentHash)
 
 	bc := api.eth.BlockChain()
@@ -204,7 +204,7 @@ func (api *consensusAPI) AssembleBlock(params assembleBlockParams) (*executableD
 	if err != nil {
 		return nil, err
 	}
-	return &executableData{
+	return &ExecutableData{
 		BlockHash:    block.Hash(),
 		ParentHash:   block.ParentHash(),
 		Miner:        block.Coinbase(),
@@ -239,7 +239,7 @@ func decodeTransactions(enc [][]byte) ([]*types.Transaction, error) {
 	return txs, nil
 }
 
-func insertBlockParamsToBlock(params executableData) (*types.Block, error) {
+func insertBlockParamsToBlock(params ExecutableData) (*types.Block, error) {
 	txs, err := decodeTransactions(params.Transactions)
 	if err != nil {
 		return nil, err
@@ -268,7 +268,7 @@ func insertBlockParamsToBlock(params executableData) (*types.Block, error) {
 // NewBlock creates an Eth1 block, inserts it in the chain, and either returns true,
 // or false + an error. This is a bit redundant for go, but simplifies things on the
 // eth2 side.
-func (api *consensusAPI) NewBlock(params executableData) (*newBlockResponse, error) {
+func (api *consensusAPI) NewBlock(params ExecutableData) (*newBlockResponse, error) {
 	parent := api.eth.BlockChain().GetBlockByHash(params.ParentHash)
 	if parent == nil {
 		return &newBlockResponse{false}, fmt.Errorf("could not find parent %x", params.ParentHash)

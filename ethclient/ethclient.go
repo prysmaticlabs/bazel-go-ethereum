@@ -28,6 +28,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/eth/catalyst"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
@@ -184,6 +185,22 @@ func (ec *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.H
 		err = ethereum.NotFound
 	}
 	return head, err
+}
+
+// AssembleBlock for catalyst execution.
+func (ec *Client) AssembleBlock(ctx context.Context, params catalyst.AssembleBlockParams) (*catalyst.ExecutableData, error) {
+	var data *catalyst.ExecutableData
+	err := ec.c.CallContext(ctx, &data, "consensus_assembleBlock", params)
+	if err == nil && data == nil {
+		err = ethereum.NotFound
+	}
+	return data, err
+}
+
+// NewBlock for catalyst consensus.
+func (ec *Client) NewBlock(ctx context.Context, params catalyst.ExecutableData) (bool, error) {
+	var ok bool
+	return ok, ec.c.CallContext(ctx, &ok, "consensus_newBlock", params)
 }
 
 type rpcTransaction struct {

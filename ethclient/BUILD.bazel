@@ -13,6 +13,7 @@ go_library(
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
         "//core/types:go_default_library",
+        "//eth/catalyst:go_default_library",
         "//rpc:go_default_library",
     ],
 )

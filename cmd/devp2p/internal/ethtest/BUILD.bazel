@@ -6,6 +6,7 @@ go_library(
         "chain.go",
         "eth66_suite.go",
         "eth66_suiteHelpers.go",
+        "helpers.go",
         "large.go",
         "suite.go",
         "transaction.go",
@@ -34,11 +35,18 @@ go_library(
 
 go_test(
     name = "go_default_test",
-    srcs = ["chain_test.go"],
+    srcs = [
+        "chain_test.go",
+        "suite_test.go",
+    ],
     data = glob(["testdata/**"]),
     embed = [":go_default_library"],
     deps = [
+        "//eth:go_default_library",
+        "//eth/ethconfig:go_default_library",
         "//eth/protocols/eth:go_default_library",
+        "//internal/utesting:go_default_library",
+        "//node:go_default_library",
         "//p2p:go_default_library",
         "@com_github_stretchr_testify//assert:go_default_library",
     ],

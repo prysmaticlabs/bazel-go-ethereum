@@ -7,12 +7,15 @@ go_library(
         "handler.go",
         "peer.go",
         "protocol.go",
+        "range.go",
         "sync.go",
+        "tracker.go",
     ],
     importpath = "github.com/ethereum/go-ethereum/eth/protocols/snap",
     visibility = ["//visibility:public"],
     deps = [
         "//common:go_default_library",
+        "//common/math:go_default_library",
         "//core:go_default_library",
         "//core/rawdb:go_default_library",
         "//core/state:go_default_library",
@@ -26,15 +29,21 @@ go_library(
         "//p2p:go_default_library",
         "//p2p/enode:go_default_library",
         "//p2p/enr:go_default_library",
+        "//p2p/msgrate:go_default_library",
+        "//p2p/tracker:go_default_library",
         "//rlp:go_default_library",
         "//trie:go_default_library",
+        "@com_github_holiman_uint256//:go_default_library",
         "@org_golang_x_crypto//sha3:go_default_library",
     ],
 )
 
 go_test(
     name = "go_default_test",
-    srcs = ["sync_test.go"],
+    srcs = [
+        "range_test.go",
+        "sync_test.go",
+    ],
     embed = [":go_default_library"],
     deps = [
         "//common:go_default_library",

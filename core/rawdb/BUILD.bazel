@@ -41,6 +41,7 @@ go_test(
         "accessors_chain_test.go",
         "accessors_indexes_test.go",
         "chain_iterator_test.go",
+        "database_test.go",
         "freezer_table_test.go",
         "table_test.go",
     ],

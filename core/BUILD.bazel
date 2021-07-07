@@ -83,6 +83,7 @@ go_test(
         "//common/math:go_default_library",
         "//consensus:go_default_library",
         "//consensus/ethash:go_default_library",
+        "//consensus/misc:go_default_library",
         "//core/rawdb:go_default_library",
         "//core/state:go_default_library",
         "//core/types:go_default_library",

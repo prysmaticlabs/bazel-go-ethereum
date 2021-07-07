@@ -24,7 +24,6 @@ go_library(
         "//p2p/enode:go_default_library",
         "//p2p/enr:go_default_library",
         "//p2p/netutil:go_default_library",
-        "//rlp:go_default_library",
     ],
 )
 

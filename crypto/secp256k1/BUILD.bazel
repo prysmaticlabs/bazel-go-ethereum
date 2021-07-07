@@ -40,6 +40,7 @@ go_library(
         "libsecp256k1/src/eckey_impl.h",
         "libsecp256k1/src/eckey.h",
         "libsecp256k1/src/modules/recovery/main_impl.h",
+        "scalar_mult_cgo.go",
         "panic_cb.go",
         "secp256.go",
     ],

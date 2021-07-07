@@ -13,6 +13,7 @@ go_library(
     deps = [
         "//common:go_default_library",
         "//common/hexutil:go_default_library",
+        "//consensus/misc:go_default_library",
         "//core:go_default_library",
         "//core/state:go_default_library",
         "//core/types:go_default_library",
@@ -30,7 +31,6 @@ go_test(
     srcs = ["api_test.go"],
     embed = [":go_default_library"],
     deps = [
-        "//common:go_default_library",
         "//consensus/ethash:go_default_library",
         "//core:go_default_library",
         "//core/rawdb:go_default_library",

@@ -13,7 +13,7 @@ import (
 var _ = (*executableDataMarshaling)(nil)
 
 // MarshalJSON marshals as JSON.
-func (e ExecutableData) MarshalJSON() ([]byte, error) {
+func (e executableData) MarshalJSON() ([]byte, error) {
 	type executableData struct {
 		BlockHash    common.Hash     `json:"blockHash"     gencodec:"required"`
 		ParentHash   common.Hash     `json:"parentHash"    gencodec:"required"`
@@ -48,7 +48,7 @@ func (e ExecutableData) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmarshals from JSON.
-func (e *ExecutableData) UnmarshalJSON(input []byte) error {
+func (e *executableData) UnmarshalJSON(input []byte) error {
 	type executableData struct {
 		BlockHash    *common.Hash    `json:"blockHash"     gencodec:"required"`
 		ParentHash   *common.Hash    `json:"parentHash"    gencodec:"required"`
@@ -67,47 +67,47 @@ func (e *ExecutableData) UnmarshalJSON(input []byte) error {
 		return err
 	}
 	if dec.BlockHash == nil {
-		return errors.New("missing required field 'blockHash' for ExecutableData")
+		return errors.New("missing required field 'blockHash' for executableData")
 	}
 	e.BlockHash = *dec.BlockHash
 	if dec.ParentHash == nil {
-		return errors.New("missing required field 'parentHash' for ExecutableData")
+		return errors.New("missing required field 'parentHash' for executableData")
 	}
 	e.ParentHash = *dec.ParentHash
 	if dec.Miner == nil {
-		return errors.New("missing required field 'miner' for ExecutableData")
+		return errors.New("missing required field 'miner' for executableData")
 	}
 	e.Miner = *dec.Miner
 	if dec.StateRoot == nil {
-		return errors.New("missing required field 'stateRoot' for ExecutableData")
+		return errors.New("missing required field 'stateRoot' for executableData")
 	}
 	e.StateRoot = *dec.StateRoot
 	if dec.Number == nil {
-		return errors.New("missing required field 'number' for ExecutableData")
+		return errors.New("missing required field 'number' for executableData")
 	}
 	e.Number = uint64(*dec.Number)
 	if dec.GasLimit == nil {
-		return errors.New("missing required field 'gasLimit' for ExecutableData")
+		return errors.New("missing required field 'gasLimit' for executableData")
 	}
 	e.GasLimit = uint64(*dec.GasLimit)
 	if dec.GasUsed == nil {
-		return errors.New("missing required field 'gasUsed' for ExecutableData")
+		return errors.New("missing required field 'gasUsed' for executableData")
 	}
 	e.GasUsed = uint64(*dec.GasUsed)
 	if dec.Timestamp == nil {
-		return errors.New("missing required field 'timestamp' for ExecutableData")
+		return errors.New("missing required field 'timestamp' for executableData")
 	}
 	e.Timestamp = uint64(*dec.Timestamp)
 	if dec.ReceiptRoot == nil {
-		return errors.New("missing required field 'receiptsRoot' for ExecutableData")
+		return errors.New("missing required field 'receiptsRoot' for executableData")
 	}
 	e.ReceiptRoot = *dec.ReceiptRoot
 	if dec.LogsBloom == nil {
-		return errors.New("missing required field 'logsBloom' for ExecutableData")
+		return errors.New("missing required field 'logsBloom' for executableData")
 	}
 	e.LogsBloom = *dec.LogsBloom
 	if dec.Transactions == nil {
-		return errors.New("missing required field 'transactions' for ExecutableData")
+		return errors.New("missing required field 'transactions' for executableData")
 	}
 	e.Transactions = make([][]byte, len(dec.Transactions))
 	for k, v := range dec.Transactions {

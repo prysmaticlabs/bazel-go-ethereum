@@ -61,6 +61,11 @@ func (api *PublicEthereumAPI) Coinbase() (common.Address, error) {
 	return api.Etherbase()
 }
 
+// Hashrate returns the POW hashrate
+func (api *PublicEthereumAPI) Hashrate() hexutil.Uint64 {
+	return hexutil.Uint64(api.e.Miner().Hashrate())
+}
+
 // PublicMinerAPI provides an API to control the miner.
 // It offers only methods that operate on data that pose no security risk when it is publicly accessible.
 type PublicMinerAPI struct {
@@ -259,12 +264,16 @@ func NewPublicDebugAPI(eth *Ethereum) *PublicDebugAPI {
 
 // DumpBlock retrieves the entire state of the database at a given block.
 func (api *PublicDebugAPI) DumpBlock(blockNr rpc.BlockNumber) (state.Dump, error) {
+	opts := &state.DumpConfig{
+		OnlyWithAddresses: true,
+		Max:               AccountRangeMaxResults, // Sanity limit over RPC
+	}
 	if blockNr == rpc.PendingBlockNumber {
 		// If we're dumping the pending state, we need to request
 		// both the pending block as well as the pending state from
 		// the miner and operate on those
 		_, stateDb := api.eth.miner.Pending()
-		return stateDb.RawDump(false, false, true), nil
+		return stateDb.RawDump(opts), nil
 	}
 	var block *types.Block
 	if blockNr == rpc.LatestBlockNumber {
@@ -279,7 +288,7 @@ func (api *PublicDebugAPI) DumpBlock(blockNr rpc.BlockNumber) (state.Dump, error
 	if err != nil {
 		return state.Dump{}, err
 	}
-	return stateDb.RawDump(false, false, true), nil
+	return stateDb.RawDump(opts), nil
 }
 
 // PrivateDebugAPI is the collection of Ethereum full node APIs exposed over
@@ -381,10 +390,17 @@ func (api *PublicDebugAPI) AccountRange(blockNrOrHash rpc.BlockNumberOrHash, sta
 		return state.IteratorDump{}, errors.New("either block number or block hash must be specified")
 	}
 
-	if maxResults > AccountRangeMaxResults || maxResults <= 0 {
-		maxResults = AccountRangeMaxResults
+	opts := &state.DumpConfig{
+		SkipCode:          nocode,
+		SkipStorage:       nostorage,
+		OnlyWithAddresses: !incompletes,
+		Start:             start,
+		Max:               uint64(maxResults),
 	}
-	return stateDb.IteratorDump(nocode, nostorage, incompletes, start, maxResults), nil
+	if maxResults > AccountRangeMaxResults || maxResults <= 0 {
+		opts.Max = AccountRangeMaxResults
+	}
+	return stateDb.IteratorDump(opts), nil
 }
 
 // StorageRangeResult is the result of a debug_storageRangeAt API call.

@@ -13,7 +13,7 @@ import (
 var _ = (*assembleBlockParamsMarshaling)(nil)
 
 // MarshalJSON marshals as JSON.
-func (a AssembleBlockParams) MarshalJSON() ([]byte, error) {
+func (a assembleBlockParams) MarshalJSON() ([]byte, error) {
 	type assembleBlockParams struct {
 		ParentHash common.Hash    `json:"parentHash"    gencodec:"required"`
 		Timestamp  hexutil.Uint64 `json:"timestamp"     gencodec:"required"`
@@ -25,7 +25,7 @@ func (a AssembleBlockParams) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmarshals from JSON.
-func (a *AssembleBlockParams) UnmarshalJSON(input []byte) error {
+func (a *assembleBlockParams) UnmarshalJSON(input []byte) error {
 	type assembleBlockParams struct {
 		ParentHash *common.Hash    `json:"parentHash"    gencodec:"required"`
 		Timestamp  *hexutil.Uint64 `json:"timestamp"     gencodec:"required"`
@@ -35,11 +35,11 @@ func (a *AssembleBlockParams) UnmarshalJSON(input []byte) error {
 		return err
 	}
 	if dec.ParentHash == nil {
-		return errors.New("missing required field 'parentHash' for AssembleBlockParams")
+		return errors.New("missing required field 'parentHash' for assembleBlockParams")
 	}
 	a.ParentHash = *dec.ParentHash
 	if dec.Timestamp == nil {
-		return errors.New("missing required field 'timestamp' for AssembleBlockParams")
+		return errors.New("missing required field 'timestamp' for assembleBlockParams")
 	}
 	a.Timestamp = uint64(*dec.Timestamp)
 	return nil

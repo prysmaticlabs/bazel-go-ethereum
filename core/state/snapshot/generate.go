@@ -31,6 +31,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/ethdb/memorydb"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -138,16 +139,6 @@ func (gs *generatorStats) Log(msg string, root common.Hash, marker []byte) {
 		}
 	}
 	log.Info(msg, ctx...)
-}
-
-// ClearSnapshotMarker sets the snapshot marker to zero, meaning that snapshots
-// are not usable.
-func ClearSnapshotMarker(diskdb ethdb.KeyValueStore) {
-	batch := diskdb.NewBatch()
-	journalProgress(batch, []byte{}, nil)
-	if err := batch.Write(); err != nil {
-		log.Crit("Failed to write initialized state marker", "err", err)
-	}
 }
 
 // generateSnapshot regenerates a brand new snapshot based on an existing state
@@ -367,7 +358,7 @@ func (dl *diskLayer) proveRange(stats *generatorStats, root common.Hash, prefix 
 	}
 	// Verify the snapshot segment with range prover, ensure that all flat states
 	// in this range correspond to merkle trie.
-	_, _, _, cont, err := trie.VerifyRangeProof(root, origin, last, keys, vals, proof)
+	cont, err := trie.VerifyRangeProof(root, origin, last, keys, vals, proof)
 	return &proofResult{
 			keys:     keys,
 			vals:     vals,
@@ -434,6 +425,20 @@ func (dl *diskLayer) generateRange(root common.Hash, prefix []byte, kind string,
 		}
 		meter.Mark(1)
 	}
+
+	// We use the snap data to build up a cache which can be used by the
+	// main account trie as a primary lookup when resolving hashes
+	var snapNodeCache ethdb.KeyValueStore
+	if len(result.keys) > 0 {
+		snapNodeCache = memorydb.New()
+		snapTrieDb := trie.NewDatabase(snapNodeCache)
+		snapTrie, _ := trie.New(common.Hash{}, snapTrieDb)
+		for i, key := range result.keys {
+			snapTrie.Update(key, result.vals[i])
+		}
+		root, _ := snapTrie.Commit(nil)
+		snapTrieDb.Commit(root, false, nil)
+	}
 	tr := result.tr
 	if tr == nil {
 		tr, err = trie.New(root, dl.triedb)
@@ -442,9 +447,11 @@ func (dl *diskLayer) generateRange(root common.Hash, prefix []byte, kind string,
 			return false, nil, errMissingTrie
 		}
 	}
+
 	var (
 		trieMore       bool
-		iter           = trie.NewIterator(tr.NodeIterator(origin))
+		nodeIt         = tr.NodeIterator(origin)
+		iter           = trie.NewIterator(nodeIt)
 		kvkeys, kvvals = result.keys, result.vals
 
 		// counters
@@ -458,6 +465,7 @@ func (dl *diskLayer) generateRange(root common.Hash, prefix []byte, kind string,
 		start    = time.Now()
 		internal time.Duration
 	)
+	nodeIt.AddResolver(snapNodeCache)
 	for iter.Next() {
 		if last != nil && bytes.Compare(iter.Key, last) > 0 {
 			trieMore = true

@@ -28,7 +28,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/eth/catalyst"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
@@ -185,22 +184,6 @@ func (ec *Client) HeaderByNumber(ctx context.Context, number *big.Int) (*types.H
 		err = ethereum.NotFound
 	}
 	return head, err
-}
-
-// AssembleBlock for catalyst execution.
-func (ec *Client) AssembleBlock(ctx context.Context, params catalyst.AssembleBlockParams) (*catalyst.ExecutableData, error) {
-	var data *catalyst.ExecutableData
-	err := ec.c.CallContext(ctx, &data, "consensus_assembleBlock", params)
-	if err == nil && data == nil {
-		err = ethereum.NotFound
-	}
-	return data, err
-}
-
-// NewBlock for catalyst consensus.
-func (ec *Client) NewBlock(ctx context.Context, params catalyst.ExecutableData) (*catalyst.NewBlockResponse, error) {
-	var data *catalyst.NewBlockResponse
-	return data, ec.c.CallContext(ctx, &data, "consensus_newBlock", params)
 }
 
 type rpcTransaction struct {
@@ -514,6 +497,16 @@ func (ec *Client) PendingCallContract(ctx context.Context, msg ethereum.CallMsg)
 func (ec *Client) SuggestGasPrice(ctx context.Context) (*big.Int, error) {
 	var hex hexutil.Big
 	if err := ec.c.CallContext(ctx, &hex, "eth_gasPrice"); err != nil {
+		return nil, err
+	}
+	return (*big.Int)(&hex), nil
+}
+
+// SuggestGasTipCap retrieves the currently suggested gas tip cap after 1559 to
+// allow a timely execution of a transaction.
+func (ec *Client) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
+	var hex hexutil.Big
+	if err := ec.c.CallContext(ctx, &hex, "eth_maxPriorityFeePerGas"); err != nil {
 		return nil, err
 	}
 	return (*big.Int)(&hex), nil

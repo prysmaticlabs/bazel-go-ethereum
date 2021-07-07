@@ -20,7 +20,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/rawdb"
@@ -39,7 +38,7 @@ var (
 	// testAddr is the Ethereum address of the tester account.
 	testAddr = crypto.PubkeyToAddress(testKey.PublicKey)
 
-	testBalance = big.NewInt(2e10)
+	testBalance = big.NewInt(2e15)
 )
 
 func generateTestChain() (*core.Genesis, []*types.Block) {
@@ -50,6 +49,7 @@ func generateTestChain() (*core.Genesis, []*types.Block) {
 		Alloc:     core.GenesisAlloc{testAddr: {Balance: testBalance}},
 		ExtraData: []byte("test genesis"),
 		Timestamp: 9000,
+		BaseFee:   big.NewInt(params.InitialBaseFee),
 	}
 	generate := func(i int, g *core.BlockGen) {
 		g.OffsetTime(5)
@@ -67,13 +67,28 @@ func generateTestChainWithFork(n int, fork int) (*core.Genesis, []*types.Block, 
 		fork = n - 1
 	}
 	db := rawdb.NewMemoryDatabase()
-	//nolint:composites
-	config := &params.ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, big.NewInt(0), new(params.EthashConfig), nil}
+	config := &params.ChainConfig{
+		ChainID:             big.NewInt(1337),
+		HomesteadBlock:      big.NewInt(0),
+		EIP150Block:         big.NewInt(0),
+		EIP155Block:         big.NewInt(0),
+		EIP158Block:         big.NewInt(0),
+		ByzantiumBlock:      big.NewInt(0),
+		ConstantinopleBlock: big.NewInt(0),
+		PetersburgBlock:     big.NewInt(0),
+		IstanbulBlock:       big.NewInt(0),
+		MuirGlacierBlock:    big.NewInt(0),
+		BerlinBlock:         big.NewInt(0),
+		LondonBlock:         big.NewInt(0),
+		CatalystBlock:       big.NewInt(0),
+		Ethash:              new(params.EthashConfig),
+	}
 	genesis := &core.Genesis{
 		Config:    config,
 		Alloc:     core.GenesisAlloc{testAddr: {Balance: testBalance}},
 		ExtraData: []byte("test genesis"),
 		Timestamp: 9000,
+		BaseFee:   big.NewInt(params.InitialBaseFee),
 	}
 	generate := func(i int, g *core.BlockGen) {
 		g.OffsetTime(5)
@@ -98,12 +113,12 @@ func TestEth2AssembleBlock(t *testing.T) {
 
 	api := newConsensusAPI(ethservice)
 	signer := types.NewEIP155Signer(ethservice.BlockChain().Config().ChainID)
-	tx, err := types.SignTx(types.NewTransaction(0, blocks[8].Coinbase(), big.NewInt(1000), params.TxGas, nil, nil), signer, testKey)
+	tx, err := types.SignTx(types.NewTransaction(0, blocks[8].Coinbase(), big.NewInt(1000), params.TxGas, big.NewInt(params.InitialBaseFee), nil), signer, testKey)
 	if err != nil {
 		t.Fatalf("error signing transaction, err=%v", err)
 	}
 	ethservice.TxPool().AddLocal(tx)
-	blockParams := AssembleBlockParams{
+	blockParams := assembleBlockParams{
 		ParentHash: blocks[8].ParentHash(),
 		Timestamp:  blocks[8].Time(),
 	}
@@ -127,7 +142,7 @@ func TestEth2AssembleBlockWithAnotherBlocksTxs(t *testing.T) {
 
 	// Put the 10th block's tx in the pool and produce a new block
 	api.addBlockTxs(blocks[9])
-	blockParams := AssembleBlockParams{
+	blockParams := assembleBlockParams{
 		ParentHash: blocks[9].ParentHash(),
 		Timestamp:  blocks[9].Time(),
 	}
@@ -148,7 +163,7 @@ func TestEth2NewBlock(t *testing.T) {
 
 	api := newConsensusAPI(ethservice)
 	for i := 5; i < 10; i++ {
-		p := ExecutableData{
+		p := executableData{
 			ParentHash:   ethservice.BlockChain().CurrentBlock().Hash(),
 			Miner:        blocks[i].Coinbase(),
 			StateRoot:    blocks[i].Root(),
@@ -174,7 +189,7 @@ func TestEth2NewBlock(t *testing.T) {
 	lastBlock := blocks[4]
 	for i := 0; i < 4; i++ {
 		lastBlockNum.Add(lastBlockNum, big.NewInt(1))
-		p := ExecutableData{
+		p := executableData{
 			ParentHash:   lastBlock.Hash(),
 			Miner:        forkedBlocks[i].Coinbase(),
 			StateRoot:    forkedBlocks[i].Root(),
@@ -191,7 +206,7 @@ func TestEth2NewBlock(t *testing.T) {
 		if err != nil || !success.Valid {
 			t.Fatalf("Failed to insert forked block #%d: %v", i, err)
 		}
-		lastBlock, err = insertBlockParamsToBlock(p)
+		lastBlock, err = insertBlockParamsToBlock(ethservice.BlockChain().Config(), lastBlock.Header(), p)
 		if err != nil {
 			t.Fatal(err)
 		}

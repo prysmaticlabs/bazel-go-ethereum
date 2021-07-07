@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus/misc"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -79,8 +80,10 @@ type blockExecutionEnv struct {
 
 func (env *blockExecutionEnv) commitTransaction(tx *types.Transaction, coinbase common.Address) error {
 	vmconfig := *env.chain.GetVMConfig()
+	snap := env.state.Snapshot()
 	receipt, err := core.ApplyTransaction(env.chain.Config(), env.chain, &coinbase, env.gasPool, env.state, env.header, tx, &env.header.GasUsed, vmconfig)
 	if err != nil {
+		env.state.RevertToSnapshot(snap)
 		return err
 	}
 	env.txs = append(env.txs, tx)
@@ -104,11 +107,16 @@ func (api *consensusAPI) makeEnv(parent *types.Block, header *types.Header) (*bl
 
 // AssembleBlock creates a new block, inserts it into the chain, and returns the "execution
 // data" required for eth2 clients to process the new block.
-func (api *consensusAPI) AssembleBlock(params AssembleBlockParams) (*ExecutableData, error) {
+func (api *consensusAPI) AssembleBlock(params assembleBlockParams) (*executableData, error) {
 	log.Info("Producing block", "parentHash", params.ParentHash)
 
 	bc := api.eth.BlockChain()
 	parent := bc.GetBlockByHash(params.ParentHash)
+	if parent == nil {
+		log.Warn("Cannot assemble block with parent hash to unknown block", "parentHash", params.ParentHash)
+		return nil, fmt.Errorf("cannot assemble block with unknown parent %s", params.ParentHash)
+	}
+
 	pool := api.eth.TxPool()
 
 	if parent.Time() >= params.Timestamp {
@@ -120,7 +128,7 @@ func (api *consensusAPI) AssembleBlock(params AssembleBlockParams) (*ExecutableD
 		time.Sleep(wait)
 	}
 
-	pending, err := pool.Pending()
+	pending, err := pool.Pending(true)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +146,9 @@ func (api *consensusAPI) AssembleBlock(params AssembleBlockParams) (*ExecutableD
 		Extra:      []byte{},
 		Time:       params.Timestamp,
 	}
+	if config := api.eth.BlockChain().Config(); config.IsLondon(header.Number) {
+		header.BaseFee = misc.CalcBaseFee(config, parent.Header())
+	}
 	err = api.eth.Engine().Prepare(bc, header)
 	if err != nil {
 		return nil, err
@@ -150,7 +161,7 @@ func (api *consensusAPI) AssembleBlock(params AssembleBlockParams) (*ExecutableD
 
 	var (
 		signer       = types.MakeSigner(bc.Config(), header.Number)
-		txHeap       = types.NewTransactionsByPriceAndNonce(signer, pending)
+		txHeap       = types.NewTransactionsByPriceAndNonce(signer, pending, nil)
 		transactions []*types.Transaction
 	)
 	for {
@@ -204,7 +215,7 @@ func (api *consensusAPI) AssembleBlock(params AssembleBlockParams) (*ExecutableD
 	if err != nil {
 		return nil, err
 	}
-	return &ExecutableData{
+	return &executableData{
 		BlockHash:    block.Hash(),
 		ParentHash:   block.ParentHash(),
 		Miner:        block.Coinbase(),
@@ -239,7 +250,7 @@ func decodeTransactions(enc [][]byte) ([]*types.Transaction, error) {
 	return txs, nil
 }
 
-func insertBlockParamsToBlock(params ExecutableData) (*types.Block, error) {
+func insertBlockParamsToBlock(config *chainParams.ChainConfig, parent *types.Header, params executableData) (*types.Block, error) {
 	txs, err := decodeTransactions(params.Transactions)
 	if err != nil {
 		return nil, err
@@ -261,6 +272,9 @@ func insertBlockParamsToBlock(params ExecutableData) (*types.Block, error) {
 		GasUsed:     params.GasUsed,
 		Time:        params.Timestamp,
 	}
+	if config.IsLondon(number) {
+		header.BaseFee = misc.CalcBaseFee(config, parent)
+	}
 	block := types.NewBlockWithHeader(header).WithBody(txs, nil /* uncles */)
 	return block, nil
 }
@@ -268,18 +282,17 @@ func insertBlockParamsToBlock(params ExecutableData) (*types.Block, error) {
 // NewBlock creates an Eth1 block, inserts it in the chain, and either returns true,
 // or false + an error. This is a bit redundant for go, but simplifies things on the
 // eth2 side.
-func (api *consensusAPI) NewBlock(params ExecutableData) (*NewBlockResponse, error) {
+func (api *consensusAPI) NewBlock(params executableData) (*newBlockResponse, error) {
 	parent := api.eth.BlockChain().GetBlockByHash(params.ParentHash)
 	if parent == nil {
-		return &NewBlockResponse{false}, fmt.Errorf("could not find parent %x", params.ParentHash)
+		return &newBlockResponse{false}, fmt.Errorf("could not find parent %x", params.ParentHash)
 	}
-	block, err := insertBlockParamsToBlock(params)
+	block, err := insertBlockParamsToBlock(api.eth.BlockChain().Config(), parent.Header(), params)
 	if err != nil {
 		return nil, err
 	}
-
 	_, err = api.eth.BlockChain().InsertChainWithoutSealVerification(block)
-	return &NewBlockResponse{err == nil}, err
+	return &newBlockResponse{err == nil}, err
 }
 
 // Used in tests to add a the list of transactions from a block to the tx pool.

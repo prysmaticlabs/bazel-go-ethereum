@@ -4,8 +4,6 @@ go_library(
     name = "go_default_library",
     srcs = [
         "chain.go",
-        "eth66_suite.go",
-        "eth66_suiteHelpers.go",
         "helpers.go",
         "large.go",
         "suite.go",
@@ -29,7 +27,6 @@ go_library(
         "//params:go_default_library",
         "//rlp:go_default_library",
         "@com_github_davecgh_go_spew//spew:go_default_library",
-        "@com_github_stretchr_testify//assert:go_default_library",
     ],
 )
 

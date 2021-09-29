@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strings"
+	"sync"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -74,6 +76,29 @@ type FilterOpts struct {
 type WatchOpts struct {
 	Start   *uint64         // Start of the queried range (nil = latest)
 	Context context.Context // Network context to support cancellation and timeouts (nil = no timeout)
+}
+
+// MetaData collects all metadata for a bound contract.
+type MetaData struct {
+	mu   sync.Mutex
+	Sigs map[string]string
+	Bin  string
+	ABI  string
+	ab   *abi.ABI
+}
+
+func (m *MetaData) GetAbi() (*abi.ABI, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.ab != nil {
+		return m.ab, nil
+	}
+	if parsed, err := abi.JSON(strings.NewReader(m.ABI)); err != nil {
+		return nil, err
+	} else {
+		m.ab = &parsed
+	}
+	return m.ab, nil
 }
 
 // BoundContract is the base wrapper object that reflects a contract on the
@@ -229,13 +254,13 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	if opts.GasPrice != nil && (opts.GasFeeCap != nil || opts.GasTipCap != nil) {
 		return nil, errors.New("both gasPrice and (maxFeePerGas or maxPriorityFeePerGas) specified")
 	}
-	head, err := c.transactor.HeaderByNumber(opts.Context, nil)
+	head, err := c.transactor.HeaderByNumber(ensureContext(opts.Context), nil)
 	if err != nil {
 		return nil, err
 	}
 	if head.BaseFee != nil && opts.GasPrice == nil {
 		if opts.GasTipCap == nil {
-			tip, err := c.transactor.SuggestGasTipCap(opts.Context)
+			tip, err := c.transactor.SuggestGasTipCap(ensureContext(opts.Context))
 			if err != nil {
 				return nil, err
 			}
@@ -256,12 +281,9 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 			return nil, errors.New("maxFeePerGas or maxPriorityFeePerGas specified but london is not active yet")
 		}
 		if opts.GasPrice == nil {
-			price, err := c.transactor.SuggestGasTipCap(opts.Context)
+			price, err := c.transactor.SuggestGasPrice(ensureContext(opts.Context))
 			if err != nil {
 				return nil, err
-			}
-			if head.BaseFee != nil {
-				price.Add(price, head.BaseFee)
 			}
 			opts.GasPrice = price
 		}
@@ -443,7 +465,7 @@ func (c *BoundContract) UnpackLogIntoMap(out map[string]interface{}, event strin
 // user specified it as such.
 func ensureContext(ctx context.Context) context.Context {
 	if ctx == nil {
-		return context.TODO()
+		return context.Background()
 	}
 	return ctx
 }

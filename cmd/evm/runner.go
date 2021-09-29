@@ -108,11 +108,11 @@ func runCmd(ctx *cli.Context) error {
 	glogger.Verbosity(log.Lvl(ctx.GlobalInt(VerbosityFlag.Name)))
 	log.Root().SetHandler(glogger)
 	logconfig := &vm.LogConfig{
-		DisableMemory:     ctx.GlobalBool(DisableMemoryFlag.Name),
-		DisableStack:      ctx.GlobalBool(DisableStackFlag.Name),
-		DisableStorage:    ctx.GlobalBool(DisableStorageFlag.Name),
-		DisableReturnData: ctx.GlobalBool(DisableReturnDataFlag.Name),
-		Debug:             ctx.GlobalBool(DebugFlag.Name),
+		EnableMemory:     !ctx.GlobalBool(DisableMemoryFlag.Name),
+		DisableStack:     ctx.GlobalBool(DisableStackFlag.Name),
+		DisableStorage:   ctx.GlobalBool(DisableStorageFlag.Name),
+		EnableReturnData: !ctx.GlobalBool(DisableReturnDataFlag.Name),
+		Debug:            ctx.GlobalBool(DebugFlag.Name),
 	}
 
 	var (
@@ -211,9 +211,8 @@ func runCmd(ctx *cli.Context) error {
 		Coinbase:    genesisConfig.Coinbase,
 		BlockNumber: new(big.Int).SetUint64(genesisConfig.Number),
 		EVMConfig: vm.Config{
-			Tracer:         tracer,
-			Debug:          ctx.GlobalBool(DebugFlag.Name) || ctx.GlobalBool(MachineFlag.Name),
-			EVMInterpreter: ctx.GlobalString(EVMInterpreterFlag.Name),
+			Tracer: tracer,
+			Debug:  ctx.GlobalBool(DebugFlag.Name) || ctx.GlobalBool(MachineFlag.Name),
 		},
 	}
 

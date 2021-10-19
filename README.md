@@ -1,3 +1,7 @@
+# Archived: This repo is no longer used by prysm.
+
+Refer to [prysmaticlabs/prysm#9725](https://github.com/prysmaticlabs/prysm/pull/9725)
+
 ## Go Ethereum
 
 Official Golang implementation of the Ethereum protocol.
